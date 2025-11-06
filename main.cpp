@@ -12,6 +12,10 @@ int main(int ac, char *av[])
 	struct sockaddr_in server_sock, client_sock;
 	char msg[256];
 	ssize_t return_value;
+
+	int max_sd;
+	fd_set master_fd;
+	fd_set read_fd;
 	
 	if (ac < 2) {
 		fprintf(stderr,"ERROR, no port provided\n");
@@ -32,20 +36,57 @@ int main(int ac, char *av[])
 		std::cout << "Error: listen error";
 		exit(0);
 	}
-	socklen_t client_len = sizeof(client_sock);
-	accept_fd = accept(socket_fd, (struct sockaddr *) &client_sock, &client_len);
-	if (accept_fd < 0){
-		std::cout << "Error: listen error";
-		exit(0);
-	}
 
+	FD_ZERO(&master_fd);
+	FD_SET(socket_fd, &master_fd);
+
+	max_sd = socket_fd;
 	while(true){
-		bzero(msg, 256);
-		return_value = recv(accept_fd, msg, sizeof(msg) - 1, 0);
-		if (return_value != -1)
-			std::cout << "Message: " << msg << std::endl;
-		else{
-			std::cout << "Error: Ti piace il pisello" << std::endl;
+		read_fd = master_fd;
+
+		int activity = select(max_sd + 1, &read_fd, NULL, NULL, NULL);
+
+		if ((activity < 0) && (errno != EINTR)) {
+			printf("Errore in select\n");
+		}
+		
+		for(int sd = 0; sd <= max_sd; sd++){
+			if (FD_ISSET(sd, &read_fd)){
+				if (sd == socket_fd){
+					socklen_t client_len = sizeof(client_sock);
+					accept_fd = accept(socket_fd, (struct sockaddr *) &client_sock, &client_len);
+					if (accept_fd < 0){
+						std::cout << "Error: listen error";
+						exit(0);
+					}
+
+					FD_SET(accept_fd, &master_fd);
+
+					if (accept_fd > max_sd) {
+						max_sd = accept_fd;
+					}
+
+					printf("New client connected to socket: %d\n", accept_fd);
+				} else {
+					bzero(msg, 256);
+					return_value = recv(sd, msg, sizeof(msg) - 1, 0);
+					if (return_value != -1){
+						if (!return_value){
+							printf("Client disconnected from socket: %d\n", sd);
+							close(sd);
+							FD_CLR(sd, &master_fd);
+						} else {
+							std::cout << "MSG: " << msg << std::endl;
+							send(sd, msg, return_value, 0);
+						}
+					}
+					else{
+						perror("recv error");
+						close(sd);
+                    	FD_CLR(sd, &master_fd);
+					}
+				}
+			}
 		}
 	}
 	
