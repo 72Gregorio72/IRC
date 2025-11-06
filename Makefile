@@ -1,6 +1,6 @@
-NAME		= webserv
+NAME		= ft_irc
 
-SRCS		=   main.cpp client.cpp
+SRCS		=   main.cpp
 
 OBJS		= $(SRCS:.cpp=.o)
 
