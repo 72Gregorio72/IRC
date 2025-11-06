@@ -33,6 +33,7 @@ vale: re
 	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --track-fds=yes ./$(NAME)
 
 push: fclean
+	rm -r .vscode
 	bash -i -c "push"
 
 testosterone: re

@@ -1,68 +1,55 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   main.cpp                                           :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: vcastald <vcastald@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/11/05 08:44:14 by vcastald          #+#    #+#             */
-/*   Updated: 2025/11/05 11:22:53 by vcastald         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
+#include "ft_irc.h"
 
-#include "webserv.h"
-
-int main(int ac, char **av)
+void error(const char *msg)
 {
-    if (ac == 1)
-        std::cout << "Error: too few parameters" << std::endl;
-    else
-        std::cout << av[1] << std::endl;
-    return (0);
-
+    perror(msg);
+    exit(1);
 }
-// void error(const char *msg)
-// {
-//     perror(msg);
-//     exit(1);
-// }
 
-// int main(int argc, char *argv[])
-// {
-//      int sockfd, newsockfd, portno;
-//      socklen_t clilen;
-//      char buffer[256];
-//      struct sockaddr_in serv_addr, cli_addr;
-//      int n;
-//      if (argc < 2) {
-//          fprintf(stderr,"ERROR, no port provided\n");
-//          exit(1);
-//      }
-//      sockfd = socket(AF_INET, SOCK_STREAM, 0);
-//      if (sockfd < 0) 
-//         error("ERROR opening socket");
-//      bzero((char *) &serv_addr, sizeof(serv_addr));
-//      portno = atoi(argv[1]);
-//      serv_addr.sin_family = AF_INET;
-//      serv_addr.sin_addr.s_addr = INADDR_ANY;
-//      serv_addr.sin_port = htons(portno);
-//      if (bind(sockfd, (struct sockaddr *) &serv_addr,
-//               sizeof(serv_addr)) < 0) 
-//               error("ERROR on binding");
-//      listen(sockfd,5);
-//      clilen = sizeof(cli_addr);
-//      newsockfd = accept(sockfd, 
-//                  (struct sockaddr *) &cli_addr, 
-//                  &clilen);
-//      if (newsockfd < 0) 
-//           error("ERROR on accept");
-//      bzero(buffer,256);
-//      n = read(newsockfd,buffer,255);
-//      if (n < 0) error("ERROR reading from socket");
-//      printf("Here is the message: %s\n",buffer);
-//      n = write(newsockfd,"I got your message",18);
-//      if (n < 0) error("ERROR writing to socket");
-//      close(newsockfd);
-//      close(sockfd);
-//      return 0; 
-// }
+int main(int ac, char *av[])
+{
+	int socket_fd, port_number, accept_fd;
+	struct sockaddr_in server_sock, client_sock;
+	char msg[256];
+	ssize_t return_value;
+	
+	if (ac < 2) {
+		fprintf(stderr,"ERROR, no port provided\n");
+		exit(1);
+	}
+
+	socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+	port_number = std::atoi(av[1]);
+	bzero((char *) &server_sock, sizeof(server_sock));
+	server_sock.sin_port = htons(port_number);
+	server_sock.sin_family = AF_INET;
+	server_sock.sin_addr.s_addr = INADDR_ANY;
+	if (bind(socket_fd, (struct sockaddr *) &server_sock, sizeof(server_sock)) < 0){
+		std::cout << "Error: bind error";
+		exit(0);
+	}
+	if (listen(socket_fd, 5) < 0){
+		std::cout << "Error: listen error";
+		exit(0);
+	}
+	socklen_t client_len = sizeof(client_sock);
+	accept_fd = accept(socket_fd, (struct sockaddr *) &client_sock, &client_len);
+	if (accept_fd < 0){
+		std::cout << "Error: listen error";
+		exit(0);
+	}
+
+	while(true){
+		bzero(msg, 256);
+		return_value = recv(accept_fd, msg, sizeof(msg) - 1, 0);
+		if (return_value != -1)
+			std::cout << "Message: " << msg << std::endl;
+		else{
+			std::cout << "Error: Ti piace il pisello" << std::endl;
+		}
+	}
+	
+	close(socket_fd);
+	close(accept_fd);
+	return 0; 
+}
