@@ -1,6 +1,6 @@
 NAME		= ircserv
 
-SRCS		=   main.cpp
+SRCS		=   main.cpp msg.cpp
 
 OBJS		= $(SRCS:.cpp=.o)
 
