@@ -5,15 +5,15 @@
 
 class Channel{
 	public:
-		Channel();
-		~Channel();
-		Channel(const Channel &other);
-		Channel &operator=(const Channel &other);
+		// Channel();
+		// ~Channel();
+		// Channel(const Channel &other);
+		// Channel &operator=(const Channel &other);
 	private:
-		std::string channel_name;
-		std::vector <User> users;
+		// std::string channel_name;
+		// std::vector <User> users;
 };
 
-std::map <std::string, Channel> channels;
+// std::map <std::string, Channel> channels;
 
 #endif
