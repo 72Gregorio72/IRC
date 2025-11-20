@@ -13,10 +13,14 @@ struct data{
 	fd_set read_fd;
 } typedef data;
 
+class User;
+
 class Server{
 	private:
 		std::string password;
 		data serverdata;
+		std::map <std::string, User> users;
+		std::map<int, std::string> client_buffers;
 	public:
 		Server();
 		~Server();
@@ -29,6 +33,11 @@ class Server{
 		void	parse_msg();
 		bool	check_password(std::string password);
 		void	close_all();
+		std::map <std::string, User> getUsers();
+		void	add_user(User &newUser);
+		void	create_user(std::string msg);
+		void	remove_user(std::string nickname);
+		void	print_users();
 };
 
 #endif

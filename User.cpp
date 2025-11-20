@@ -17,3 +17,6 @@ User& User::operator=(const User &other){
 	return *this;
 }
 
+std::string User::getNickName(){
+	return Nick_name;
+}

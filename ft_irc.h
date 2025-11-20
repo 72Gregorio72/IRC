@@ -24,6 +24,7 @@
 #include <netdb.h>
 #include <signal.h>
 #include <climits>
+#include <sstream>
 
 #include <map>
 #include <vector>

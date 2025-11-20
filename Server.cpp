@@ -19,6 +19,25 @@ std::string Server::getPassword(){
 	return password;
 }
 
+void	Server::add_user(User &newUser){
+	users.insert(std::make_pair(newUser.getNickName(), newUser));
+}
+
+void	Server::remove_user(std::string nickname){
+	users.erase(nickname);
+}
+
+void	Server::print_users(){
+	std::cout << "Current users:" << std::endl;
+	for (std::map<std::string, User>::iterator it = users.begin(); it != users.end(); ++it) {
+		std::cout << "- " << it->first << std::endl;
+	}
+}
+
+std::map <std::string, User> Server::getUsers(){
+	return users;
+}
+
 void	Server::open_server(char **av){
 	serverdata.socket_fd = socket(AF_INET, SOCK_STREAM, 0);
 	int opt = 1;
@@ -53,11 +72,12 @@ bool	Server::check_password(std::string password){
 		password.erase(pos);
 	if (password == this->password)
 		return true;
+	std::cout << "Received password: " << password << std::endl;
+	std::cout << "Expected password: " << this->password << std::endl;
 	return false;
 }
 
-void	create_user(std::string msg){
-	std::cout << "Creating user..." << std::endl;
+void	Server::create_user(std::string msg){
 	std::string nickname;
 	std::string username;
 	std::string realname;
@@ -85,29 +105,35 @@ void	create_user(std::string msg){
 		realname.erase(pos);
 
 	User new_user = User(nickname, username, hostanme, servername, realname);
-	std::cout << "nickname: " << nickname << std::endl;
-	std::cout << "username: " << username << std::endl;
-	std::cout << "hostname: " << hostanme << std::endl;
-	std::cout << "servername: " << servername << std::endl;
-	std::cout << "realname: " << realname << std::endl;
+	add_user(new_user);
+	std::cout << "User " << nickname << " created!" << std::endl;
+	std::cout << "Username: " << username << std::endl;
+	std::cout << "Hostname: " << hostanme << std::endl;
+	std::cout << "Servername: " << servername << std::endl;
+	std::cout << "Realname: " << realname << std::endl;
 }
 
 void	Server::parse_msg(){
 	std::string msg(serverdata.msg);
-	
-	if (msg.find("PASS ") != std::string::npos) {
-		if (msg.size() > 12)
+	if (msg.find("CAP LS 302") != std::string::npos)
 			msg.erase(0, 12);
+	std::cout << "Parsing message: " << msg << std::endl;
+	if (msg.find("PASS ") != std::string::npos) {
 		if (check_password(msg)){
 			std::cout << "Authentication correct!" << std::endl;
 		} else {
 			std::cout << "Authentication failed!" << std::endl;
 		}
-		size_t pos = msg.find("NICK ");
+	}
+	if (size_t pos = msg.find("NICK ") != std::string::npos) {
 		if (pos != std::string::npos)
 			msg.erase(0, pos);
 		msg.erase(0, 4);
 		create_user(msg);
+	}
+
+	if (msg.find("printusers ") != std::string::npos) {
+		print_users();
 	}
 }
 

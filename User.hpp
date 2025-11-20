@@ -8,6 +8,7 @@ class User{
 		User();
 		User(std::string nickname, std::string username, std::string hostname, std::string servername, std::string realname);
 		~User();
+		std::string getNickName();
 		User(const User &other);
 		User &operator=(const User &other);
 	private:
