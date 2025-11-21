@@ -16,28 +16,35 @@ struct data{
 class User;
 
 class Server{
-	private:
-		std::string password;
-		data serverdata;
-		std::map <std::string, User> users;
-		std::map<int, std::string> client_buffers;
+
 	public:
+
 		Server();
 		~Server();
 		Server(std::string pass);
 		Server(const Server &other);
 		Server &operator=(const Server &other);
-		std::string getPassword();
+		
 		void	open_server(char **av);
 		void	server_loop();
-		void	parse_msg();
+		int		parse_msg(int sd);
 		bool	check_password(std::string password);
 		void	close_all();
-		std::map <std::string, User> getUsers();
-		void	add_user(User &newUser);
-		void	create_user(std::string msg);
-		void	remove_user(std::string nickname);
+		User	*find_by_sd(int sd);
+
+		std::vector <User *>	getUsers();
+		std::string 		getPassword();
+
+		void	add_user(User *newUser);
+		void	create_user(std::string msg, int sd);
+		void	remove_user(int sd);
 		void	print_users();
+
+	private:
+
+		std::string password;
+		data serverdata;
+		std::vector <User *> users;
 };
 
 #endif
