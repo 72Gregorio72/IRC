@@ -1,12 +1,18 @@
 #include "Server.hpp"
+#include <string>
 
-Server::Server() : password("1234") {}
+Server::Server() : password("1234"), serverName("Pranglost") {}
 
-Server::~Server() {}
+Server::~Server() {
+    for (size_t i = 0; i < users.size(); i++) {
+        delete users[i];
+    }
+    users.clear();
+}
 
-Server::Server(std::string pass) : password(pass) {}
+Server::Server(std::string pass) : password(pass), serverName("Pranglost") {}
 
-Server::Server(const Server &other) : password(other.password) {}
+Server::Server(const Server &other) : password(other.password), serverName(other.serverName) {}
 
 Server& Server::operator=(const Server &other){
 	if (this == &other)
@@ -19,11 +25,43 @@ std::string Server::getPassword(){
 	return password;
 }
 
+std::string Server::getServerName(){
+	return serverName;
+}
+
+void	Server::add_user(User *newUser){
+	users.push_back(newUser);
+}
+
+void Server::remove_user(int sd){
+    for (std::vector<User*>::iterator it = users.begin(); it != users.end(); ++it) {
+        if ((*it)->sd == sd) {
+            // std::cout << "Removing user with socket: " << sd << std::endl;
+            FD_CLR((*it)->sd, &serverdata.master_fd);
+            delete *it;
+            users.erase(it);
+            break;
+        }
+    }
+}
+
+void	Server::print_users(){
+	std::cout << "Current users:" << std::endl;
+	for (int i = 0; i < (int)users.size(); ++i) {
+		std::cout << "User " << i + 1 << ":" << std::endl;
+		users[i]->printUser();
+	}
+}
+
+std::vector <User *> Server::getUsers(){
+	return users;
+}
+
 void	Server::open_server(char **av){
 	serverdata.socket_fd = socket(AF_INET, SOCK_STREAM, 0);
 	int opt = 1;
     if (setsockopt(serverdata.socket_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
-        perror("setsockopt");
+		std::cout << "Error: setsockopt error" << std::endl;
         exit(1);
     }
 	serverdata.port_number = std::atoi(av[1]);
@@ -56,19 +94,13 @@ bool	Server::check_password(std::string password){
 	return false;
 }
 
-void	create_user(std::string msg){
-	std::cout << "Creating user..." << std::endl;
-	std::string nickname;
+void	Server::create_user(std::string msg, int sd){
 	std::string username;
 	std::string realname;
 	std::string hostanme;
 	std::string servername;
 
-	nickname = msg.substr(0, msg.find_first_of("\n"));
-	msg.erase(0, msg.find_first_of("\n"));
-
-	msg.erase(0, 6);
-
+	msg.erase(0, 5);
 	username = msg.substr(0, msg.find_first_of(" "));
 	msg.erase(0, msg.find_first_of(" ") + 1);
 
@@ -83,32 +115,76 @@ void	create_user(std::string msg){
 	size_t pos = realname.find_first_of("\r\n");
 	if (pos != std::string::npos)
 		realname.erase(pos);
+		
+	User *user = find_by_sd(sd);
+    
+    if (user == NULL) {
+        std::cout << "Errore: utente non trovato!" << std::endl;
+        return;
+    }
 
-	User new_user = User(nickname, username, hostanme, servername, realname);
-	std::cout << "nickname: " << nickname << std::endl;
-	std::cout << "username: " << username << std::endl;
-	std::cout << "hostname: " << hostanme << std::endl;
-	std::cout << "servername: " << servername << std::endl;
-	std::cout << "realname: " << realname << std::endl;
+    // Usa la freccia -> per modificare l'oggetto REALE
+    user->setAll(username, hostanme, servername, realname);
 }
 
-void	Server::parse_msg(){
+int	Server::parse_msg(int sd){
 	std::string msg(serverdata.msg);
-	
-	if (msg.find("PASS ") != std::string::npos) {
-		if (msg.size() > 12)
+
+	if (find_by_sd(sd)->getNickName() == "") {
+		if (msg.find("CAP LS 302") != std::string::npos)
 			msg.erase(0, 12);
-		if (check_password(msg)){
-			std::cout << "Authentication correct!" << std::endl;
-		} else {
-			std::cout << "Authentication failed!" << std::endl;
+
+		if (msg.find("PASS ") != std::string::npos) {
+			if (check_password(msg) && !find_by_sd(sd)->authenticated && find_by_sd(sd)->getNickName() == "") {
+				find_by_sd(sd)->authenticated = true;
+				return 1;
+			} else {
+				return -72;
+			}
 		}
-		size_t pos = msg.find("NICK ");
-		if (pos != std::string::npos)
-			msg.erase(0, pos);
-		msg.erase(0, 4);
-		create_user(msg);
+
+		if (size_t pos = msg.find("NICK ") != std::string::npos && find_by_sd(sd)->getNickName() == "" && find_by_sd(sd)->authenticated) {
+			if (pos != std::string::npos)
+				msg.erase(0, pos);
+			msg.erase(0, 4);
+			std::string nickname = msg.substr(0, msg.find_first_of("\n"));
+			if (find_by_nickname(nickname) != NULL) {
+				reply_to_user(ERR_NICKNAMEINUSE, nickname, sd);
+				return -72;
+			}
+			msg.erase(0, msg.find_first_of("\n"));
+			find_by_sd(sd)->setNickName(nickname);
+		}
 	}
+	if (!find_by_sd(sd)->authenticated)
+		return -1;
+
+	if (msg.find("USER ") != std::string::npos && find_by_sd(sd)->getUserName() == "") {
+		create_user(msg, sd);
+	}
+
+	if (msg.find("printusers") != std::string::npos) {
+		print_users();
+	}
+	return 0;
+}
+
+User* Server::find_by_sd(int sd){
+    for (size_t i = 0; i < users.size(); i++) {
+        if (users[i]->sd == sd) {
+            return users[i];
+        }
+    }
+    return NULL;
+}
+
+User	*Server::find_by_nickname(std::string nickname){
+	for (size_t i = 0; i < users.size(); i++) {
+		if (users[i]->getNickName() == nickname) {
+			return users[i];
+		}
+	}
+	return NULL;
 }
 
 void	Server::server_loop(){
@@ -118,11 +194,13 @@ void	Server::server_loop(){
 		int activity = select(serverdata.max_sd + 1, &serverdata.read_fd, NULL, NULL, NULL);
 
 		if ((activity < 0) && (errno != EINTR)) {
-			printf("Errore in select\n");
+			std::cout << "Error: select error" << std::endl;
+			exit(0);
 		}
 		
 		for(int sd = 0; sd <= serverdata.max_sd; sd++){
 			if (FD_ISSET(sd, &serverdata.read_fd)){
+
 				if (sd == serverdata.socket_fd){
 					socklen_t client_len = sizeof(serverdata.client_sock);
 					serverdata.accept_fd = accept(serverdata.socket_fd, (struct sockaddr *) &serverdata.client_sock, &client_len);
@@ -136,26 +214,46 @@ void	Server::server_loop(){
 					if (serverdata.accept_fd > serverdata.max_sd) {
 						serverdata.max_sd = serverdata.accept_fd;
 					}
-
-					printf("New client connected to socket: %d\n", serverdata.accept_fd);
+					User *new_user = new User(serverdata.accept_fd);
+					new_user->buffer = "";
+					add_user(new_user);
 				} else {
-					bzero(serverdata.msg, 256);
-					serverdata.return_value = recv(sd, serverdata.msg, sizeof(serverdata.msg) - 1, 0);
-					if (serverdata.return_value != -1){
-						if (!serverdata.return_value){
-							printf("Client disconnected from socket: %d\n", sd);
-							close(sd);
-							FD_CLR(sd, &serverdata.master_fd);
-						} else {
-							std::cout << "MSG: " << serverdata.msg << std::endl;
-							parse_msg();
-							send(sd, serverdata.msg, serverdata.return_value, 0);
+					char buffer[256];
+					ssize_t bytes_received = recv(sd, buffer, sizeof(buffer) - 1, 0);
+					if (bytes_received > 0) {
+						buffer[bytes_received] = '\0';
+						User* user = find_by_sd(sd);
+						if (user == NULL) {
+							std::cout << "User not found for socket: " << sd << std::endl;
+							continue;
 						}
-					}
-					else{
-						perror("recv error");
-						close(sd);
-                    	FD_CLR(sd, &serverdata.master_fd);
+						user->buffer += std::string(buffer);
+						size_t pos;
+						while ((pos = user->buffer.find("\r\n")) != std::string::npos)
+						{
+							std::string complete_msg = user->buffer.substr(0, pos + 2);
+							// std::cout << "Complete message from socket " << sd << ": " << complete_msg << std::endl;
+							serverdata.msg[0] = '\0';
+							strncpy(serverdata.msg, complete_msg.c_str(), sizeof(serverdata.msg) - 1);
+							int number = parse_msg(sd);
+							if (number == -72) {
+								remove_user(sd);
+								std::cout << "Authentication Failed! " << sd << std::endl;
+								break;
+							} else if (number == 1) {
+								std::cout << "Authentication Correct! " << sd << std::endl;
+							}
+							user->buffer.erase(0, pos + 2);
+						}
+					} else if (bytes_received == 0) {
+						FD_CLR(sd, &serverdata.master_fd);
+						User *user = find_by_sd(sd);
+						if (user != NULL) {
+							remove_user(user->sd);
+						}
+					} else {
+						std::cout << "Error: recv error" << std::endl;
+					   	FD_CLR(sd, &serverdata.master_fd);
 					}
 				}
 			}

@@ -2,12 +2,30 @@
 
 User::User() : User_name(""), isOp(false) {}
 
+User::User(int sd) : User_name(""), isOp(false) {
+	this->sd = sd;
+}
+
 User::User(std::string nickname, std::string username, std::string hostname, std::string servername, std::string realname)
-: Nick_name(nickname), User_name(username), Host_name(hostname), Server_name(servername), Real_name(realname), isOp(false) {}
+: sd(-1), authenticated(false), Nick_name(nickname), User_name(username), Host_name(hostname), Server_name(servername), Real_name(realname),  isOp(false) {}
 
 User::~User() {}
 
-User::User(const User &other) : User_name(other.User_name), isOp(other.isOp) {}
+User::User(const User &other) : sd(other.sd), authenticated(false), User_name(other.User_name), isOp(other.isOp) {}
+void	User::setAll(std::string nickname, std::string username, std::string hostname, std::string servername, std::string realname){
+	this->Nick_name = nickname;
+	this->User_name = username;
+	this->Host_name = hostname;
+	this->Server_name = servername;
+	this->Real_name = realname;
+}
+
+void	User::setAll(std::string username, std::string hostname, std::string servername, std::string realname){
+	this->User_name = username;
+	this->Host_name = hostname;
+	this->Server_name = servername;
+	this->Real_name = realname;
+}
 
 User& User::operator=(const User &other){
 	if (this == &other)
@@ -17,3 +35,34 @@ User& User::operator=(const User &other){
 	return *this;
 }
 
+std::string User::getNickName(){
+	return Nick_name;
+}
+
+std::string User::getUserName(){
+	return User_name;
+}
+
+std::string User::getHostName(){
+	return Host_name;
+}
+
+std::string User::getServerName(){
+	return Server_name;
+}
+
+std::string User::getRealName(){
+	return Real_name;
+}
+
+void	User::setNickName(std::string nickname){
+	this->Nick_name = nickname;
+}
+
+void	User::printUser(){
+	std::cout << "Nickname: " << this->Nick_name << std::endl;
+	std::cout << "Username: " << this->User_name << std::endl;
+	std::cout << "Hostname: " << this->Host_name << std::endl;
+	std::cout << "Servername: " << this->Server_name << std::endl;
+	std::cout << "Realname: " << this->Real_name << std::endl;
+}

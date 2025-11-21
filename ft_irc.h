@@ -24,6 +24,10 @@
 #include <netdb.h>
 #include <signal.h>
 #include <climits>
+#include <sstream>
+#include <stdlib.h>
+
+#include "macros.h"
 
 #include <map>
 #include <vector>
@@ -32,7 +36,5 @@
 #include "Channel.hpp"
 #include "User.hpp"
 #include "Server.hpp"
-
-// void	parse_msg(data *data, std::string msg);
 
 #endif

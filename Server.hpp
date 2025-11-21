@@ -13,22 +13,44 @@ struct data{
 	fd_set read_fd;
 } typedef data;
 
+class User;
+
 class Server{
-	private:
-		std::string password;
-		data serverdata;
+
 	public:
+
 		Server();
 		~Server();
 		Server(std::string pass);
 		Server(const Server &other);
 		Server &operator=(const Server &other);
-		std::string getPassword();
+		
 		void	open_server(char **av);
 		void	server_loop();
-		void	parse_msg();
+		int		parse_msg(int sd);
 		bool	check_password(std::string password);
 		void	close_all();
+		User	*find_by_sd(int sd);
+		User	*find_by_nickname(std::string nickname);
+
+		std::vector <User *>	getUsers();
+		std::string 		getPassword();
+
+		void	add_user(User *newUser);
+		void	create_user(std::string msg, int sd);
+		void	remove_user(int sd);
+		void	print_users();
+
+		void	reply_to_user(int numErrno, std::string nickname, int sd);
+
+		std::string getServerName();
+
+	private:
+
+		std::string password;
+		data serverdata;
+		std::vector <User *> users;
+		std::string	serverName;
 };
 
 #endif

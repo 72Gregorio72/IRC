@@ -14,6 +14,4 @@ class Channel{
 		// std::vector <User> users;
 };
 
-// std::map <std::string, Channel> channels;
-
 #endif
