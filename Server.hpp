@@ -31,6 +31,7 @@ class Server{
 		bool	check_password(std::string password);
 		void	close_all();
 		User	*find_by_sd(int sd);
+		User	*find_by_nickname(std::string nickname);
 
 		std::vector <User *>	getUsers();
 		std::string 		getPassword();
@@ -40,11 +41,16 @@ class Server{
 		void	remove_user(int sd);
 		void	print_users();
 
+		void	reply_to_user(int numErrno, std::string nickname, int sd);
+
+		std::string getServerName();
+
 	private:
 
 		std::string password;
 		data serverdata;
 		std::vector <User *> users;
+		std::string	serverName;
 };
 
 #endif

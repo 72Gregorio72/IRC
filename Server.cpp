@@ -1,6 +1,7 @@
 #include "Server.hpp"
+#include <string>
 
-Server::Server() : password("1234") {}
+Server::Server() : password("1234"), serverName("Pranglost") {}
 
 Server::~Server() {
     for (size_t i = 0; i < users.size(); i++) {
@@ -9,9 +10,9 @@ Server::~Server() {
     users.clear();
 }
 
-Server::Server(std::string pass) : password(pass) {}
+Server::Server(std::string pass) : password(pass), serverName("Pranglost") {}
 
-Server::Server(const Server &other) : password(other.password) {}
+Server::Server(const Server &other) : password(other.password), serverName(other.serverName) {}
 
 Server& Server::operator=(const Server &other){
 	if (this == &other)
@@ -24,6 +25,10 @@ std::string Server::getPassword(){
 	return password;
 }
 
+std::string Server::getServerName(){
+	return serverName;
+}
+
 void	Server::add_user(User *newUser){
 	users.push_back(newUser);
 }
@@ -31,12 +36,10 @@ void	Server::add_user(User *newUser){
 void Server::remove_user(int sd){
     for (std::vector<User*>::iterator it = users.begin(); it != users.end(); ++it) {
         if ((*it)->sd == sd) {
-            std::cout << "Removing user with socket: " << sd << std::endl;
+            // std::cout << "Removing user with socket: " << sd << std::endl;
             FD_CLR((*it)->sd, &serverdata.master_fd);
-            close((*it)->sd); 
             delete *it;
             users.erase(it);
-            
             break;
         }
     }
@@ -88,8 +91,6 @@ bool	Server::check_password(std::string password){
 		password.erase(pos);
 	if (password == this->password)
 		return true;
-	// std::cout << "Received password: " << password << std::endl;
-	// std::cout << "Expected password: " << this->password << std::endl;
 	return false;
 }
 
@@ -130,16 +131,14 @@ int	Server::parse_msg(int sd){
 	std::string msg(serverdata.msg);
 
 	if (find_by_sd(sd)->getNickName() == "") {
-		std::cout << "User not found for socket: " << sd << std::endl;
 		if (msg.find("CAP LS 302") != std::string::npos)
 			msg.erase(0, 12);
 
 		if (msg.find("PASS ") != std::string::npos) {
-			if (check_password(msg)){
-				std::cout << "Authentication correct!" << std::endl;
+			if (check_password(msg) && !find_by_sd(sd)->authenticated && find_by_sd(sd)->getNickName() == "") {
 				find_by_sd(sd)->authenticated = true;
+				return 1;
 			} else {
-				std::cout << "Authentication failed!" << std::endl;
 				return -72;
 			}
 		}
@@ -149,9 +148,12 @@ int	Server::parse_msg(int sd){
 				msg.erase(0, pos);
 			msg.erase(0, 4);
 			std::string nickname = msg.substr(0, msg.find_first_of("\n"));
+			if (find_by_nickname(nickname) != NULL) {
+				reply_to_user(ERR_NICKNAMEINUSE, nickname, sd);
+				return -72;
+			}
 			msg.erase(0, msg.find_first_of("\n"));
 			find_by_sd(sd)->setNickName(nickname);
-			std::cout << "Nickname set to: " << nickname << std::endl;
 		}
 	}
 	if (!find_by_sd(sd)->authenticated)
@@ -174,6 +176,15 @@ User* Server::find_by_sd(int sd){
         }
     }
     return NULL;
+}
+
+User	*Server::find_by_nickname(std::string nickname){
+	for (size_t i = 0; i < users.size(); i++) {
+		if (users[i]->getNickName() == nickname) {
+			return users[i];
+		}
+	}
+	return NULL;
 }
 
 void	Server::server_loop(){
@@ -224,15 +235,17 @@ void	Server::server_loop(){
 							// std::cout << "Complete message from socket " << sd << ": " << complete_msg << std::endl;
 							serverdata.msg[0] = '\0';
 							strncpy(serverdata.msg, complete_msg.c_str(), sizeof(serverdata.msg) - 1);
-							if (parse_msg(sd) == -72) {
+							int number = parse_msg(sd);
+							if (number == -72) {
 								remove_user(sd);
+								std::cout << "Authentication Failed! " << sd << std::endl;
 								break;
+							} else if (number == 1) {
+								std::cout << "Authentication Correct! " << sd << std::endl;
 							}
 							user->buffer.erase(0, pos + 2);
 						}
 					} else if (bytes_received == 0) {
-						std::cout << "Socket " << sd << " disconnected." << std::endl;
-						close(sd);
 						FD_CLR(sd, &serverdata.master_fd);
 						User *user = find_by_sd(sd);
 						if (user != NULL) {
@@ -240,7 +253,6 @@ void	Server::server_loop(){
 						}
 					} else {
 						std::cout << "Error: recv error" << std::endl;
-						close(sd);
 					   	FD_CLR(sd, &serverdata.master_fd);
 					}
 				}
