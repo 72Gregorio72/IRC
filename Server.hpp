@@ -26,7 +26,12 @@ class Server{
 		Server &operator=(const Server &other);
 		
 		void	open_server(char **av);
+
 		void	server_loop();
+		void	handle_new_connection();
+		void	handle_client_read(int sd);
+		int		process_user_buffer(User *user, int sd);
+
 		int		parse_msg(int sd);
 		bool	check_password(std::string password);
 		void	close_all();
