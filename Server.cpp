@@ -152,3 +152,27 @@ User	*Server::find_by_nickname(std::string nickname){
 	}
 	return NULL;
 }
+
+void	Server::sendPrivmsg(std::string msg, User* sender)
+{
+	size_t pos = msg.find(" ");
+	std::string channelName = msg.substr(0, pos);
+	msg.erase(0, pos);
+	pos = msg.find(":");
+	msg.erase(0, pos + 1);
+	std::cout << msg << std::endl;
+	for (std::vector<Channel>::iterator it = allChannels.begin(); it != allChannels.end(); it++)
+	{;
+		if (it->getChannelName() == channelName)
+		{
+			std::vector<User> channelUsers = it->getUsers();
+			for (size_t i = 0; i < channelUsers.size(); i++)
+			{
+				std::string fullMsg = ":" + sender->getNickName() + "!" + sender->getUserName() + "@localhost PRIVMSG " + channelName + " :" + msg + "\r\n";
+				if (channelUsers[i].sd != sender->sd)
+					send(channelUsers[i].sd, fullMsg.c_str(), fullMsg.length(), 0);
+			}
+		}
+	}
+	
+}

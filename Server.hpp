@@ -49,6 +49,8 @@ class Server{
 
 		void	reply_to_user(int numErrno, std::string nickname, int sd);
 
+		void	sendPrivmsg(std::string msg, User* sender);
+
 		std::string getServerName();
 
 		Channel* findChannelByName(std::string name);
