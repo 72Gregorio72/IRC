@@ -4,11 +4,12 @@
 #include "ft_irc.h"
 
 class User;
+class Server;
 
 class Channel{
 	public:
 		Channel();
-		Channel(std::string name);
+		Channel(std::string name, Server *serv);
 		~Channel();
 		Channel(const Channel &other);
 		Channel &operator=(const Channel &other);
@@ -18,8 +19,9 @@ class Channel{
 		void addUser(User *user);
 		void removeUser(std::string nickname);
 
-		Channel *findChannelByName(std::string name);
 	private:
+
+		Server	*server;
 		std::string channel_name;
 		std::vector <User> users;
 		std::string topic;

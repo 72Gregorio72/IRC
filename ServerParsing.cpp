@@ -36,6 +36,10 @@ int	Server::parse_msg(int sd){
 		create_user(msg, sd);
 	}
 
+	if (msg.find("QUIT ") != std::string::npos && find_by_sd(sd)->getUserName() == "") {
+		remove_user(sd);
+	}
+
 	if (msg.find("printusers") != std::string::npos) {
 		print_users();
 	}
@@ -50,7 +54,7 @@ int	Server::parse_msg(int sd){
 		if (msg.find("#") != 0 && msg.find("&") != 0) {
 			msg = "#" + msg;
 		}
-		Channel channel(msg);
+		Channel channel(msg, this);
 		if (findChannelByName(channel.getChannelName()) != NULL) {
 			Channel* existingChannel = findChannelByName(channel.getChannelName());
 			existingChannel->addUser(find_by_sd(sd));

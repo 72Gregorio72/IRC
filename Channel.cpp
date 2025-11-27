@@ -9,9 +9,10 @@ Channel::~Channel() {
 	users.clear();
 }
 
-Channel::Channel(std::string name) {
+Channel::Channel(std::string name, Server *serv) {
     topic = "";
-    
+    server = serv;
+
     if (name.length() > 200 || name.empty()) {
         channel_name = "invalid";
         return;
@@ -27,6 +28,7 @@ Channel::Channel(std::string name) {
 Channel::Channel(const Channel &other) {
 	channel_name = other.channel_name;
 	users = other.users;
+	server = other.server;
 }
 
 Channel &Channel::operator=(const Channel &other) {
@@ -34,6 +36,7 @@ Channel &Channel::operator=(const Channel &other) {
 	{
 		channel_name = other.channel_name;
 		users = other.users;
+		server = other.server;
 	}
     return *this;
 }
@@ -48,7 +51,7 @@ std::vector<User> Channel::getUsers() {
 
 void Channel::addUser(User *user) {
 	users.push_back(*user);
-	user->printUser();
+	// user->printUser();
 	std::string joinMsg = ":" + user->getNickName() + "!" + user->getUserName() + "@127.0.0.1 JOIN :" + channel_name + "\r\n";
     if (users.size() == 1)
 			users.back().SetOp(true);
@@ -71,10 +74,14 @@ void Channel::addUser(User *user) {
 
 	std::cout << "Names list: " << namesList << std::endl;
 	
-    std::string nameReply = ":localhost 353 " + user->getNickName() + " = " + channel_name + " :" + namesList + "\r\n";
-	send(user->sd, nameReply.c_str(), nameReply.length(), 0);
-	std::string endNames = ":localhost 366 " + user->getNickName() + " " + channel_name + " :End of /NAMES list\r\n";
-	send(user->sd, endNames.c_str(), endNames.length(), 0);
+	server->replyServToClient(RPL_NAMREPLY, user->getNickName(), user->sd, channel_name, namesList);
+    // std::string nameReply = ":localhost 353 " + user->getNickName() + " = " + channel_name + " :" + namesList + "\r\n";
+	// send(user->sd, nameReply.c_str(), nameReply.length(), 0);
+
+	// Formato 366: :Server 366 Nick #canale :End of /NAMES list
+	server->replyServToClient(RPL_ENDOFNAMES, user->getNickName(), user->sd, channel_name, "End of /NAMES list");
+	// std::string endNames = ":localhost 366 " + user->getNickName() + " " + channel_name + " :End of /NAMES list\r\n";
+	// send(user->sd, endNames.c_str(), endNames.length(), 0);
 }
 
 void Channel::removeUser(std::string nickname) {

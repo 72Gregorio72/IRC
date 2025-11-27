@@ -9,7 +9,7 @@ User::User(int sd) : User_name(""), isOp(false) {
 User::User(std::string nickname, std::string username, std::string hostname, std::string servername, std::string realname)
 : sd(-1), authenticated(false), Nick_name(nickname), User_name(username), Host_name(hostname), Server_name(servername), Real_name(realname),  isOp(false) {}
 
-User::~User() {}
+User::~User() { authenticated = false; }
 
 User::User(const User &other) : sd(other.sd), authenticated(false), User_name(other.User_name), isOp(other.isOp) {}
 void	User::setAll(std::string nickname, std::string username, std::string hostname, std::string servername, std::string realname){
