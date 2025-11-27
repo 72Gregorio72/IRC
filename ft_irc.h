@@ -1,14 +1,5 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   ft_irc.h                                           :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: gpicchio <gpicchio@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/11/05 08:56:57 by vcastald          #+#    #+#             */
-/*   Updated: 2025/11/06 15:57:02 by gpicchio         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
+#ifndef FT_IRC_H
+#define FT_IRC_H
 
 #include <cstdlib>
 #include <cstdio>
@@ -33,3 +24,17 @@
 #include <netdb.h>
 #include <signal.h>
 #include <climits>
+#include <sstream>
+#include <stdlib.h>
+
+#include "macros.h"
+
+#include <map>
+#include <vector>
+#include <algorithm>
+
+#include "Channel.hpp"
+#include "User.hpp"
+#include "Server.hpp"
+
+#endif

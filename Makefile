@@ -1,6 +1,10 @@
 NAME		= ircserv
 
-SRCS		=   main.cpp
+SRCS		=   main.cpp Server.cpp \
+				User.cpp Channel.cpp \
+				ServerErrorMessage.cpp \
+				ServerLoop.cpp \
+				ServerParsing.cpp \
 
 OBJS		= $(SRCS:.cpp=.o)
 
