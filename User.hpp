@@ -31,6 +31,8 @@ class User{
 		void	setAll(std::string nickname, std::string username, std::string hostname, std::string servername, std::string realname);
 		void 	setAll(std::string username, std::string hostname, std::string servername, std::string realname);
 	
+		bool _isOp();
+		void SetOp(bool val);
 	private:
 		std::string Nick_name;
 		std::string User_name;
