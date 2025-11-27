@@ -5,6 +5,7 @@ SRCS		=   main.cpp Server.cpp \
 				ServerErrorMessage.cpp \
 				ServerLoop.cpp \
 				ServerParsing.cpp \
+				ServerReplyMessage.cpp \
 
 OBJS		= $(SRCS:.cpp=.o)
 

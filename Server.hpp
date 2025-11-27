@@ -48,6 +48,9 @@ class Server{
 		void	print_users();
 
 		void	reply_to_user(int numErrno, std::string nickname, int sd);
+		void    replyServToClient(int numErrno, std::string nickname, int sd, std::string channelName, std::string addMsg);
+
+
 
 		std::string getServerName();
 
