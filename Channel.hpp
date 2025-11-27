@@ -15,14 +15,13 @@ class Channel{
 
 		std::string getChannelName();
 		std::vector<User> getUsers();
-		void addUser(User user);
+		void addUser(User *user);
 		void removeUser(std::string nickname);
 
 		Channel *findChannelByName(std::string name);
 	private:
 		std::string channel_name;
 		std::vector <User> users;
-		std::vector<Channel> allChannels;
 		std::string topic;
 };
 

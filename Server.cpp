@@ -134,6 +134,15 @@ User* Server::find_by_sd(int sd){
     return NULL;
 }
 
+Channel* Server::findChannelByName(std::string name) {
+	for (size_t i = 0; i < allChannels.size(); i++) {
+		if (allChannels[i].getChannelName() == name) {
+			return &allChannels[i];
+		}
+	}
+	return NULL;
+}
+
 User	*Server::find_by_nickname(std::string nickname){
 	for (size_t i = 0; i < users.size(); i++) {
 		if (users[i]->getNickName() == nickname) {

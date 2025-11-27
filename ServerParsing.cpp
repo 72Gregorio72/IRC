@@ -42,16 +42,22 @@ int	Server::parse_msg(int sd){
 
 	if (msg.find("JOIN ") != std::string::npos) {
 		size_t pos = msg.find("JOIN ");
-		if (pos != std::string::npos)
-			msg.erase(0, pos);
+		if (pos != std::string::npos) msg.erase(0, pos);
 		msg.erase(0, 5);
 		pos = msg.find_first_of("\r\n");
-		if (pos != std::string::npos) {
-			msg = msg.substr(0, pos);
+		if (pos != std::string::npos) msg = msg.substr(0, pos);
+
+		if (msg.find("#") != 0 && msg.find("&") != 0) {
+			msg = "#" + msg;
 		}
-		std::cout << "Creating channel: " << msg << std::endl;
 		Channel channel(msg);
-		channel.addUser(*find_by_sd(sd));
+		if (findChannelByName(channel.getChannelName()) != NULL) {
+			Channel* existingChannel = findChannelByName(channel.getChannelName());
+			existingChannel->addUser(find_by_sd(sd));
+			return 0;
+		}
+		allChannels.push_back(channel);
+		allChannels.back().addUser(find_by_sd(sd));
 	}
 	return 0;
 }

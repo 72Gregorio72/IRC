@@ -10,16 +10,18 @@ Channel::~Channel() {
 }
 
 Channel::Channel(std::string name) {
-	if (channel_name[0] != '#' && channel_name[0] != '&'){
-		channel_name = "#" + channel_name;
-	}
-	if (channel_name.length() > 200) {
-		std::cout << "Error: Channel name too long." << std::endl;
-		return ;
-	}
-	channel_name = name;
-	allChannels.push_back(*this);
-	topic = "";
+    topic = "";
+    
+    if (name.length() > 200 || name.empty()) {
+        channel_name = "invalid";
+        return;
+    }
+
+    if (name[0] != '#' && name[0] != '&') {
+        channel_name = "#" + name;
+    } else {
+        channel_name = name;
+    }
 }
 
 Channel::Channel(const Channel &other) {
@@ -44,9 +46,10 @@ std::vector<User> Channel::getUsers() {
 	return users;
 }
 
-void Channel::addUser(User user) {
-	users.push_back(user);
-	std::string joinMsg = ":" + user.getNickName() + "!" + user.getUserName() + "@127.0.0.1 JOIN :" + channel_name + "\r\n";
+void Channel::addUser(User *user) {
+	users.push_back(*user);
+	user->printUser();
+	std::string joinMsg = ":" + user->getNickName() + "!" + user->getUserName() + "@127.0.0.1 JOIN :" + channel_name + "\r\n";
     
     for (size_t i = 0; i < users.size(); i++) {
         int fd = users[i].sd;
@@ -54,8 +57,8 @@ void Channel::addUser(User user) {
     }
 
 	if (!this->topic.empty()) {
-        std::string topicMsg = ":127.0.0.1 332 " + user.getNickName() + " " + channel_name + " :" + this->topic + "\r\n";
-        send(user.sd, topicMsg.c_str(), topicMsg.length(), 0);
+        std::string topicMsg = ":localhost 332 " + user->getNickName() + " " + channel_name + " :" + this->topic + "\r\n";
+        send(user->sd, topicMsg.c_str(), topicMsg.length(), 0);
     }
 
     std::string namesList = "";
@@ -64,13 +67,15 @@ void Channel::addUser(User user) {
         // Esempio: if (users[i].isOp()) namesList += "@";
         namesList += users[i].getNickName() + " ";
     }
+
+	std::cout << "Names list: " << namesList << std::endl;
 	
-    std::string nameReply = ":127.0.0.1 353 " + user.getNickName() + " = " + channel_name + " :" + namesList + "\r\n";
-	send(user.sd, nameReply.c_str(), nameReply.length(), 0);
+    std::string nameReply = ":localhost 353 " + user->getNickName() + " = " + channel_name + " :" + namesList + "\r\n";
+	send(user->sd, nameReply.c_str(), nameReply.length(), 0);
 
 	// Formato 366: :Server 366 Nick #canale :End of /NAMES list
-	std::string endNames = ":127.0.0.1 366 " + user.getNickName() + " " + channel_name + " :End of /NAMES list\r\n";
-	send(user.sd, endNames.c_str(), endNames.length(), 0);
+	std::string endNames = ":localhost 366 " + user->getNickName() + " " + channel_name + " :End of /NAMES list\r\n";
+	send(user->sd, endNames.c_str(), endNames.length(), 0);
 }
 
 void Channel::removeUser(std::string nickname) {
@@ -80,13 +85,4 @@ void Channel::removeUser(std::string nickname) {
 			break;
 		}
 	}
-}
-
-Channel* Channel::findChannelByName(std::string name) {
-	for (size_t i = 0; i < allChannels.size(); i++) {
-		if (allChannels[i].getChannelName() == name) {
-			return &allChannels[i];
-		}
-	}
-	return NULL;
 }

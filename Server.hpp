@@ -14,6 +14,7 @@ struct data{
 } typedef data;
 
 class User;
+class Channel;
 
 class Server{
 
@@ -50,8 +51,10 @@ class Server{
 
 		std::string getServerName();
 
-	private:
+		Channel* findChannelByName(std::string name);
 
+	private:
+		std::vector<Channel> allChannels;
 		std::string password;
 		data serverdata;
 		std::vector <User *> users;
