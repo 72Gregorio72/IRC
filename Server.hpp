@@ -52,6 +52,8 @@ class Server{
 
 
 
+		void	sendPrivmsg(std::string msg, User* sender);
+
 		std::string getServerName();
 
 		Channel* findChannelByName(std::string name);

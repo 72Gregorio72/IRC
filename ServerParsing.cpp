@@ -64,5 +64,16 @@ int	Server::parse_msg(int sd){
 		allChannels.push_back(channel);
 		allChannels.back().addUser(find_by_sd(sd));
 	}
+	if (msg.find("PRIVMSG ") != std::string::npos) {
+		size_t pos = msg.find("PRIVMSG ");
+		if (pos < 2) // sender 
+		{
+			msg.erase(0, 8);
+			pos = msg.find_first_of("\r\n");
+			if (pos != std::string::npos)
+				msg = msg.substr(0, pos);
+			sendPrivmsg(msg, find_by_sd(sd));
+		}
+	}
 	return 0;
 }
