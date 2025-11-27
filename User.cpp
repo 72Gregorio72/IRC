@@ -59,6 +59,14 @@ void	User::setNickName(std::string nickname){
 	this->Nick_name = nickname;
 }
 
+bool User::_isOp() {
+	return isOp;
+}
+
+void User::SetOp(bool val) {
+	isOp = val;
+}
+
 void	User::printUser(){
 	std::cout << "Nickname: " << this->Nick_name << std::endl;
 	std::cout << "Username: " << this->User_name << std::endl;
