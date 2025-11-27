@@ -110,7 +110,8 @@ void	Server::create_user(std::string msg, int sd){
 	msg.erase(0, msg.find_first_of(" ") + 1);
 
 	realname = msg;
-	realname.erase(0, 1); // real name removing :
+	realname.erase(0, 1);
+	
 	size_t pos = realname.find_first_of("\r\n");
 	if (pos != std::string::npos)
 		realname.erase(pos);
