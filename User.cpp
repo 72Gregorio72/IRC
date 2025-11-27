@@ -11,7 +11,19 @@ User::User(std::string nickname, std::string username, std::string hostname, std
 
 User::~User() { authenticated = false; }
 
-User::User(const User &other) : sd(other.sd), authenticated(false), User_name(other.User_name), isOp(other.isOp) {}
+User::User(const User &other){
+	this->sd = other.sd;
+	this->buffer = other.buffer;
+	this->authenticated = other.authenticated;
+	this->Nick_name = other.Nick_name;
+	this->User_name = other.User_name;
+	this->Host_name = other.Host_name;
+	this->Server_name = other.Server_name;
+	this->Real_name = other.Real_name;
+	this->isOp = other.isOp;
+
+}
+
 void	User::setAll(std::string nickname, std::string username, std::string hostname, std::string servername, std::string realname){
 	this->Nick_name = nickname;
 	this->User_name = username;
@@ -57,6 +69,14 @@ std::string User::getRealName(){
 
 void	User::setNickName(std::string nickname){
 	this->Nick_name = nickname;
+}
+
+bool User::_isOp() {
+	return isOp;
+}
+
+void User::SetOp(bool val) {
+	isOp = val;
 }
 
 void	User::printUser(){

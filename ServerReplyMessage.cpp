@@ -6,10 +6,10 @@ void    Server::replyServToClient(int numErrno, std::string nickname, int sd, st
 
 	switch (numErrno) {
 		case RPL_NAMREPLY:
-			msg += ":localhost 353" + nickname + " = " + channelName + " :" + addMsg + "\r\n";
+			msg += ":localhost 353 " + nickname + " = " + channelName + " :" + addMsg + "\r\n";
 			break;
 		case RPL_ENDOFNAMES:
-			msg += ":localhost 366" + nickname + " " + channelName + " :" + addMsg + "\r\n";
+			msg += ":localhost 366 " + nickname + " " + channelName + " :" + addMsg + "\r\n";
 			break;
 		default:
 			break;

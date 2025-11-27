@@ -51,9 +51,11 @@ std::vector<User> Channel::getUsers() {
 
 void Channel::addUser(User *user) {
 	users.push_back(*user);
-	// user->printUser();
+	std::cout << "User " << users[0].getNickName() << std::endl;
 	std::string joinMsg = ":" + user->getNickName() + "!" + user->getUserName() + "@127.0.0.1 JOIN :" + channel_name + "\r\n";
-    
+    if (users.size() == 1)
+			users.back().SetOp(true);
+	send(user->sd, joinMsg.c_str(), joinMsg.length(), 0);
     for (size_t i = 0; i < users.size(); i++) {
         int fd = users[i].sd;
         send(fd, joinMsg.c_str(), joinMsg.length(), 0);
@@ -66,8 +68,8 @@ void Channel::addUser(User *user) {
 
     std::string namesList = "";
     for (size_t i = 0; i < users.size(); i++) {
-        // Qui dovresti controllare se l'utente è operatore per aggiungere "@"
-        // Esempio: if (users[i].isOp()) namesList += "@";
+		if (users[i]._isOp())
+			namesList += "@";
         namesList += users[i].getNickName() + " ";
     }
 
