@@ -25,7 +25,7 @@ void	Server::replyErrToClient(int numErrno, std::string nickname, std::string ch
             break;
 		
 		case ERR_USERNOTINCHANNEL:
-            msg = ":127.0.0.1 441 " + nickname + " " + channel + " :They aren't on that channel\r\n";
+            msg = ":127.0.0.1 441 " + nickname + " " + channel + " :User not found in channel\r\n";
             break;
 
         case ERR_NOSUCHCHANNEL:
