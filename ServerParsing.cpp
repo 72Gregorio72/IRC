@@ -12,7 +12,7 @@ int	Server::parse_msg(int sd){
 				find_by_sd(sd)->authenticated = true;
 				return 1;
 			} else {
-				replyErrToClient(ERR_PASSWDMISMATCH, "", "", sd);
+				replyErrToClient(ERR_PASSWDMISMATCH, "", "", sd, "");
 				return -72;
 			}
 		}
@@ -23,8 +23,7 @@ int	Server::parse_msg(int sd){
 			msg.erase(0, 4);
 			std::string nickname = msg.substr(0, msg.find_first_of("\r\n"));
 			if (find_by_nickname(nickname) != NULL) {
-				replyErrToClient(ERR_NICKNAMEINUSE, nickname, "", sd);
-				reply_to_user(ERR_NICKNAMEINUSE, nickname, sd, "");
+				replyErrToClient(ERR_NICKNAMEINUSE, nickname, "", sd, "");
 				return -72;
 			}
 			msg.erase(0, msg.find_first_of("\r\n"));
@@ -96,7 +95,7 @@ int	Server::parse_msg(int sd){
 			return (-100);
 		}
 		if (!channelWanted->userInChannel(userToRemove->getNickName())) {
-			replyErrToClient(ERR_NOTONCHANNEL, userToRemove->getNickName(), channelWanted->getChannelName(), sd);
+			replyErrToClient(ERR_NOTONCHANNEL, userToRemove->getNickName(), channelWanted->getChannelName(), sd, "");
 			return (-72);
 		}
 
@@ -126,20 +125,19 @@ int	Server::parse_msg(int sd){
 		std::string userToKick = msg.substr(0, msg.find("\r\n"));
 		Channel* channel = findChannelByName(channelName);
 		if (channel == NULL){
-			reply_to_user(ERR_NOSUCHCHANNEL, find_by_sd(sd)->getNickName(), sd, channelName);
+			replyErrToClient(ERR_NOSUCHCHANNEL, find_by_sd(sd)->getNickName(), channelName, sd, "");
 			return -1;
 		}
 		if (channel->findUserByNickname(find_by_sd(sd)->getNickName())->_isOp() == false){
-			reply_to_user(ERR_CHANOPRIVSNEEDED, find_by_sd(sd)->getNickName(), sd, channelName);
+			replyErrToClient(ERR_CHANOPRIVSNEEDED, find_by_sd(sd)->getNickName(), channelName, sd, "");
 			return -1;
 		}
 		if (channel->findUserByNickname(find_by_sd(sd)->getNickName()) == NULL){
-			reply_to_user(ERR_NOTONCHANNEL, find_by_sd(sd)->getNickName(), sd, channelName);
+			replyErrToClient(ERR_NOTONCHANNEL, find_by_sd(sd)->getNickName(), channelName, sd, "");
 			return -1;
 		}
-		if (!channel->removeUser(userToKick)){
-			std::cout << "User to kick: " << userToKick << std::endl;
-			reply_to_user(ERR_USERNOTINCHANNEL, find_by_sd(sd)->getNickName(), sd, channelName);
+		if (channel->userInChannel(userToKick) == false){
+			replyErrToClient(ERR_USERNOTINCHANNEL, find_by_sd(sd)->getNickName(), channelName, sd, channelName);
 			return -1;
 		} else {
 			std::vector<User> users = channel->getUsers();
@@ -149,6 +147,7 @@ int	Server::parse_msg(int sd){
 				send(fd, partMsg.c_str(), partMsg.length(), 0);
 			}
 		}
+		channel->removeUser(userToKick);
 	}
 	return 0;
 }

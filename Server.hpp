@@ -47,8 +47,7 @@ class Server{
 		void	remove_user(int sd);
 		void	print_users();
 
-		void	replyErrToClient(int numErrno, std::string nickname, std::string channel, int sd);
-		void	reply_to_user(int numErrno, std::string nickname, int sd, std::string arg);
+		void	replyErrToClient(int numErrno, std::string nickname, std::string channel, int sd, std::string arg);
 		void    replyServToClient(int numErrno, std::string nickname, int sd, std::string channelName, std::string addMsg);
 
 
