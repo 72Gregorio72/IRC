@@ -21,19 +21,19 @@ void	Server::replyErrToClient(int numErrno, std::string nickname, std::string ch
 			break;
 
 		case ERR_NOSUCHNICK:
-			msg = ":127.0.0.1 401 " + nickname + " " + channel + " :No such nick/channel\r\n";
+			msg = ":localhost 401 " + nickname + " " + channel + " :No such nick/channel\r\n";
             break;
 		
 		case ERR_USERNOTINCHANNEL:
-            msg = ":127.0.0.1 441 " + nickname + " " + channel + " :They aren't on that channel\r\n";
+            msg = ":localhost 441 " + nickname + " " + channel + " :They aren't on that channel\r\n";
             break;
 
         case ERR_NOSUCHCHANNEL:
-            msg = ":127.0.0.1 403 " + nickname + " " + channel + " :No such channel\r\n";
+            msg = ":localhost 403 " + nickname + " " + channel + " :No such channel\r\n";
             break;
 
         case ERR_CHANOPRIVSNEEDED:
-            msg = ":127.0.0.1 482 " + nickname + " " + channel + " :You're not channel operator\r\n";
+            msg = ":localhost 482 " + nickname + " " + channel + " :You're not channel operator\r\n";
             break;
 		default:
 			break;

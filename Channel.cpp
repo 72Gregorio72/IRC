@@ -52,7 +52,7 @@ std::vector<User> Channel::getUsers() {
 void Channel::addUser(User *user) {
 	users.push_back(*user);
 	std::cout << "User " << users[0].getNickName() << std::endl;
-	std::string joinMsg = ":" + user->getNickName() + "!" + user->getUserName() + "@127.0.0.1 JOIN :" + channel_name + "\r\n";
+	std::string joinMsg = ":" + user->getNickName() + "!" + user->getUserName() + "@localhost JOIN :" + channel_name + "\r\n";
     if (users.size() == 1)
 			users.back().SetOp(true);
 	send(user->sd, joinMsg.c_str(), joinMsg.length(), 0);

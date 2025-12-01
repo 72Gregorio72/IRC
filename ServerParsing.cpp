@@ -65,7 +65,6 @@ int	Server::parse_msg(int sd){
 		allChannels.back().addUser(find_by_sd(sd));
 	}
 
-
 	if (msg.find("PRIVMSG ") != std::string::npos) {
 		size_t pos = msg.find("PRIVMSG ");
 		if (pos < 2) // sender 
@@ -141,7 +140,7 @@ int	Server::parse_msg(int sd){
 			return -1;
 		} else {
 			std::vector<User> users = channel->getUsers();
-			std::string partMsg = ":" + userToKick + "!" + userToKick + "@127.0.0.1 PART " + channelName + "\r\n";
+			std::string partMsg = ":" + userToKick + "!" + userToKick + "@localhost PART " + channelName + "\r\n";
 			for (size_t j = 0; j < users.size(); j++) {
 				int fd = users[j].sd;
 				send(fd, partMsg.c_str(), partMsg.length(), 0);
