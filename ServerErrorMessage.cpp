@@ -1,6 +1,6 @@
 #include "Server.hpp"
 
-void	Server::replyErrToClient(int numErrno, std::string nickname, int sd){
+void	Server::replyErrToClient(int numErrno, std::string nickname, std::string channel,int sd){
 	std::string msg = "";
 
 	switch (numErrno) {
@@ -12,6 +12,9 @@ void	Server::replyErrToClient(int numErrno, std::string nickname, int sd){
 			break;
 		case ERR_PASSWDMISMATCH:
 			msg += ":localhost 464 * :Password incorrect\r\n";
+			break;
+		case ERR_NOTONCHANNEL:
+			msg += ":localhost 442 " + nickname + channel + " :You're not on that channel\r\n";
 			break;
 		default:
 			break;

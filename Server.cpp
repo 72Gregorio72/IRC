@@ -176,3 +176,15 @@ void	Server::sendPrivmsg(std::string msg, User* sender)
 	}
 	
 }
+
+void Server::deleteChannel(std::string channelName)
+{
+    for (std::vector<Channel>::iterator it = allChannels.begin(); it != allChannels.end(); ++it)
+    {
+        if (it->getChannelName() == channelName)
+        {
+            allChannels.erase(it);
+            return;
+        }
+    }
+}
