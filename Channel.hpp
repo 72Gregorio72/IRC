@@ -23,6 +23,7 @@ class Channel{
 		
 
 		User *findUserByNickname(std::string nickname);
+		int count_operators();
 	private:
 
 		Server	*server;
