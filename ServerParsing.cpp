@@ -101,13 +101,11 @@ int	Server::parse_msg(int sd){
 
 		std::string msgToSend = ":" + userToRemove->getNickName() + "!" + userToRemove->getUserName() + "@localhost PART " + channelName + " :Leaving\r\n";
 
-			// 5. Broadcast (Invio a tutti nel canale)
 		std::vector<User> usersInChannel = channelWanted->getUsers();
 		for (size_t i = 0; i < usersInChannel.size(); i++) {
 			send(usersInChannel[i].sd, msgToSend.c_str(), msgToSend.length(), 0);
 		}
 
-		// 6. Rimozione e Pulizia
 		channelWanted->removeUser(userToRemove->getNickName());
 		
 		if (channelWanted->getUsers().empty()) {
