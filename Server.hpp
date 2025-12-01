@@ -47,7 +47,10 @@ class Server{
 		void	remove_user(int sd);
 		void	print_users();
 
-		void	reply_to_user(int numErrno, std::string nickname, int sd);
+		void	replyErrToClient(int numErrno, std::string nickname, int sd);
+		void    replyServToClient(int numErrno, std::string nickname, int sd, std::string channelName, std::string addMsg);
+
+
 
 		void	sendPrivmsg(std::string msg, User* sender);
 

@@ -12,6 +12,7 @@ int	Server::parse_msg(int sd){
 				find_by_sd(sd)->authenticated = true;
 				return 1;
 			} else {
+				replyErrToClient(ERR_PASSWDMISMATCH, "", sd);
 				return -72;
 			}
 		}
@@ -22,7 +23,7 @@ int	Server::parse_msg(int sd){
 			msg.erase(0, 4);
 			std::string nickname = msg.substr(0, msg.find_first_of("\n"));
 			if (find_by_nickname(nickname) != NULL) {
-				reply_to_user(ERR_NICKNAMEINUSE, nickname, sd);
+				replyErrToClient(ERR_NICKNAMEINUSE, nickname, sd);
 				return -72;
 			}
 			msg.erase(0, msg.find_first_of("\n"));
@@ -54,7 +55,7 @@ int	Server::parse_msg(int sd){
 		if (msg.find("#") != 0 && msg.find("&") != 0) {
 			msg = "#" + msg;
 		}
-		Channel channel(msg);
+		Channel channel(msg, this);
 		if (findChannelByName(channel.getChannelName()) != NULL) {
 			Channel* existingChannel = findChannelByName(channel.getChannelName());
 			existingChannel->addUser(find_by_sd(sd));
