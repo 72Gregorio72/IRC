@@ -1,43 +1,78 @@
 #include "Server.hpp"
 
+volatile sig_atomic_t g_sig_received = 0;
+
+void sighandler(int signum) {
+    (void)signum;
+    g_sig_received = 1;
+}
+
 void Server::server_loop() {
-	while (true) {
-		serverdata.read_fd = serverdata.master_fd;
+    // Configurazione segnali (Corretta!)
+    struct sigaction sa;
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_handler = sighandler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+    sigaction(SIGINT, &sa, NULL);
 
-		int activity = select(serverdata.max_sd + 1, &serverdata.read_fd, NULL, NULL, NULL);
-		if ((activity < 0) && (errno != EINTR)) {
-			std::cout << "Error: select error" << std::endl;
-			exit(0);
-		}
+    while (true) {
 
-		for (int sd = 0; sd <= serverdata.max_sd; ++sd) {
-			if (FD_ISSET(sd, &serverdata.read_fd)) {
-				if (sd == serverdata.socket_fd) {
-					handle_new_connection();
-				} else {
-					handle_client_read(sd);
-				}
-			}
-		}
-	}
+        if (g_sig_received)
+            break;
+        
+        serverdata.read_fd = serverdata.master_fd;
+
+        int activity = select(serverdata.max_sd + 1, &serverdata.read_fd, NULL, NULL, NULL);
+
+        if (activity < 0 && errno == EINTR) {
+            continue;
+        }
+
+        if (activity < 0) {
+            std::cout << "Error: select error" << std::endl;
+            exit(0);
+        }
+        if (activity > 0) {
+            for (int sd = 0; sd <= serverdata.max_sd; ++sd) {
+                if (FD_ISSET(sd, &serverdata.read_fd)) {
+                    if (sd == serverdata.socket_fd) {
+                        handle_new_connection();
+                    } else {
+                        handle_client_read(sd);
+                    }
+                }
+            }
+        }
+    }
 }
 
 void Server::handle_new_connection() {
-	socklen_t client_len = sizeof(serverdata.client_sock);
-	serverdata.accept_fd = accept(serverdata.socket_fd, (struct sockaddr *)&serverdata.client_sock, &client_len);
-	if (serverdata.accept_fd < 0) {
-		std::cout << "Error: accept error" << std::endl;
-		return;
-	}
+    socklen_t client_len = sizeof(serverdata.client_sock);
+    
+    int new_fd = accept(serverdata.socket_fd, (struct sockaddr *)&serverdata.client_sock, &client_len);
 
-	FD_SET(serverdata.accept_fd, &serverdata.master_fd);
-	if (serverdata.accept_fd > serverdata.max_sd) {
-		serverdata.max_sd = serverdata.accept_fd;
-	}
+    if (new_fd < 0) {
+        if (errno != EINTR) {
+            std::cout << "Error: accept error" << std::endl;
+        }
+        return; 
+    }
 
-	User *new_user = new User(serverdata.accept_fd);
-	new_user->buffer = "";
-	add_user(new_user);
+    serverdata.accept_fd = new_fd;
+
+    fcntl(new_fd, F_SETFL, O_NONBLOCK);
+
+    FD_SET(serverdata.accept_fd, &serverdata.master_fd);
+    if (serverdata.accept_fd > serverdata.max_sd) {
+        serverdata.max_sd = serverdata.accept_fd;
+    }
+
+    User *new_user = new User(serverdata.accept_fd);
+    new_user->buffer = "";
+    add_user(new_user);
+    
+    std::cout << "Nuova connessione, socket fd: " << new_fd << std::endl;
 }
 
 void Server::handle_client_read(int sd) {
@@ -77,7 +112,6 @@ int Server::process_user_buffer(User *user, int sd) {
 
 		serverdata.msg[0] = '\0';
 		strncpy(serverdata.msg, complete_msg.c_str(), sizeof(serverdata.msg) - 1);
-
 		int number = parse_msg(sd);
 		if (number == -72) {
 			remove_user(sd);
@@ -91,8 +125,19 @@ int Server::process_user_buffer(User *user, int sd) {
 	return 0;
 }
 
-void	Server::close_all()
-{
-	close(serverdata.accept_fd);
-	close(serverdata.socket_fd);
+void Server::close_all() {
+
+    if (serverdata.accept_fd >= 0) {
+        close(serverdata.accept_fd);
+        serverdata.accept_fd = -1;
+    }
+    
+    if (serverdata.socket_fd >= 0) {
+        close(serverdata.socket_fd);
+        serverdata.socket_fd = -1;
+    }
+
+	for (size_t i = 0; i < users.size(); i++) {
+		close(users[i]->sd);
+	}
 }

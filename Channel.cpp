@@ -76,13 +76,8 @@ void Channel::addUser(User *user) {
 	std::cout << "Names list: " << namesList << std::endl;
 	
 	server->replyServToClient(RPL_NAMREPLY, user->getNickName(), user->sd, channel_name, namesList);
-    // std::string nameReply = ":localhost 353 " + user->getNickName() + " = " + channel_name + " :" + namesList + "\r\n";
-	// send(user->sd, nameReply.c_str(), nameReply.length(), 0);
 
-	// Formato 366: :Server 366 Nick #canale :End of /NAMES list
 	server->replyServToClient(RPL_ENDOFNAMES, user->getNickName(), user->sd, channel_name, "End of /NAMES list");
-	// std::string endNames = ":localhost 366 " + user->getNickName() + " " + channel_name + " :End of /NAMES list\r\n";
-	// send(user->sd, endNames.c_str(), endNames.length(), 0);
 }
 
 User *Channel::findUserByNickname(std::string nickname) {
@@ -111,4 +106,14 @@ bool	Channel::userInChannel(std::string nickname)
 			return (true);
 	}
 	return (false);
+}
+
+int	Channel::count_operators()
+{
+	int count = 0;
+	for (size_t i = 0; i < users.size(); i++) {
+		if (users[i]._isOp())
+			count++;
+	}
+	return (count);
 }

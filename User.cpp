@@ -1,9 +1,8 @@
 #include "User.hpp"
 
-User::User() : User_name(""), isOp(false) {}
+User::User() : buffer(""), sd(-1), authenticated(false), Nick_name(""), User_name(""), Host_name(""), Server_name(""), Real_name(""), isOp(false){}
 
-User::User(int sd) : User_name(""), isOp(false) {
-	this->sd = sd;
+User::User(int sd) :  buffer(""), sd(sd), authenticated(false), Nick_name(""), User_name(""), Host_name(""), Server_name(""), Real_name(""), isOp(false){
 }
 
 User::User(std::string nickname, std::string username, std::string hostname, std::string servername, std::string realname)
