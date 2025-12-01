@@ -198,20 +198,6 @@ int Server::parse_msg(int sd) {
 			}
 		}
 		while (pos != std::string::npos);
-	}
-        if (msg.find("#") != 0 && msg.find("&") != 0) {
-            msg = "#" + msg;
-        }
-        
-        Channel* existingChannel = findChannelByName(msg);
-        if (existingChannel != NULL) {
-            existingChannel->addUser(find_by_sd(sd));
-        } else {
-            Channel channel(msg, this);
-            allChannels.push_back(channel);
-            allChannels.back().addUser(find_by_sd(sd));
-        }
-        return 0;
     }
 
     else if (msg.find("PRIVMSG ") != std::string::npos) {
