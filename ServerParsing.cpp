@@ -69,7 +69,31 @@ int Server::part(std::string msg, int sd){
 	for (size_t i = 0; i < usersInChannel.size(); i++) {
 		send(usersInChannel[i].sd, msgToSend.c_str(), msgToSend.length(), 0);
 	}
-	channelWanted->removeUser(userToRemove->getNickName());
+	if (channelWanted->findUserByNickname(userToRemove->getNickName())->_isOp() == true && channelWanted->count_operators() < 2) {
+		channelWanted->removeUser(userToRemove->getNickName());
+		usersInChannel = channelWanted->getUsers();
+		for (size_t i = 0; i < usersInChannel.size(); i++) {
+			if (usersInChannel[i].getNickName() != userToRemove->getNickName()) {
+				usersInChannel[i].SetOp(true);
+				usersInChannel = channelWanted->getUsers();
+				std::string namesList = "";
+				for (size_t i = 0; i < usersInChannel.size(); i++) {
+					if (usersInChannel[i]._isOp())
+						namesList += "@";
+					namesList += usersInChannel[i].getNickName() + " ";
+				}
+				std::cout << "Names list: " << namesList << std::endl;
+				replyServToClient(RPL_NAMREPLY, usersInChannel[i].getNickName(), usersInChannel[i].sd, channelName, namesList);
+				replyServToClient(RPL_ENDOFNAMES, usersInChannel[i].getNickName(), usersInChannel[i].sd, channelName, "End of /NAMES list");
+				std::string opMsg = ":" + usersInChannel[i].getNickName() + " is now channel operator\r\n";
+				for (size_t j = 0; j < usersInChannel.size(); j++) {
+					send(usersInChannel[j].sd, opMsg.c_str(), opMsg.length(), 0);
+				}
+				break;
+			}
+		}
+	} else
+		channelWanted->removeUser(userToRemove->getNickName());
 	
 	if (channelWanted->getUsers().empty()) {
 		deleteChannel(channelName);
