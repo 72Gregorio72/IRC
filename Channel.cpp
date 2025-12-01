@@ -85,11 +85,30 @@ void Channel::addUser(User *user) {
 	// send(user->sd, endNames.c_str(), endNames.length(), 0);
 }
 
-void Channel::removeUser(std::string nickname) {
-	for (std::vector<User>::iterator it = users.begin(); it != users.end(); ++it) {
-		if (it->getNickName() == nickname) {
-			users.erase(it);
-			break;
+User *Channel::findUserByNickname(std::string nickname) {
+	for (size_t i = 0; i < users.size(); i++) {
+		if (users[i].getNickName() == nickname) {
+			return &users[i];
 		}
 	}
+	return NULL;
+}
+
+int Channel::removeUser(std::string nickname) {
+	for (size_t i = 0; i < users.size(); i++) {
+		if (users[i].getNickName() == nickname) {
+			users.erase(users.begin() + i);
+			return 1;
+		}
+	}
+	return 0;
+}
+
+bool	Channel::userInChannel(std::string nickname)
+{
+	for (std::vector<User>::iterator it = users.begin(); it != users.end(); ++it) {
+		if (it->getNickName() == nickname)
+			return (true);
+	}
+	return (false);
 }

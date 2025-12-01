@@ -46,7 +46,7 @@ push: fclean
 testosterone: re
 	make clean
 	@clear
-	@./$(NAME)
+	@./$(NAME) 7272 1234
 
 #COLORS
 
