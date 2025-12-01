@@ -70,6 +70,7 @@ void	Server::open_server(char **av){
         close(serverdata.socket_fd);
         exit(1);
     }
+	
 	serverdata.port_number = std::atoi(av[1]);
 	bzero((char *) &serverdata.server_sock, sizeof(serverdata.server_sock));
 	serverdata.server_sock.sin_port = htons(serverdata.port_number);
