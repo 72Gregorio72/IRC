@@ -35,7 +35,7 @@ re: fclean all
 vale: re
 	make clean
 	@clear
-	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --track-fds=yes ./$(NAME)
+	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --track-fds=yes ./$(NAME) 7272 1234
 
 push: fclean
 	if [ -d .vscode ]; then \

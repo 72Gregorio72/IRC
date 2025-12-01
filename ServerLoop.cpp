@@ -77,7 +77,6 @@ int Server::process_user_buffer(User *user, int sd) {
 
 		serverdata.msg[0] = '\0';
 		strncpy(serverdata.msg, complete_msg.c_str(), sizeof(serverdata.msg) - 1);
-
 		int number = parse_msg(sd);
 		if (number == -72) {
 			remove_user(sd);

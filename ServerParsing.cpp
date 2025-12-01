@@ -1,11 +1,15 @@
 #include "Server.hpp"
 
 int	Server::parse_msg(int sd){
+	if (sd < 0)
+		return -1;
 	std::string msg(serverdata.msg);
 
 	if (find_by_sd(sd)->getNickName() == "") {
-		if (msg.find("CAP LS 302") != std::string::npos)
+		if (msg.find("CAP LS 302") != std::string::npos) {
 			msg.erase(0, 12);
+			return 0;
+		}
 
 		if (msg.find("PASS ") != std::string::npos) {
 			if (check_password(msg) && !find_by_sd(sd)->authenticated && find_by_sd(sd)->getNickName() == "") {
@@ -16,7 +20,6 @@ int	Server::parse_msg(int sd){
 				return -72;
 			}
 		}
-
 		if (size_t pos = msg.find("NICK ") != std::string::npos && find_by_sd(sd)->getNickName() == "" && find_by_sd(sd)->authenticated) {
 			if (pos != std::string::npos)
 				msg.erase(0, pos);
@@ -28,8 +31,10 @@ int	Server::parse_msg(int sd){
 			}
 			msg.erase(0, msg.find_first_of("\r\n"));
 			find_by_sd(sd)->setNickName(nickname);
+			return 0;
 		}
 	}
+
 	if (!find_by_sd(sd)->authenticated)
 		return -1;
 
@@ -39,6 +44,8 @@ int	Server::parse_msg(int sd){
 
 	if (msg.find("QUIT ") != std::string::npos && find_by_sd(sd)->getUserName() == "") {
 		remove_user(sd);
+		for (size_t i = 0; i < allChannels.size(); i++)
+			allChannels[i].removeUser(find_by_sd(sd)->getNickName());
 	}
 
 	if (msg.find("printusers") != std::string::npos) {
@@ -68,7 +75,7 @@ int	Server::parse_msg(int sd){
 
 	if (msg.find("PRIVMSG ") != std::string::npos) {
 		size_t pos = msg.find("PRIVMSG ");
-		if (pos < 2) // sender 
+		if (pos < 2)
 		{
 			msg.erase(0, 8);
 			pos = msg.find_first_of("\r\n");
@@ -79,7 +86,6 @@ int	Server::parse_msg(int sd){
 	}
 
 	if (msg.find("PART ") != std::string::npos) {
-	
 		size_t pos = msg.find("PART ");
 		if (pos != std::string::npos) msg.erase(0, pos);
 		msg.erase(0, 5);
@@ -100,14 +106,10 @@ int	Server::parse_msg(int sd){
 		}
 
 		std::string msgToSend = ":" + userToRemove->getNickName() + "!" + userToRemove->getUserName() + "@localhost PART " + channelName + " :Leaving\r\n";
-
-			// 5. Broadcast (Invio a tutti nel canale)
 		std::vector<User> usersInChannel = channelWanted->getUsers();
 		for (size_t i = 0; i < usersInChannel.size(); i++) {
 			send(usersInChannel[i].sd, msgToSend.c_str(), msgToSend.length(), 0);
 		}
-
-		// 6. Rimozione e Pulizia
 		channelWanted->removeUser(userToRemove->getNickName());
 		
 		if (channelWanted->getUsers().empty()) {
