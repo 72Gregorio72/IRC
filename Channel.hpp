@@ -17,11 +17,12 @@ class Channel{
 		std::string getChannelName();
 		std::vector<User> getUsers();
 		void addUser(User *user);
-		void removeUser(std::string nickname);
+		int removeUser(std::string nickname);
 
 		bool	userInChannel(std::string nickname);
 		
 
+		User *findUserByNickname(std::string nickname);
 	private:
 
 		Server	*server;
