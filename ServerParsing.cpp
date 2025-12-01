@@ -168,17 +168,39 @@ int	Server::parse_msg(int sd){
 		pos = msg.find_first_of("\r\n");
 		if (pos != std::string::npos) msg = msg.substr(0, pos);
 
-		if (msg.find("#") != 0 && msg.find("&") != 0) {
-			msg = "#" + msg;
+		do {
+			pos = msg.find_first_of(",");
+			std::string channelName;;
+			if (pos != std::string::npos)
+			{
+				channelName = msg.substr(0, pos);
+				msg.erase(0, pos + 1);
+			}
+			else
+				channelName = msg;
+			if (channelName.find("#") != 0 && channelName.find("&") != 0) {
+				channelName = "#" + channelName;
+			}
+			Channel channel(channelName, this);
+			if (findChannelByName(channel.getChannelName()) != NULL) {
+				Channel* existingChannel = findChannelByName(channel.getChannelName());
+				std::vector<User> users = existingChannel->getUsers();
+				for (std::vector<User>::iterator it = users.begin(); it != users.end(); ++it)
+				{
+					if (it->sd != sd)
+					{
+						existingChannel->addUser(find_by_sd(sd));
+						continue ;
+					}
+				}
+			}
+			if (findChannelByName(channel.getChannelName()) == NULL)
+			{
+				allChannels.push_back(channel);
+				allChannels.back().addUser(find_by_sd(sd));
+			}
 		}
-		Channel channel(msg, this);
-		if (findChannelByName(channel.getChannelName()) != NULL) {
-			Channel* existingChannel = findChannelByName(channel.getChannelName());
-			existingChannel->addUser(find_by_sd(sd));
-			return 0;
-		}
-		allChannels.push_back(channel);
-		allChannels.back().addUser(find_by_sd(sd));
+		while (pos != std::string::npos);
 	}
 
 	if (msg.find("PRIVMSG ") != std::string::npos) {
