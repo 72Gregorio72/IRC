@@ -108,8 +108,10 @@ int	Server::parse_msg(int sd){
 		std::string msgToSend = ":" + userToRemove->getNickName() + "!" + userToRemove->getUserName() + "@localhost PART " + channelName + " :Leaving\r\n";
 		std::vector<User> usersInChannel = channelWanted->getUsers();
 		for (size_t i = 0; i < usersInChannel.size(); i++) {
-			send(usersInChannel[i].sd, msgToSend.c_str(), msgToSend.length(), 0);
+			if (usersInChannel[i].sd != sd)
+				send(usersInChannel[i].sd, msgToSend.c_str(), msgToSend.length(), 0);
 		}
+
 		channelWanted->removeUser(userToRemove->getNickName());
 		
 		if (channelWanted->getUsers().empty()) {

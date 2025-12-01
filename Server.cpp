@@ -57,10 +57,17 @@ std::vector <User *> Server::getUsers(){
 }
 
 void	Server::open_server(char **av){
+	serverdata.accept_fd = -1;
 	serverdata.socket_fd = socket(AF_INET, SOCK_STREAM, 0);
 	int opt = 1;
     if (setsockopt(serverdata.socket_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
 		std::cout << "Error: setsockopt error" << std::endl;
+        exit(1);
+    }
+
+	if (fcntl(serverdata.socket_fd, F_SETFL, O_NONBLOCK) < 0) {
+        std::cout << "Error: fcntl error" << std::endl;
+        close(serverdata.socket_fd);
         exit(1);
     }
 	serverdata.port_number = std::atoi(av[1]);
