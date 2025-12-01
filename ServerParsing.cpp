@@ -20,12 +20,12 @@ int	Server::parse_msg(int sd){
 			if (pos != std::string::npos)
 				msg.erase(0, pos);
 			msg.erase(0, 4);
-			std::string nickname = msg.substr(0, msg.find_first_of("\n"));
+			std::string nickname = msg.substr(0, msg.find_first_of("\r\n"));
 			if (find_by_nickname(nickname) != NULL) {
-				reply_to_user(ERR_NICKNAMEINUSE, nickname, sd);
+				reply_to_user(ERR_NICKNAMEINUSE, nickname, sd, "");
 				return -72;
 			}
-			msg.erase(0, msg.find_first_of("\n"));
+			msg.erase(0, msg.find_first_of("\r\n"));
 			find_by_sd(sd)->setNickName(nickname);
 		}
 	}
@@ -62,6 +62,40 @@ int	Server::parse_msg(int sd){
 		}
 		allChannels.push_back(channel);
 		allChannels.back().addUser(find_by_sd(sd));
+	}
+
+	if (msg.find("KICK ") != std::string::npos){
+		size_t pos = msg.find("KICK ");
+		if (pos != std::string::npos) msg.erase(0, pos);
+		msg.erase(0, 5);
+		std::string channelName = msg.substr(0, msg.find(" "));
+		msg.erase(0, msg.find(" ") + 1);
+		std::string userToKick = msg.substr(0, msg.find("\r\n"));
+		Channel* channel = findChannelByName(channelName);
+		if (channel == NULL){
+			reply_to_user(ERR_NOSUCHCHANNEL, find_by_sd(sd)->getNickName(), sd, channelName);
+			return -1;
+		}
+		if (channel->findUserByNickname(find_by_sd(sd)->getNickName())->_isOp() == false){
+			reply_to_user(ERR_CHANOPRIVSNEEDED, find_by_sd(sd)->getNickName(), sd, channelName);
+			return -1;
+		}
+		if (channel->findUserByNickname(find_by_sd(sd)->getNickName()) == NULL){
+			reply_to_user(ERR_NOTONCHANNEL, find_by_sd(sd)->getNickName(), sd, channelName);
+			return -1;
+		}
+		if (!channel->removeUser(userToKick)){
+			std::cout << "User to kick: " << userToKick << std::endl;
+			reply_to_user(ERR_USERNOTINCHANNEL, find_by_sd(sd)->getNickName(), sd, channelName);
+			return -1;
+		} else {
+			std::vector<User> users = channel->getUsers();
+			std::string partMsg = ":" + userToKick + "!" + userToKick + "@127.0.0.1 PART " + channelName + "\r\n";
+			for (size_t j = 0; j < users.size(); j++) {
+				int fd = users[j].sd;
+				send(fd, partMsg.c_str(), partMsg.length(), 0);
+			}
+		}
 	}
 	return 0;
 }
