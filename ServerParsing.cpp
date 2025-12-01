@@ -181,7 +181,6 @@ int	Server::parse_msg(int sd){
 		allChannels.back().addUser(find_by_sd(sd));
 	}
 
-
 	if (msg.find("PRIVMSG ") != std::string::npos) {
 		size_t pos = msg.find("PRIVMSG ");
 		if (pos < 2)
