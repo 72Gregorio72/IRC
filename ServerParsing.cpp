@@ -34,7 +34,7 @@ int Server::kick(std::string msg, int sd){
 		return -1;
 	} else {
 		std::vector<User> users = channel->getUsers();
-		std::string partMsg = ":" + userToKick + "!" + userToKick + "@127.0.0.1 PART " + channelName + " :" + reason + "\r\n";
+		std::string partMsg = ":" + userToKick + "!" + userToKick + "@localhost PART " + channelName + " :" + reason + "\r\n";
 		for (size_t j = 0; j < users.size(); j++) {
 			int fd = users[j].sd;
 			send(fd, partMsg.c_str(), partMsg.length(), 0);
@@ -59,7 +59,9 @@ int Server::part(std::string msg, int sd){
 		std::cout << channelName << std::endl;
 		return (-100);
 	}
-	if (!channelWanted->userInChannel(userToRemove->getNickName())) {
+
+	if (!channelWanted->userInChannel(userToRemove->getNickName()) && !channelWanted->getUsers().empty()) {
+		std::cout << "ciao" << std::endl;
 		replyErrToClient(ERR_NOTONCHANNEL, userToRemove->getNickName(), channelWanted->getChannelName(), sd, "");
 		return (-72);
 	}
@@ -71,29 +73,24 @@ int Server::part(std::string msg, int sd){
 		send(usersInChannel[i].sd, msgToSend.c_str(), msgToSend.length(), 0);
 	}
 
-	if (channelWanted->findUserByNickname(userToRemove->getNickName())->_isOp() == true && channelWanted->count_operators() < 2) {
+	if (userToRemove->_isOp() == true && channelWanted->count_operators() < 2) {
 		channelWanted->removeUser(userToRemove->getNickName());
 		usersInChannel = channelWanted->getUsers();
-		for (size_t i = 0; i < usersInChannel.size(); i++) {
-			if (usersInChannel[i].getNickName() != userToRemove->getNickName()) {
-				usersInChannel[i].SetOp(true);
-				usersInChannel = channelWanted->getUsers();
-				std::string namesList = "";
-				for (size_t i = 0; i < usersInChannel.size(); i++) {
-					if (usersInChannel[i]._isOp())
-						namesList += "@";
-					namesList += usersInChannel[i].getNickName() + " ";
-				}
-				std::cout << "Names list: " << namesList << std::endl;
-				replyServToClient(RPL_NAMREPLY, usersInChannel[i].getNickName(), usersInChannel[i].sd, channelName, namesList);
-				replyServToClient(RPL_ENDOFNAMES, usersInChannel[i].getNickName(), usersInChannel[i].sd, channelName, "End of /NAMES list");
-				std::string opMsg = ":" + usersInChannel[i].getNickName() + " is now channel operator\r\n";
-				for (size_t j = 0; j < usersInChannel.size(); j++) {
-					send(usersInChannel[j].sd, opMsg.c_str(), opMsg.length(), 0);
-				}
-				break;
-			}
-		}
+		std::vector<User> users = channelWanted->getUsers(); 
+
+		// for (size_t i = 0; i < users.size(); i++) {
+		// 	if (users[i].getNickName() != userToRemove->getNickName()) {
+		// 		User* newOp = channelWanted->findUserByNickname(users[i].getNickName());
+		// 		if (newOp)
+		// 			newOp->SetOp(true);
+		// 		std::string opMsg = ":localhost MODE " + channelName + " +o " + users[i].getNickName() + "\r\n";
+		// 		users = channelWanted->getUsers();
+		// 		for (size_t j = 0; j < users.size(); j++) {
+		// 			send(users[j].sd, opMsg.c_str(), opMsg.length(), 0);
+		// 		}
+		// 		break;
+		// 	}
+		// }
 	} else
 		channelWanted->removeUser(userToRemove->getNickName());
 	
@@ -137,66 +134,76 @@ int Server::parse_entry(std::string msg, int sd){
 	return 0;
 }
 
-int	Server::parse_msg(int sd){
-	if (sd < 0)
-		return -1;
-	std::string msg(serverdata.msg);
+int Server::parse_msg(int sd) {
+    if (sd < 0)
+        return -1;
+    
+    std::string msg(serverdata.msg);
 
-	if (parse_entry(msg, sd) == -72)
-		return -72;
+    if (parse_entry(msg, sd) == -72)
+        return -72;
 
-	if (!find_by_sd(sd)->authenticated)
-		return -1;
+    if (!find_by_sd(sd)->authenticated)
+        return -1;
 
-	if (msg.find("USER ") != std::string::npos && find_by_sd(sd)->getUserName() == "")
-		create_user(msg, sd);
+    if (msg.find("USER ") != std::string::npos && find_by_sd(sd)->getUserName() == "") {
+        create_user(msg, sd);
+        return 0;
+    }
 
-	if (msg.find("QUIT ") != std::string::npos && find_by_sd(sd)->getUserName() == "") {
-		remove_user(sd);
-		for (size_t i = 0; i < allChannels.size(); i++)
-			allChannels[i].removeUser(find_by_sd(sd)->getNickName());
-	}
+    if (msg.find("QUIT ") != std::string::npos) {
+        remove_user(sd);
+        for (size_t i = 0; i < allChannels.size(); i++)
+            allChannels[i].removeUser(find_by_sd(sd)->getNickName());
+        return 0;
+    }
 
-	if (msg.find("printusers") != std::string::npos) {
-		print_users();
-	}
+    if (msg.find("JOIN ") != std::string::npos) {
+        size_t pos = msg.find("JOIN ");
+        if (pos != std::string::npos) msg.erase(0, pos);
+        msg.erase(0, 5);
+        pos = msg.find_first_of("\r\n");
+        if (pos != std::string::npos) msg = msg.substr(0, pos);
 
-	if (msg.find("JOIN ") != std::string::npos) {
-		size_t pos = msg.find("JOIN ");
-		if (pos != std::string::npos) msg.erase(0, pos);
-		msg.erase(0, 5);
-		pos = msg.find_first_of("\r\n");
-		if (pos != std::string::npos) msg = msg.substr(0, pos);
+        if (msg.find("#") != 0 && msg.find("&") != 0) {
+            msg = "#" + msg;
+        }
+        
+        Channel* existingChannel = findChannelByName(msg);
+        if (existingChannel != NULL) {
+            existingChannel->addUser(find_by_sd(sd));
+        } else {
+            Channel channel(msg, this);
+            allChannels.push_back(channel);
+            allChannels.back().addUser(find_by_sd(sd));
+        }
+        return 0;
+    }
 
-		if (msg.find("#") != 0 && msg.find("&") != 0) {
-			msg = "#" + msg;
-		}
-		Channel channel(msg, this);
-		if (findChannelByName(channel.getChannelName()) != NULL) {
-			Channel* existingChannel = findChannelByName(channel.getChannelName());
-			existingChannel->addUser(find_by_sd(sd));
-			return 0;
-		}
-		allChannels.push_back(channel);
-		allChannels.back().addUser(find_by_sd(sd));
-	}
+    else if (msg.find("PRIVMSG ") != std::string::npos) {
+        size_t pos = msg.find("PRIVMSG ");
+        if (pos != std::string::npos) 
+        {
+            msg.erase(0, pos + 8);
+            pos = msg.find_first_of("\r\n");
+            if (pos != std::string::npos)
+                msg = msg.substr(0, pos);
+            sendPrivmsg(msg, find_by_sd(sd));
+        }
+        return 0;
+    }
 
-	if (msg.find("PRIVMSG ") != std::string::npos) {
-		size_t pos = msg.find("PRIVMSG ");
-		if (pos < 2)
-		{
-			msg.erase(0, 8);
-			pos = msg.find_first_of("\r\n");
-			if (pos != std::string::npos)
-				msg = msg.substr(0, pos);
-			sendPrivmsg(msg, find_by_sd(sd));
-		}
-	}
+    else if (msg.find("PART ") != std::string::npos) {
+        return (part(msg, sd));
+    }
 
-	if (msg.find("PART ") != std::string::npos)
-		return (part(msg, sd));
+    else if (msg.find("KICK ") != std::string::npos) {
+        return (kick(msg, sd));
+    }
+    if (msg.find("printusers") != std::string::npos) {
+        print_users();
+        return 0;
+    }
 
-	if (msg.find("KICK ") != std::string::npos)
-		return (kick(msg, sd));
-	return 0;
+    return 0;
 }
