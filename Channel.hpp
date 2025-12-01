@@ -19,6 +19,9 @@ class Channel{
 		void addUser(User *user);
 		int removeUser(std::string nickname);
 
+		bool	userInChannel(std::string nickname);
+		
+
 		User *findUserByNickname(std::string nickname);
 	private:
 

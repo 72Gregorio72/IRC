@@ -1,15 +1,23 @@
 #include "Server.hpp"
 
+void	Server::replyErrToClient(int numErrno, std::string nickname, std::string channel,int sd){
 void	Server::reply_to_user(int numErrno, std::string nickname, int sd, std::string arg){
 	std::string msg = "";
 
 	switch (numErrno) {
 		case ERR_NICKNAMEINUSE:
-			msg += ":127.0.0.1 433  *" + nickname + " :Nickname is already in use\r\n";
+			msg += ":localhost 433  *" + nickname + " :Nickname is already in use\r\n";
 			break;
 
 		case ERR_UNKNOWNCOMMAND:
 			msg = "Unknown command.";
+			break;
+		case ERR_PASSWDMISMATCH:
+			msg += ":localhost 464 * :Password incorrect\r\n";
+			break;
+		case ERR_NOTONCHANNEL:
+			msg += ":localhost 442 " + nickname + channel + " :You're not on that channel\r\n";
+			break;
 			break;
 
 		case ERR_NOSUCHNICK:

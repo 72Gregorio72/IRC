@@ -103,3 +103,12 @@ int Channel::removeUser(std::string nickname) {
 	}
 	return 0;
 }
+
+bool	Channel::userInChannel(std::string nickname)
+{
+	for (std::vector<User>::iterator it = users.begin(); it != users.end(); ++it) {
+		if (it->getNickName() == nickname)
+			return (true);
+	}
+	return (false);
+}
