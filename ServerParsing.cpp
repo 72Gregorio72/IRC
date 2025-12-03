@@ -229,10 +229,12 @@ int Server::parse_msg(int sd) {
     }
 
     if (msg.find("QUIT ") != std::string::npos) {
-        for (size_t i = 0; i < allChannels.size(); i++)
+        for (size_t i = 0; i < allChannels.size(); i++) {
 			if (allChannels[i].userInChannel(find_by_sd(sd)->getNickName()))
             	allChannels[i].removeUser(find_by_sd(sd)->getNickName());
+		}
 		remove_user(sd);
+		close(sd);
         return 0;
     }
 
