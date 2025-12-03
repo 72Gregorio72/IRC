@@ -112,6 +112,78 @@ int Server::parse_entry(std::string msg, int sd){
 	return 0;
 }
 
+int Server::topic(std::string msg, int sd) {
+    User *userSender = find_by_sd(sd);
+
+    size_t pos = msg.find("TOPIC");
+    if (pos != std::string::npos) 
+        msg = msg.substr(pos + 5); 
+    pos = msg.find_last_not_of("\r\n");
+    if (pos != std::string::npos) 
+        msg = msg.substr(0, pos + 1);
+
+    size_t chanStart = msg.find_first_not_of(" \t");
+    if (chanStart == std::string::npos) {
+        replyErrToClient(ERR_NEEDMOREPARAMS, userSender->getNickName(), "TOPIC", sd, "");
+        return (-100);
+    }
+    size_t chanEnd = msg.find_first_of(" \t", chanStart);
+
+    std::string channelName;
+    std::string topicStr;
+    bool settingTopic = false;
+
+    if (chanEnd == std::string::npos) {
+        channelName = msg.substr(chanStart);
+        settingTopic = false;
+    } 
+    else {
+        channelName = msg.substr(chanStart, chanEnd - chanStart);
+        std::string leftover = msg.substr(chanEnd);
+
+        size_t topicStart = leftover.find_first_not_of(" \t");
+        
+        if (topicStart != std::string::npos) {
+            topicStr = leftover.substr(topicStart);
+            if (topicStr[0] == ':') {
+                topicStr = topicStr.substr(1);
+            }
+            settingTopic = true;
+        }
+    }
+
+    Channel *wantedChannel = findChannelByName(channelName);
+	if (!wantedChannel) {
+        replyErrToClient(ERR_NOSUCHCHANNEL, userSender->getNickName(), channelName, sd, "");
+        return (-100);
+    }
+
+    userSender = wantedChannel->findUserByNickname(userSender->getNickName());
+    if (!settingTopic) {
+        std::string topicWanted = wantedChannel->getTopic();
+        if (topicWanted == "")
+            replyServToClient(RPL_NOTOPIC, userSender->getNickName(), sd, wantedChannel->getChannelName(), "");
+        else
+            replyServToClient(RPL_TOPIC, userSender->getNickName(), sd, wantedChannel->getChannelName(), topicWanted);
+    }
+
+    else {
+        if (userSender->_isOp() == false) {
+            replyErrToClient(ERR_CHANOPRIVSNEEDED, userSender->getNickName(), wantedChannel->getChannelName(), sd, "");
+            return (-100);
+        }
+
+        wantedChannel->setTopic(topicStr);
+        std::string notifMsg = ":" + userSender->getNickName() + "!" + userSender->getUserName() + "@localhost TOPIC " + channelName + " :" + topicStr + "\r\n";
+        
+        std::vector <User> usersInChannel = wantedChannel->getUsers();
+        for (size_t i = 0; i < usersInChannel.size(); i++) 
+            send(usersInChannel[i].sd, notifMsg.c_str(), notifMsg.length(), MSG_NOSIGNAL);
+    }
+
+    return (0);
+}
+
 int Server::parse_join(std::string msg) {
 	std::string temp = msg;
 	temp.find(",");
@@ -206,7 +278,10 @@ int Server::parse_msg(int sd) {
 				{
 					if (it->sd != sd)
 					{
-						existingChannel->addUser(find_by_sd(sd));
+						if (existingChannel->getInviteOnly())
+							replyErrToClient(ERR_INVITEONLYCHAN, "", existingChannel->getChannelName(), sd, " :Cannot join channel (+i)");
+						else
+							existingChannel->addUser(find_by_sd(sd));
 						continue ;
 					}
 				}
@@ -235,6 +310,11 @@ int Server::parse_msg(int sd) {
 
     else if (msg.find("PART ") != std::string::npos) {
         return (part(msg, sd));
+    }
+
+
+    else if (msg.find("TOPIC ") != std::string::npos) {
+        return (topic(msg, sd));
     }
 
     else if (msg.find("KICK ") != std::string::npos) {

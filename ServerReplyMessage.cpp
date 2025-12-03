@@ -11,6 +11,12 @@ void    Server::replyServToClient(int numErrno, std::string nickname, int sd, st
 		case RPL_ENDOFNAMES:
 			msg += ":localhost 366 " + nickname + " " + channelName + " :" + addMsg + "\r\n";
 			break;
+		case RPL_NOTOPIC:
+			msg += ":localhost 331 " + nickname + " " + channelName + " :No topic is set\r\n";
+			break;
+		case RPL_TOPIC:
+			msg += ":localhost 332 " + nickname + " " + channelName + " :" + addMsg + "\r\n";
+			break;
 		default:
 			break;
 	}

@@ -35,6 +35,15 @@ void	Server::replyErrToClient(int numErrno, std::string nickname, std::string ch
         case ERR_CHANOPRIVSNEEDED:
             msg = ":localhost 482 " + nickname + " " + channel + " :You're not channel operator\r\n";
             break;
+
+		case ERR_INVITEONLYCHAN:
+			msg = ":localhost 473 " + channel + arg + "\r\n";
+			break;
+
+		case ERR_NEEDMOREPARAMS:
+			msg = ":localhost 461 " + nickname + " " + arg + " :Not enough parameters\r\n"; 
+			break;
+
 		default:
 			break;
 	}
