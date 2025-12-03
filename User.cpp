@@ -84,4 +84,6 @@ void	User::printUser(){
 	std::cout << "Hostname: " << this->Host_name << std::endl;
 	std::cout << "Servername: " << this->Server_name << std::endl;
 	std::cout << "Realname: " << this->Real_name << std::endl;
+	std::cout << "Op: " << this->isOp << std::endl;
+
 }

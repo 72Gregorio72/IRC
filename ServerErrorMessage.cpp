@@ -17,7 +17,7 @@ void	Server::replyErrToClient(int numErrno, std::string nickname, std::string ch
 			break;
 
 		case ERR_NOTONCHANNEL:
-			msg += ":localhost 442 " + nickname + channel + " :You're not on that channel\r\n";
+			msg += ":localhost 442 " + nickname + " " + channel + " :You're not on that channel\r\n";
 			break;
 
 		case ERR_NOSUCHNICK:
@@ -29,12 +29,21 @@ void	Server::replyErrToClient(int numErrno, std::string nickname, std::string ch
             break;
 
         case ERR_NOSUCHCHANNEL:
-            msg = ":localhost 403 " + nickname + " " + channel + " :we are women we are strong\r\n";
+            msg = ":localhost 403 " + nickname + " " + channel + " :No Channel found\r\n";
             break;
 
         case ERR_CHANOPRIVSNEEDED:
             msg = ":localhost 482 " + nickname + " " + channel + " :You're not channel operator\r\n";
             break;
+
+		case ERR_INVITEONLYCHAN:
+			msg = ":localhost 473 " + channel + arg + "\r\n";
+			break;
+
+		case ERR_NEEDMOREPARAMS:
+			msg = ":localhost 461 " + nickname + " " + arg + " :Not enough parameters\r\n"; 
+			break;
+
 		default:
 			break;
 	}
