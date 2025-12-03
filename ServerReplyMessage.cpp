@@ -14,5 +14,5 @@ void    Server::replyServToClient(int numErrno, std::string nickname, int sd, st
 		default:
 			break;
 	}
-	send(sd, msg.c_str(), msg.length(), 0);
+	send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
 }

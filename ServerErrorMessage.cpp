@@ -39,5 +39,5 @@ void	Server::replyErrToClient(int numErrno, std::string nickname, std::string ch
 			break;
 	}
 	std::cout << "msg to send: " << msg << std::endl;
-	send(sd, msg.c_str(), msg.length(), 0);
+	send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
 }
