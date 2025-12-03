@@ -105,24 +105,28 @@ void Server::handle_client_read(int sd) {
 }
 
 int Server::process_user_buffer(User *user, int sd) {
-	size_t pos;
-	while ((pos = user->buffer.find("\r\n")) != std::string::npos) {
-		std::string complete_msg = user->buffer.substr(0, pos + 2);
-		std::cout << "Complete message from socket " << sd << ": " << complete_msg << std::endl;
+    size_t pos;
+    while ((pos = user->buffer.find("\r\n")) != std::string::npos) {
+        std::string complete_msg = user->buffer.substr(0, pos + 2);
+        std::cout << "Complete message from socket " << sd << ": " << complete_msg << std::endl;
 
-		serverdata.msg[0] = '\0';
-		strncpy(serverdata.msg, complete_msg.c_str(), sizeof(serverdata.msg) - 1);
-		int number = parse_msg(sd);
-		if (number == -72) {
-			remove_user(sd);
-			std::cout << "Authentication Failed! " << sd << std::endl;
-			return -72;
-		} else if (number == 1) {
-			std::cout << "Authentication Correct! " << sd << std::endl;
-		}
-		user->buffer.erase(0, pos + 2);
-	}
-	return 0;
+        serverdata.msg[0] = '\0';
+        strncpy(serverdata.msg, complete_msg.c_str(), sizeof(serverdata.msg) - 1);
+        int number = parse_msg(sd);
+        if (number == -72) {
+            std::cout << "Authentication Failed! " << sd << std::endl;
+            return -72;
+        } else if (number == 1) {
+            std::cout << "Authentication Correct! " << sd << std::endl;
+        }
+        User *current = find_by_sd(sd);
+        if (current == NULL) {
+            return 0;
+        }
+        current->buffer.erase(0, pos + 2);
+        user = current;
+    }
+    return 0;
 }
 
 void Server::close_all() {

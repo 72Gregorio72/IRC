@@ -61,38 +61,11 @@ int Server::part(std::string msg, int sd){
 	}
 
 	if (!channelWanted->userInChannel(userToRemove->getNickName()) && !channelWanted->getUsers().empty()) {
-		std::cout << "ciao" << std::endl;
 		replyErrToClient(ERR_NOTONCHANNEL, userToRemove->getNickName(), channelWanted->getChannelName(), sd, "");
 		return (-72);
 	}
-
-	std::string msgToSend = ":" + userToRemove->getNickName() + "!" + userToRemove->getUserName() + "@localhost PART " + channelName + " :Leaving\r\n";
 	
-	std::vector<User> usersInChannel = channelWanted->getUsers();
-	for (size_t i = 0; i < usersInChannel.size(); i++) {
-		send(usersInChannel[i].sd, msgToSend.c_str(), msgToSend.length(), MSG_NOSIGNAL);
-	}
-
-	if (userToRemove->_isOp() == true && channelWanted->count_operators() < 2) {
-		channelWanted->removeUser(userToRemove->getNickName());
-		usersInChannel = channelWanted->getUsers();
-		std::vector<User> users = channelWanted->getUsers(); 
-
-		// for (size_t i = 0; i < users.size(); i++) {
-		// 	if (users[i].getNickName() != userToRemove->getNickName()) {
-		// 		User* newOp = channelWanted->findUserByNickname(users[i].getNickName());
-		// 		if (newOp)
-		// 			newOp->SetOp(true);
-		// 		std::string opMsg = ":localhost MODE " + channelName + " +o " + users[i].getNickName() + "\r\n";
-		// 		users = channelWanted->getUsers();
-		// 		for (size_t j = 0; j < users.size(); j++) {
-		// 			send(users[j].sd, opMsg.c_str(), opMsg.length(), 0);
-		// 		}
-		// 		break;
-		// 	}
-		// }
-	} else
-		channelWanted->removeUser(userToRemove->getNickName());
+	channelWanted->removeUser(userToRemove->getNickName());
 	
 	if (channelWanted->getUsers().empty()) {
 		deleteChannel(channelName);
@@ -152,9 +125,10 @@ int Server::parse_msg(int sd) {
     }
 
     if (msg.find("QUIT ") != std::string::npos) {
-        remove_user(sd);
         for (size_t i = 0; i < allChannels.size(); i++)
-            allChannels[i].removeUser(find_by_sd(sd)->getNickName());
+			if (allChannels[i].userInChannel(find_by_sd(sd)->getNickName()))
+            	allChannels[i].removeUser(find_by_sd(sd)->getNickName());
+		remove_user(sd);
         return 0;
     }
 

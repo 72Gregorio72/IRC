@@ -90,13 +90,51 @@ User *Channel::findUserByNickname(std::string nickname) {
 }
 
 int Channel::removeUser(std::string nickname) {
-	for (size_t i = 0; i < users.size(); i++) {
-		if (users[i].getNickName() == nickname) {
-			users.erase(users.begin() + i);
-			return 1;
-		}
-	}
-	return 0;
+    for (size_t i = 0; i < users.size(); i++) {
+        if (users[i].getNickName() == nickname) {
+            bool isOp = users[i]._isOp();
+            std::string channel_name = this->getChannelName();
+
+            if (isOp && count_operators() > 1) {
+                users[i].SetOp(false);
+            } else if (isOp && count_operators() == 1 && users.size() > 1) {
+                for (size_t j = 0; j < users.size(); j++) {
+                    if (users[j].getNickName() != nickname) {
+                        users[j].SetOp(true);
+                        std::string modeMsg = ":localhost MODE " + channel_name + " +o " + users[j].getNickName() + "\r\n";
+						for (size_t k = 0; k < users.size(); k++)
+							send(users[k].sd, modeMsg.c_str(), modeMsg.length(), MSG_NOSIGNAL);
+                        break;
+                    }
+                }
+            }
+            std::string msgToSend = ":" + users[i].getNickName() + "!" + users[i].getUserName() + "@localhost PART " + channel_name + " :Leaving\r\n";
+            std::vector<User> usersInChannel = getUsers();
+            for (size_t k = 0; k < usersInChannel.size(); k++) {
+                send(usersInChannel[k].sd, msgToSend.c_str(), msgToSend.length(), MSG_NOSIGNAL);
+            }
+
+            users.erase(users.begin() + i);
+
+            std::string namesList;
+            for (size_t k = 0; k < users.size(); k++) {
+                if (k > 0) namesList += " ";
+                if (users[k]._isOp()) {
+                    namesList += "@";
+                }
+                namesList += users[k].getNickName();
+            }
+            for (size_t k = 0; k < users.size(); k++) {
+                std::string rpl353 = ":localhost 353 " + users[k].getNickName() + " = " + channel_name + " :" + namesList + "\r\n";
+                send(users[k].sd, rpl353.c_str(), rpl353.length(), MSG_NOSIGNAL);
+                std::string rpl366 = ":localhost 366 " + users[k].getNickName() + " " + channel_name + " :End of /NAMES list.\r\n";
+                send(users[k].sd, rpl366.c_str(), rpl366.length(), MSG_NOSIGNAL);
+            }
+
+            return 1;
+        }
+    }
+    return 0;
 }
 
 bool	Channel::userInChannel(std::string nickname)
