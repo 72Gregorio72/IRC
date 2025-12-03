@@ -63,6 +63,8 @@ class Server{
 		int part(std::string msg, int sd);
 		int parse_entry(std::string msg, int sd);
 		int	topic(std::string msg, int sd);
+		// void assignPassword(std::string msg);
+		int parse_join(std::string msg);
 
 	private:
 		std::vector<Channel> allChannels;
