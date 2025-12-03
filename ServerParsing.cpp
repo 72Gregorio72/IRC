@@ -158,7 +158,12 @@ int Server::topic(std::string msg, int sd) {
         return (-100);
     }
 
+	std::string nickSender = userSender->getNickName();
     userSender = wantedChannel->findUserByNickname(userSender->getNickName());
+	if (!userSender) {
+		replyErrToClient(ERR_NOTONCHANNEL, nickSender, wantedChannel->getChannelName(), sd, "");
+		return (-100);
+	}
     if (!settingTopic) {
         std::string topicWanted = wantedChannel->getTopic();
         if (topicWanted == "")
@@ -188,7 +193,7 @@ int Server::parse_join(std::string msg) {
 	std::string temp = msg;
 	temp.find(",");
 	temp.erase(0, temp.find(",") + 1);
-	if (temp[0] == ' ' || temp[0] == '\r' || temp[0] == '\n')
+	if (temp[0] == ' ' || temp[0] == ',' || temp[0] == '\r' || temp[0] == '\n')
 		return -1;
 	temp = msg;
 	temp.erase(0, temp.find(" ") + 1);
