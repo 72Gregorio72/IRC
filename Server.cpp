@@ -191,7 +191,7 @@ void	Server::sendPrivmsg(std::string msg, User* sender)
 		if (target)
 		{
 			std::string fullMsg = ":" + sender->getNickName() + "!" + sender->getUserName() + "@localhost PRIVMSG " + channelName + " :" + msg + "\r\n";
-			send(target->sd, fullMsg.c_str(), fullMsg.length(), 0);
+			send(target->sd, fullMsg.c_str(), fullMsg.length(), MSG_NOSIGNAL);
 			return ;
 		}
 		else
