@@ -1,9 +1,16 @@
 #include "Server.hpp"
 
-// void Server::assignPassword(std::string msg)
+// void Server::assignPasswordToChannel(std::string msg)
 // {
 
 // }
+
+bool Server::alreadyInChannel(std::string nickname, std::string channelName) {
+	Channel channel = *findChannelByName(channelName);
+	if (channel.userInChannel(nickname))
+		return true;
+	return false;
+}
 
 int Server::kick(std::string msg, int sd){
 	size_t pos = msg.find("KICK ");
@@ -269,24 +276,23 @@ int Server::parse_msg(int sd) {
 			if (channelName.find("#") != 0 && channelName.find("&") != 0) {
 				channelName = "#" + channelName;
 			}
-			// if (channelName.find_first_of(",") != std::string::npos || channelName.find(" ") != std::string::npos || channelName.size() <= 1)
-			// {
-			// 	replyErrToClient(ERR_NOSUCHCHANNEL, find_by_sd(sd)->getNickName(), channelName, sd, "");
-			// 	continue ;
-			// }
-			// assignPassword(msg, channelName);
+			// assignPasswordToChannel(msg, channelName);
 			Channel channel(channelName, this);
 			if (findChannelByName(channel.getChannelName()) != NULL) {
 				Channel* existingChannel = findChannelByName(channel.getChannelName());
+				if (existingChannel->getInviteOnly())
+				{
+					replyErrToClient(ERR_INVITEONLYCHAN, "", existingChannel->getChannelName(), sd, " :Cannot join channel (+i)");
+					return -1;
+				}
 				std::vector<User> users = existingChannel->getUsers();
+				if (alreadyInChannel(find_by_sd(sd)->getNickName(), existingChannel->getChannelName()))
+					return -1;
 				for (std::vector<User>::iterator it = users.begin(); it != users.end(); ++it)
 				{
 					if (it->sd != sd)
 					{
-						if (existingChannel->getInviteOnly())
-							replyErrToClient(ERR_INVITEONLYCHAN, "", existingChannel->getChannelName(), sd, " :Cannot join channel (+i)");
-						else
-							existingChannel->addUser(find_by_sd(sd));
+						existingChannel->addUser(find_by_sd(sd));
 						continue ;
 					}
 				}
