@@ -179,9 +179,9 @@ void	Server::sendPrivmsg(std::string msg, User* sender)
 				{
 					std::string fullMsg = ":" + sender->getNickName() + "!" + sender->getUserName() + "@localhost PRIVMSG " + channelName + " :" + msg + "\r\n";
 					if (channelUsers[i].sd != sender->sd)
-						send(channelUsers[i].sd, fullMsg.c_str(), fullMsg.length(), 0);
+						send(channelUsers[i].sd, fullMsg.c_str(), fullMsg.length(), MSG_NOSIGNAL);
+
 				}
-				break;
 			}
 		}
 	}
@@ -191,13 +191,13 @@ void	Server::sendPrivmsg(std::string msg, User* sender)
 		if (target)
 		{
 			std::string fullMsg = ":" + sender->getNickName() + "!" + sender->getUserName() + "@localhost PRIVMSG " + channelName + " :" + msg + "\r\n";
-			send(target->sd, fullMsg.c_str(), fullMsg.length(), 0);
+			send(target->sd, fullMsg.c_str(), fullMsg.length(), MSG_NOSIGNAL);
 			return ;
 		}
 		else
 		{
 			std::string reply = ":" + getServerName() + " 401 " + sender->getNickName() + " " + channelName + " :No such nick/channel\r\n";
-			send(sender->sd, reply.c_str(), reply.length(), 0);
+			send(sender->sd, reply.c_str(), reply.length(), MSG_NOSIGNAL);
 			return ;
 
 		}

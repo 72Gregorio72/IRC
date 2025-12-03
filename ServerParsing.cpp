@@ -37,7 +37,7 @@ int Server::kick(std::string msg, int sd){
 		std::string partMsg = ":" + userToKick + "!" + userToKick + "@localhost PART " + channelName + " :" + reason + "\r\n";
 		for (size_t j = 0; j < users.size(); j++) {
 			int fd = users[j].sd;
-			send(fd, partMsg.c_str(), partMsg.length(), 0);
+			send(fd, partMsg.c_str(), partMsg.length(), MSG_NOSIGNAL);
 		}
 	}
 	channel->removeUser(userToKick);
@@ -70,7 +70,7 @@ int Server::part(std::string msg, int sd){
 	
 	std::vector<User> usersInChannel = channelWanted->getUsers();
 	for (size_t i = 0; i < usersInChannel.size(); i++) {
-		send(usersInChannel[i].sd, msgToSend.c_str(), msgToSend.length(), 0);
+		send(usersInChannel[i].sd, msgToSend.c_str(), msgToSend.length(), MSG_NOSIGNAL);
 	}
 
 	if (userToRemove->_isOp() == true && channelWanted->count_operators() < 2) {

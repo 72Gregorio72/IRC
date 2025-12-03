@@ -129,12 +129,12 @@ void Server::close_all() {
 
     if (serverdata.accept_fd >= 0) {
         close(serverdata.accept_fd);
-        serverdata.accept_fd = -1;
+        //serverdata.accept_fd = -1;
     }
     
     if (serverdata.socket_fd >= 0) {
         close(serverdata.socket_fd);
-        serverdata.socket_fd = -1;
+        //serverdata.socket_fd = -1;
     }
 
 	for (size_t i = 0; i < users.size(); i++) {

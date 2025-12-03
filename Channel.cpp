@@ -55,15 +55,15 @@ void Channel::addUser(User *user) {
 	std::string joinMsg = ":" + user->getNickName() + "!" + user->getUserName() + "@localhost JOIN :" + channel_name + "\r\n";
     if (users.size() == 1)
 			users.back().SetOp(true);
-	send(user->sd, joinMsg.c_str(), joinMsg.length(), 0);
+	send(user->sd, joinMsg.c_str(), joinMsg.length(), MSG_NOSIGNAL);
     for (size_t i = 0; i < users.size(); i++) {
         int fd = users[i].sd;
-        send(fd, joinMsg.c_str(), joinMsg.length(), 0);
+        send(fd, joinMsg.c_str(), joinMsg.length(), MSG_NOSIGNAL);
     }
 
 	if (!this->topic.empty()) {
         std::string topicMsg = ":localhost 332 " + user->getNickName() + " " + channel_name + " :" + this->topic + "\r\n";
-        send(user->sd, topicMsg.c_str(), topicMsg.length(), 0);
+        send(user->sd, topicMsg.c_str(), topicMsg.length(), MSG_NOSIGNAL);
     }
 
     std::string namesList = "";
