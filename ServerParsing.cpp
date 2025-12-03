@@ -1,5 +1,10 @@
 #include "Server.hpp"
 
+// void Server::assignPassword(std::string msg)
+// {
+
+// }
+
 int Server::kick(std::string msg, int sd){
 	size_t pos = msg.find("KICK ");
 	if (pos != std::string::npos) msg.erase(0, pos);
@@ -61,7 +66,6 @@ int Server::part(std::string msg, int sd){
 	}
 
 	if (!channelWanted->userInChannel(userToRemove->getNickName()) && !channelWanted->getUsers().empty()) {
-		std::cout << "ciao" << std::endl;
 		replyErrToClient(ERR_NOTONCHANNEL, userToRemove->getNickName(), channelWanted->getChannelName(), sd, "");
 		return (-72);
 	}
@@ -134,6 +138,21 @@ int Server::parse_entry(std::string msg, int sd){
 	return 0;
 }
 
+int Server::parse_join(std::string msg) {
+	std::string temp = msg;
+	temp.find(",");
+	temp.erase(0, temp.find(",") + 1);
+	if (temp[0] == ' ' || temp[0] == '\r' || temp[0] == '\n')
+		return -1;
+	temp = msg;
+	temp.erase(0, temp.find(" ") + 1);
+	if (temp.empty())
+		return -1;
+	if (temp[0] == ',' || temp[0] == '\r' || temp[0] == '\n')
+		return -1;
+	return 0;
+}
+
 int Server::parse_msg(int sd) {
     if (sd < 0)
         return -1;
@@ -159,25 +178,51 @@ int Server::parse_msg(int sd) {
     }
 
     if (msg.find("JOIN ") != std::string::npos) {
+		std::cout << msg << std::endl;
         size_t pos = msg.find("JOIN ");
         if (pos != std::string::npos) msg.erase(0, pos);
         msg.erase(0, 5);
         pos = msg.find_first_of("\r\n");
+		if (parse_join(msg) == -1) {
+			replyErrToClient(ERR_NOSUCHCHANNEL, find_by_sd(sd)->getNickName(), "", sd, "");
+			return -1;
+		}
         if (pos != std::string::npos) msg = msg.substr(0, pos);
-
+		std::string channels = msg.substr(0, msg.find(" "));
+		if (msg.find(" ") != std::string::npos)
+			msg.erase(0, msg.find(" ") + 1);
+		else
+			msg.erase(0, msg.find("\r\n"));
+		std::string passwords = msg.substr(0, msg.find(" "));
+		if (passwords.empty())
+			passwords = "";
+		std::cout << "Channels to join: |" << channels << "|" << std::endl;
+		std::cout << "Passwords provided: " << passwords << std::endl;
+		if (channels.find(" ") != std::string::npos || channels.find(7) != std::string::npos) {
+			if (passwords.empty() && (passwords.find(" ") != std::string::npos || passwords.find(7) != std::string::npos)) {
+				replyErrToClient(ERR_NOSUCHCHANNEL, find_by_sd(sd)->getNickName(), channels, sd, "");
+				return -1;
+			}
+		}
 		do {
-			pos = msg.find_first_of(",");
+			pos = channels.find_first_of(",");
 			std::string channelName;;
 			if (pos != std::string::npos)
 			{
-				channelName = msg.substr(0, pos);
-				msg.erase(0, pos + 1);
+				channelName = channels.substr(0, pos);
+				channels.erase(0, pos + 1);
 			}
 			else
-				channelName = msg;
+				channelName = channels;
 			if (channelName.find("#") != 0 && channelName.find("&") != 0) {
 				channelName = "#" + channelName;
 			}
+			// if (channelName.find_first_of(",") != std::string::npos || channelName.find(" ") != std::string::npos || channelName.size() <= 1)
+			// {
+			// 	replyErrToClient(ERR_NOSUCHCHANNEL, find_by_sd(sd)->getNickName(), channelName, sd, "");
+			// 	continue ;
+			// }
+			// assignPassword(msg, channelName);
 			Channel channel(channelName, this);
 			if (findChannelByName(channel.getChannelName()) != NULL) {
 				Channel* existingChannel = findChannelByName(channel.getChannelName());

@@ -25,11 +25,11 @@ void	Server::replyErrToClient(int numErrno, std::string nickname, std::string ch
             break;
 		
 		case ERR_USERNOTINCHANNEL:
-            msg = ":localhost 441 " + nickname + " " + channel + " :They aren't on that channel\r\n";
+            msg = ":localhost 441 " + nickname + " " + channel + " :User is not in that channel\r\n";
             break;
 
         case ERR_NOSUCHCHANNEL:
-            msg = ":localhost 403 " + nickname + " " + channel + " :No such channel\r\n";
+            msg = ":localhost 403 " + nickname + " " + channel + " :we are women we are strong\r\n";
             break;
 
         case ERR_CHANOPRIVSNEEDED:
