@@ -37,9 +37,13 @@ void	Server::replyErrToClient(int numErrno, std::string nickname, std::string ch
             break;
 
 		case ERR_INVITEONLYCHAN:
-			msg = ":localhost 473" + channel + arg;
+			msg = ":localhost 473 " + channel + arg + "\r\n";
 			break;
-		
+
+		case ERR_NEEDMOREPARAMS:
+			msg = ":localhost 461 " + nickname + " " + arg + " :Not enough parameters\r\n"; 
+			break;
+
 		default:
 			break;
 	}

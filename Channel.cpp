@@ -31,6 +31,7 @@ Channel::Channel(const Channel &other) {
 	users = other.users;
 	server = other.server;
 	inviteOnly = other.inviteOnly;
+    topic = other.topic;
 }
 
 
@@ -41,6 +42,7 @@ Channel &Channel::operator=(const Channel &other) {
 		users = other.users;
 		server = other.server;
 		inviteOnly = other.inviteOnly;
+        topic = other.topic;
 	}
     return *this;
 }
@@ -53,8 +55,16 @@ std::string Channel::getChannelName() {
 	return channel_name;
 }
 
+std::string Channel::getTopic() {
+	return topic;
+}
+
 std::vector<User> Channel::getUsers() {
 	return users;
+}
+
+void    Channel::setTopic(std::string src_topic) {
+    topic = src_topic;
 }
 
 void Channel::addUser(User *user) {
@@ -62,8 +72,11 @@ void Channel::addUser(User *user) {
 	users.push_back(*user);
 	std::cout << "User " << users[0].getNickName() << std::endl;
 	std::string joinMsg = ":" + user->getNickName() + "!" + user->getUserName() + "@localhost JOIN :" + channel_name + "\r\n";
+    
     if (users.size() == 1)
-			users.back().SetOp(true);
+		users.back().SetOp(true);
+	
+    std::cout << "User " << users[0]._isOp() << std::endl;
 	send(user->sd, joinMsg.c_str(), joinMsg.length(), MSG_NOSIGNAL);
     for (size_t i = 0; i < users.size(); i++) {
         int fd = users[i].sd;

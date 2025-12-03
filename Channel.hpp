@@ -16,15 +16,19 @@ class Channel{
 
 		std::string getChannelName();
 		std::vector<User> getUsers();
+		bool	getInviteOnly();
+		std::string	getTopic();
+
 		void addUser(User *user);
 		int removeUser(std::string nickname);
 
 		bool	userInChannel(std::string nickname);
 		
-		bool	getInviteOnly();
 
 		User *findUserByNickname(std::string nickname);
 		int count_operators();
+
+		void	setTopic(std::string src_topic);
 	private:
 
 		Server	*server;

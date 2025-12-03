@@ -62,6 +62,7 @@ class Server{
 		int kick(std::string msg, int sd);
 		int part(std::string msg, int sd);
 		int parse_entry(std::string msg, int sd);
+		int	topic(std::string msg, int sd);
 
 	private:
 		std::vector<Channel> allChannels;
