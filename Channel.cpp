@@ -77,7 +77,6 @@ void Channel::addUser(User *user) {
 		users.back().SetOp(true);
 	
     std::cout << "User " << users[0]._isOp() << std::endl;
-	send(user->sd, joinMsg.c_str(), joinMsg.length(), MSG_NOSIGNAL);
     for (size_t i = 0; i < users.size(); i++) {
         int fd = users[i].sd;
         send(fd, joinMsg.c_str(), joinMsg.length(), MSG_NOSIGNAL);
@@ -105,6 +104,15 @@ void Channel::addUser(User *user) {
 User *Channel::findUserByNickname(std::string nickname) {
 	for (size_t i = 0; i < users.size(); i++) {
 		if (users[i].getNickName() == nickname) {
+			return &users[i];
+		}
+	}
+	return NULL;
+}
+
+User *Channel::findUserBySd(int sd) {
+	for (size_t i = 0; i < users.size(); i++) {
+		if (users[i].sd == sd) {
 			return &users[i];
 		}
 	}

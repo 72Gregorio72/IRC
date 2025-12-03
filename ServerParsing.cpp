@@ -269,11 +269,6 @@ int Server::parse_msg(int sd) {
 			if (channelName.find("#") != 0 && channelName.find("&") != 0) {
 				channelName = "#" + channelName;
 			}
-			// if (channelName.find_first_of(",") != std::string::npos || channelName.find(" ") != std::string::npos || channelName.size() <= 1)
-			// {
-			// 	replyErrToClient(ERR_NOSUCHCHANNEL, find_by_sd(sd)->getNickName(), channelName, sd, "");
-			// 	continue ;
-			// }
 			// assignPassword(msg, channelName);
 			Channel channel(channelName, this);
 			if (findChannelByName(channel.getChannelName()) != NULL) {
