@@ -21,6 +21,7 @@ class Channel{
 
 		bool	userInChannel(std::string nickname);
 		
+		bool	getInviteOnly();
 
 		User *findUserByNickname(std::string nickname);
 		int count_operators();
@@ -30,6 +31,7 @@ class Channel{
 		std::string channel_name;
 		std::vector <User> users;
 		std::string topic;
+		bool	inviteOnly;
 };
 
 #endif

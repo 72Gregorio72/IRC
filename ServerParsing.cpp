@@ -186,7 +186,10 @@ int Server::parse_msg(int sd) {
 				{
 					if (it->sd != sd)
 					{
-						existingChannel->addUser(find_by_sd(sd));
+						if (existingChannel->getInviteOnly())
+							replyErrToClient(ERR_INVITEONLYCHAN, "", existingChannel->getChannelName(), sd, " :Cannot join channel (+i)");
+						else
+							existingChannel->addUser(find_by_sd(sd));
 						continue ;
 					}
 				}

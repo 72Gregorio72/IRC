@@ -3,6 +3,7 @@
 Channel::Channel() {
 	channel_name = "";
 	topic = "";
+	inviteOnly = false;
 }
 
 Channel::~Channel() {
@@ -12,7 +13,7 @@ Channel::~Channel() {
 Channel::Channel(std::string name, Server *serv) {
     topic = "";
     server = serv;
-
+	inviteOnly = false;
     if (name.length() > 200 || name.empty()) {
         channel_name = "invalid";
         return;
@@ -29,7 +30,9 @@ Channel::Channel(const Channel &other) {
 	channel_name = other.channel_name;
 	users = other.users;
 	server = other.server;
+	inviteOnly = other.inviteOnly;
 }
+
 
 Channel &Channel::operator=(const Channel &other) {
 	if (this != &other)
@@ -37,8 +40,13 @@ Channel &Channel::operator=(const Channel &other) {
 		channel_name = other.channel_name;
 		users = other.users;
 		server = other.server;
+		inviteOnly = other.inviteOnly;
 	}
     return *this;
+}
+
+bool	Channel::getInviteOnly() {
+	return inviteOnly;
 }
 
 std::string Channel::getChannelName() {
@@ -50,6 +58,7 @@ std::vector<User> Channel::getUsers() {
 }
 
 void Channel::addUser(User *user) {
+
 	users.push_back(*user);
 	std::cout << "User " << users[0].getNickName() << std::endl;
 	std::string joinMsg = ":" + user->getNickName() + "!" + user->getUserName() + "@localhost JOIN :" + channel_name + "\r\n";

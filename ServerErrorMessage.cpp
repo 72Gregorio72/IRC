@@ -35,6 +35,11 @@ void	Server::replyErrToClient(int numErrno, std::string nickname, std::string ch
         case ERR_CHANOPRIVSNEEDED:
             msg = ":localhost 482 " + nickname + " " + channel + " :You're not channel operator\r\n";
             break;
+
+		case ERR_INVITEONLYCHAN:
+			msg = ":localhost 473" + channel + arg;
+			break;
+		
 		default:
 			break;
 	}
