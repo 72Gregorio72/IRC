@@ -163,36 +163,35 @@ User	*Server::find_by_nickname(std::string nickname){
 
 void	Server::sendPrivmsg(std::string msg, User* sender)
 {
-	bool searchUser = false;
 	size_t pos = msg.find(" ");
 	std::string channelName = msg.substr(0, pos);
 	msg.erase(0, pos);
 	pos = msg.find(":");
 	msg.erase(0, pos + 1);
-	for (std::vector<Channel>::iterator it = allChannels.begin(); it != allChannels.end(); it++)
-	{;
-		if (it->getChannelName() == channelName)
-		{
-			std::vector<User> channelUsers = it->getUsers();
-			for (size_t i = 0; i < channelUsers.size(); i++)
+	if (channelName[0] == '#'|| channelName[0] == '&')
+	{
+		for (std::vector<Channel>::iterator it = allChannels.begin(); it != allChannels.end(); it++)
+		{;
+			if (it->getChannelName() == channelName)
 			{
-				std::string fullMsg = ":" + sender->getNickName() + "!" + sender->getUserName() + "@localhost PRIVMSG " + channelName + " :" + msg + "\r\n";
-				if (channelUsers[i].sd != sender->sd)
+				std::vector<User> channelUsers = it->getUsers();
+				for (size_t i = 0; i < channelUsers.size(); i++)
 				{
-					send(channelUsers[i].sd, fullMsg.c_str(), fullMsg.length(), MSG_NOSIGNAL);
-					searchUser = true;
+					std::string fullMsg = ":" + sender->getNickName() + "!" + sender->getUserName() + "@localhost PRIVMSG " + channelName + " :" + msg + "\r\n";
+					if (channelUsers[i].sd != sender->sd)
+						send(channelUsers[i].sd, fullMsg.c_str(), fullMsg.length(), MSG_NOSIGNAL);
+
 				}
 			}
 		}
 	}
-	if (!searchUser) // se non trova canale, cerca user
+	else // se non trova canale, cerca user
 	{
 		User *target = find_by_nickname(channelName);
 		if (target)
 		{
 			std::string fullMsg = ":" + sender->getNickName() + "!" + sender->getUserName() + "@localhost PRIVMSG " + channelName + " :" + msg + "\r\n";
-			send(target->sd, fullMsg.c_str(), fullMsg.length(), MSG_NOSIGNAL);
-			searchUser = true;
+			send(target->sd, fullMsg.c_str(), fullMsg.length(), 0);
 			return ;
 		}
 		else
