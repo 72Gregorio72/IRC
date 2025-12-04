@@ -1,10 +1,59 @@
 #include "Server.hpp"
 #include "BalatroBot/Balatro.hpp"
 
-// void Server::assignPasswordToChannel(std::string msg)
-// {
-
-// }
+bool Server::assignPasswordToChannel(std::string channels, std::string passwords, Channel *channel)
+{
+	std::size_t chanPos;
+	std::size_t passPos;
+	int countChannel = 0;
+	int countPassword = 0;
+	while (!channels.empty()){
+		std::string chanName;
+		chanPos = channels.find(",");
+		if (chanPos != std::string::npos)
+		{
+			chanName = channels.substr(0, chanPos); // non entra qua
+			std::cout << "Extracted channel name: " << chanName << std::endl;
+			channels.erase(0, chanPos + 1);
+		}
+		else
+		{
+			std::cout << " brutto Extracted channel name: " << channels << std::endl;
+			chanName = channels;
+			channels.clear();
+		}
+		countChannel++;
+		std::string pass;
+		if (!passwords.empty()) 
+        {
+            passPos = passwords.find(",");
+            if (passPos != std::string::npos)
+            {
+                pass = passwords.substr(0, passPos);
+                passwords.erase(0, passPos + 1);
+            }
+            else
+            {
+                pass = passwords;
+                passwords.clear(); // <--- IMPORTANTE: Svuota la stringa per non riusare l'ultima pass
+            }
+        }
+		if (chanName[0] != '#' && chanName[0] != '&')
+			chanName = "#" + chanName;
+		std::cout << "before [" << pass << "] to channel [" << chanName << "]" << std::endl;
+		if (chanName == channel->getChannelName())
+		{
+			channel->setPassword(pass);
+			std::cout << "after [" << pass << "] to channel [" << chanName << "]" << std::endl;
+			return true;
+		}
+		chanName.clear();
+		pass.clear();
+	};
+	if (countPassword > countChannel)
+		return false;
+	return true;
+}
 
 bool Server::alreadyInChannel(std::string nickname, std::string channelName) {
 	Channel channel = *findChannelByName(channelName);
@@ -279,8 +328,12 @@ int Server::parse_msg(int sd) {
 			if (channelName.find("#") != 0 && channelName.find("&") != 0) {
 				channelName = "#" + channelName;
 			}
-			// assignPasswordToChannel(msg, channelName);
 			Channel channel(channelName, this);
+			if (!assignPasswordToChannel(channels, passwords, &channel))
+			{
+				replyErrToClient(ERR_NEEDMOREPARAMS, find_by_sd(sd)->getNickName(), "", sd, ":There are more passwords than channels");
+				return -1;
+			}
 			if (findChannelByName(channel.getChannelName()) != NULL) {
 				Channel* existingChannel = findChannelByName(channel.getChannelName());
 				if (existingChannel->getInviteOnly())

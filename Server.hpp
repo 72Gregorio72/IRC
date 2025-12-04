@@ -63,7 +63,7 @@ class Server{
 		int part(std::string msg, int sd);
 		int parse_entry(std::string msg, int sd);
 		int	topic(std::string msg, int sd);
-		// void assignPasswordToChannel(std::string msg);
+		bool assignPasswordToChannel(std::string channels, std::string passwords, Channel *channel);
 		int parse_join(std::string msg);
 		bool alreadyInChannel(std::string nickname, std::string channelName);
 
