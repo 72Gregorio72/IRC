@@ -32,6 +32,7 @@
 #include <map>
 #include <vector>
 #include <algorithm>
+#include <sstream>
 
 #include "Channel.hpp"
 #include "User.hpp"

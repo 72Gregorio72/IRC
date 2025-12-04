@@ -6,6 +6,8 @@ SRCS		=   main.cpp Server.cpp \
 				ServerLoop.cpp \
 				ServerParsing.cpp \
 				ServerReplyMessage.cpp \
+				BalatroBot/Balatro.cpp \
+				BalatroBot/Card.cpp \
 
 OBJS		= $(SRCS:.cpp=.o)
 
