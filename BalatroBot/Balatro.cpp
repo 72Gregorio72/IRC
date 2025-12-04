@@ -14,7 +14,9 @@ Balatro::Balatro(const Balatro &other)
 	  hands(other.hands), 
 	  coins(other.coins),
 	  currentBet(other.currentBet),
-	  totalBet(other.totalBet) {}
+	  totalBet(other.totalBet),
+	  sd(other.sd),
+	  player(other.player) {}
 
 Balatro &Balatro::operator=(const Balatro &other) {
 	if (this != &other) {
@@ -26,6 +28,8 @@ Balatro &Balatro::operator=(const Balatro &other) {
 		coins = other.coins;
 		currentBet = other.currentBet;
 		totalBet = other.totalBet;
+		sd = other.sd;
+		player = other.player;
 	}
 	return *this;
 }
@@ -55,6 +59,14 @@ void Balatro::dealInitialHand() {
         deck.pop_back();
     }
     printUI();
+}
+
+void Balatro::getMessagePrompt(std::string msg) {
+	std::cout << msg << "bot sd: " << sd << std::endl;
+}
+
+int Balatro::getSd() {
+	return sd;
 }
 
 void Balatro::shuffleDeck(){

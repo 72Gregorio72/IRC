@@ -15,6 +15,7 @@ struct data{
 
 class User;
 class Channel;
+class Balatro;
 
 class Server{
 
@@ -66,12 +67,16 @@ class Server{
 		// void assignPassword(std::string msg);
 		int parse_join(std::string msg);
 
+		Balatro* findBalatroBySd(int sd);
+
+		void addBalatroBot(int sd, User player);
 	private:
 		std::vector<Channel> allChannels;
 		std::string password;
 		data serverdata;
 		std::vector <User *> users;
 		std::string	serverName;
+		std::vector<Balatro> balatroBots;
 };
 
 #endif

@@ -306,6 +306,10 @@ int Server::parse_msg(int sd) {
         if (pos != std::string::npos) 
         {
             msg.erase(0, pos + 8);
+			if (msg.find("BalatroBot") != std::string::npos){
+				findBalatroBySd(sd)->getMessagePrompt(msg);
+				return 0;
+			}
             pos = msg.find_first_of("\r\n");
             if (pos != std::string::npos)
                 msg = msg.substr(0, pos);
@@ -332,9 +336,9 @@ int Server::parse_msg(int sd) {
     }
 
 	if (msg.find("balatro") != std::string::npos) {
-		std::cout << "Balatro command received" << std::endl;
-		Balatro balatrobot(sd, *find_by_sd(sd));
-		balatrobot.startNewGame();
+		addBalatroBot(sd, *find_by_sd(sd));
+		if (findBalatroBySd(sd) != NULL)
+			findBalatroBySd(sd)->startNewGame();
 	}
 
     return 0;
