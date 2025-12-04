@@ -26,6 +26,7 @@ class Channel{
 		
 
 		User *findUserByNickname(std::string nickname);
+		User *findUserBySd(int sd);
 		int count_operators();
 
 		void	setTopic(std::string src_topic);

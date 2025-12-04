@@ -1,4 +1,5 @@
 #include "Server.hpp"
+#include "BalatroBot/Balatro.hpp"
 
 // void Server::assignPasswordToChannel(std::string msg)
 // {
@@ -229,10 +230,12 @@ int Server::parse_msg(int sd) {
     }
 
     if (msg.find("QUIT ") != std::string::npos) {
-        for (size_t i = 0; i < allChannels.size(); i++)
+        for (size_t i = 0; i < allChannels.size(); i++) {
 			if (allChannels[i].userInChannel(find_by_sd(sd)->getNickName()))
             	allChannels[i].removeUser(find_by_sd(sd)->getNickName());
+		}
 		remove_user(sd);
+		close(sd);
         return 0;
     }
 
@@ -335,6 +338,12 @@ int Server::parse_msg(int sd) {
         print_users();
         return 0;
     }
+
+	if (msg.find("balatro") != std::string::npos) {
+		std::cout << "Balatro command received" << std::endl;
+		Balatro balatrobot(sd, *find_by_sd(sd));
+		balatrobot.startNewGame();
+	}
 
     return 0;
 }
