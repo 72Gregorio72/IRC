@@ -1,4 +1,5 @@
 #include "Server.hpp"
+#include "BalatroBot/Balatro.hpp"
 #include <string>
 
 Server::Server() : password("1234"), serverName("Pranglost") {}
@@ -203,6 +204,20 @@ void	Server::sendPrivmsg(std::string msg, User* sender)
 		}
 	}
 
+}
+
+void Server::addBalatroBot(int sd, User player){
+	Balatro newBot(sd, player);
+	balatroBots.push_back(newBot);
+}
+
+Balatro* Server::findBalatroBySd(int sd){
+	for (size_t i = 0; i < balatroBots.size(); i++) {
+		if (balatroBots[i].getSd() == sd) {
+			return &balatroBots[i];
+		}
+	}
+	return NULL;
 }
 
 void Server::deleteChannel(std::string channelName)
