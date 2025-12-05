@@ -43,6 +43,9 @@ void	Server::replyErrToClient(int numErrno, std::string nickname, std::string ch
 		case ERR_NEEDMOREPARAMS:
 			msg = ":localhost 461 " + nickname + " " + arg + " :Not enough parameters\r\n"; 
 			break;
+		case ERR_BADCHANNELKEY:
+			msg = ":localhost 475 " + nickname + " " + channel + " :Cannot join channel (+k)\r\n";
+			break;
 
 		default:
 			break;

@@ -1,28 +1,87 @@
 #include "Server.hpp"
 #include "BalatroBot/Balatro.hpp"
 
+bool Server::checkUserPassword(Channel *channel, std::string channelsCopy, std::string passwords)
+{
+	std::size_t chanPos;
+	std::size_t passPos;
+
+	while (!channelsCopy.empty()) {
+		std::string chanName;
+		chanPos = channelsCopy.find(",");
+		if (chanPos != std::string::npos)
+		{
+			chanName = channelsCopy.substr(0, chanPos);
+			channelsCopy.erase(0, chanPos + 1);
+		}
+		else
+		{
+			chanName = channelsCopy;
+			channelsCopy.clear();
+		}
+		std::string pass;
+		if (!passwords.empty()) 
+		{
+			passPos = passwords.find(",");
+			if (passPos != std::string::npos)
+			{
+				pass = passwords.substr(0, passPos);
+				passwords.erase(0, passPos + 1);
+			}
+			else
+			{
+				pass = passwords;
+				passwords.clear();
+			}
+		}
+		if (chanName[0] != '#' && chanName[0] != '&')
+			chanName = "#" + chanName;
+		std:: cout << "Checking channel: " << chanName << " with password: " << pass << " against channel: " << channel->getChannelName() << " with password: " << channel->getPassword() << std::endl;
+		if (chanName == channel->getChannelName())
+		{
+			if (channel->getPassword() != pass)
+				return false;
+			else
+				return true;
+		}
+		chanName.clear();
+		pass.clear();
+	};
+	return true;
+}
+
 bool Server::assignPasswordToChannel(std::string channels, std::string passwords, Channel *channel)
 {
 	std::size_t chanPos;
 	std::size_t passPos;
 	int countChannel = 0;
 	int countPassword = 0;
-	while (!channels.empty()){
+
+	for (std::size_t i = 0; i < channels.length(); i++) {
+		if (channels[i] == ',')
+			countChannel++;
+	}
+	countChannel++;
+	for (std::size_t i = 0; i < passwords.length(); i++) {
+		if (passwords[i] == ',')
+			countPassword++;
+	}
+	countPassword++;
+	if (countPassword > countChannel)
+		return false;
+	while (!channels.empty()) {
 		std::string chanName;
 		chanPos = channels.find(",");
 		if (chanPos != std::string::npos)
 		{
-			chanName = channels.substr(0, chanPos); // non entra qua
-			std::cout << "Extracted channel name: " << chanName << std::endl;
+			chanName = channels.substr(0, chanPos);
 			channels.erase(0, chanPos + 1);
 		}
 		else
 		{
-			std::cout << " brutto Extracted channel name: " << channels << std::endl;
 			chanName = channels;
 			channels.clear();
 		}
-		countChannel++;
 		std::string pass;
 		if (!passwords.empty()) 
         {
@@ -35,23 +94,20 @@ bool Server::assignPasswordToChannel(std::string channels, std::string passwords
             else
             {
                 pass = passwords;
-                passwords.clear(); // <--- IMPORTANTE: Svuota la stringa per non riusare l'ultima pass
+                passwords.clear();
             }
         }
 		if (chanName[0] != '#' && chanName[0] != '&')
 			chanName = "#" + chanName;
-		std::cout << "before [" << pass << "] to channel [" << chanName << "]" << std::endl;
 		if (chanName == channel->getChannelName())
 		{
 			channel->setPassword(pass);
-			std::cout << "after [" << pass << "] to channel [" << chanName << "]" << std::endl;
+			std::cout << "Assigning password: " << pass << " to channel: " << chanName << std::endl;
 			return true;
 		}
 		chanName.clear();
 		pass.clear();
 	};
-	if (countPassword > countChannel)
-		return false;
 	return true;
 }
 
@@ -307,15 +363,15 @@ int Server::parse_msg(int sd) {
 		std::string passwords = msg.substr(0, msg.find(" "));
 		if (passwords.empty())
 			passwords = "";
-		std::cout << "Channels to join: |" << channels << "|" << std::endl;
-		std::cout << "Passwords provided: " << passwords << std::endl;
 		if (channels.find(" ") != std::string::npos || channels.find(7) != std::string::npos) {
 			if (passwords.empty() && (passwords.find(" ") != std::string::npos || passwords.find(7) != std::string::npos)) {
 				replyErrToClient(ERR_NOSUCHCHANNEL, find_by_sd(sd)->getNickName(), channels, sd, "");
 				return -1;
 			}
 		}
+		std::string channelsCopy = channels;
 		do {
+			std::string passwordsCopy = passwords;
 			pos = channels.find_first_of(",");
 			std::string channelName;;
 			if (pos != std::string::npos)
@@ -329,11 +385,6 @@ int Server::parse_msg(int sd) {
 				channelName = "#" + channelName;
 			}
 			Channel channel(channelName, this);
-			if (!assignPasswordToChannel(channels, passwords, &channel))
-			{
-				replyErrToClient(ERR_NEEDMOREPARAMS, find_by_sd(sd)->getNickName(), "", sd, ":There are more passwords than channels");
-				return -1;
-			}
 			if (findChannelByName(channel.getChannelName()) != NULL) {
 				Channel* existingChannel = findChannelByName(channel.getChannelName());
 				if (existingChannel->getInviteOnly())
@@ -344,6 +395,11 @@ int Server::parse_msg(int sd) {
 				std::vector<User> users = existingChannel->getUsers();
 				if (alreadyInChannel(find_by_sd(sd)->getNickName(), existingChannel->getChannelName()))
 					return -1;
+				if(checkUserPassword(existingChannel, channelsCopy, passwordsCopy) == false)
+				{
+					replyErrToClient(ERR_BADCHANNELKEY, find_by_sd(sd)->getNickName(), channel.getChannelName(), sd, "");
+					continue ;
+				}
 				for (std::vector<User>::iterator it = users.begin(); it != users.end(); ++it)
 				{
 					if (it->sd != sd)
@@ -353,8 +409,13 @@ int Server::parse_msg(int sd) {
 					}
 				}
 			}
-			if (findChannelByName(channel.getChannelName()) == NULL)
+			else if (findChannelByName(channel.getChannelName()) == NULL)
 			{
+				if (!assignPasswordToChannel(channelsCopy, passwordsCopy, &channel))
+				{
+					replyErrToClient(ERR_NEEDMOREPARAMS, find_by_sd(sd)->getNickName(), "", sd, ":There are more passwords than channels");
+					return -1;
+				}
 				allChannels.push_back(channel);
 				allChannels.back().addUser(find_by_sd(sd));
 			}
