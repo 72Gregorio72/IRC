@@ -499,7 +499,12 @@ int Server::mode(std::string msg, int sd) {
 				modeFlags.l.flag = 1;
 			}
 			else
+			{
+				std::stringstream ss;
+				ss << flagsStr[i];
+				replyErrToClient(ERR_UNKNOWNMODE, find_by_sd(sd)->getNickName(), "", sd, ss.str());
 				return -1; // Unknown flag
+			}
 		}
 		else if (modeFlags.setting == 2) { // Removing flags
 			if (flagsStr[i] == 'i')
@@ -570,12 +575,78 @@ int Server::mode(std::string msg, int sd) {
 				if (limit <= 0)
 					return -1; // Invalid limit
 				channel->setUserLimit(limit);
+				std::string opMsg = ":" + find_by_sd(sd)->getNickName() + "!" + find_by_sd(sd)->getUserName() + "@localhost MODE " + channelName + " +l " + modeFlags.l.arg + "\r\n";
+				std::vector<User> users = channel->getUsers();
+				for (size_t j = 0; j < users.size(); j++) {
+					int fd = users[j].sd;
+					send(fd, opMsg.c_str(), opMsg.length(), MSG_NOSIGNAL);
+				}
 			} else {
 				replyErrToClient(ERR_NEEDMOREPARAMS, find_by_sd(sd)->getNickName(), channelName, sd, "");
 				return -1; // No limit provided
 			}
 		} else if (modeFlags.l.flag == 2) {
+			std::string deopMsg = ":" + find_by_sd(sd)->getNickName() + "!" + find_by_sd(sd)->getUserName() + "@localhost MODE " + channelName + " -l " + modeFlags.l.arg + "\r\n";
+			std::vector<User> users = channel->getUsers();
+			for (size_t j = 0; j < users.size(); j++) {
+				int fd = users[j].sd;
+				send(fd, deopMsg.c_str(), deopMsg.length(), MSG_NOSIGNAL);
+			}
 			channel->setUserLimit(-1); // No limit
+		}
+
+		if (modeFlags.k.flag == 1) {
+			channel->setPassword(modeFlags.k.arg);
+			std::string opMsg = ":" + find_by_sd(sd)->getNickName() + "!" + find_by_sd(sd)->getUserName() + "@localhost MODE " + channelName + " +k " + modeFlags.k.arg + "\r\n";
+			std::vector<User> users = channel->getUsers();
+			for (size_t j = 0; j < users.size(); j++) {
+				int fd = users[j].sd;
+				send(fd, opMsg.c_str(), opMsg.length(), MSG_NOSIGNAL);
+			}
+		} else if (modeFlags.k.flag == 2) {
+			channel->setPassword("");
+			std::string opMsg = ":" + find_by_sd(sd)->getNickName() + "!" + find_by_sd(sd)->getUserName() + "@localhost MODE " + channelName + " -k " + modeFlags.k.arg + "\r\n";
+			std::vector<User> users = channel->getUsers();
+			for (size_t j = 0; j < users.size(); j++) {
+				int fd = users[j].sd;
+				send(fd, opMsg.c_str(), opMsg.length(), MSG_NOSIGNAL);
+			}
+		}
+
+		if (modeFlags.i.flag == 1) {
+			channel->setInviteOnly(true);
+			std::string opMsg = ":" + find_by_sd(sd)->getNickName() + "!" + find_by_sd(sd)->getUserName() + "@localhost MODE " + channelName + " +i " + modeFlags.i.arg + "\r\n";
+			std::vector<User> users = channel->getUsers();
+			for (size_t j = 0; j < users.size(); j++) {
+				int fd = users[j].sd;
+				send(fd, opMsg.c_str(), opMsg.length(), MSG_NOSIGNAL);
+			}
+		} else if (modeFlags.i.flag == 2) {
+			channel->setInviteOnly(false);
+			std::string opMsg = ":" + find_by_sd(sd)->getNickName() + "!" + find_by_sd(sd)->getUserName() + "@localhost MODE " + channelName + " -i " + modeFlags.i.arg + "\r\n";
+			std::vector<User> users = channel->getUsers();
+			for (size_t j = 0; j < users.size(); j++) {
+				int fd = users[j].sd;
+				send(fd, opMsg.c_str(), opMsg.length(), MSG_NOSIGNAL);
+			}
+		}
+
+		if (modeFlags.t.flag == 1) {
+			channel->setTopicChangeOnlyOp(true);
+			std::string opMsg = ":" + find_by_sd(sd)->getNickName() + "!" + find_by_sd(sd)->getUserName() + "@localhost MODE " + channelName + " +t " + modeFlags.t.arg + "\r\n";
+			std::vector<User> users = channel->getUsers();
+			for (size_t j = 0; j < users.size(); j++) {
+				int fd = users[j].sd;
+				send(fd, opMsg.c_str(), opMsg.length(), MSG_NOSIGNAL);
+			}
+		} else if (modeFlags.t.flag == 2) {
+			channel->setTopicChangeOnlyOp(false);
+			std::string opMsg = ":" + find_by_sd(sd)->getNickName() + "!" + find_by_sd(sd)->getUserName() + "@localhost MODE " + channelName + " -t " + modeFlags.t.arg + "\r\n";
+			std::vector<User> users = channel->getUsers();
+			for (size_t j = 0; j < users.size(); j++) {
+				int fd = users[j].sd;
+				send(fd, opMsg.c_str(), opMsg.length(), MSG_NOSIGNAL);
+			}
 		}
 	}
 
