@@ -599,7 +599,7 @@ int Server::parse_msg(int sd) {
 			}
 			else
 				channelName = channels;
-			if (channelName.find("#") != 0 && channelName.find("&") != 0) {
+			if ((channelName.find("#") != 0 && channelName.find("&") != 0) || channelName.length() > 200 || channelName.length() < 1) {
 				replyErrToClient(ERR_NOSUCHCHANNEL, find_by_sd(sd)->getNickName(), channelName, sd, "");
 				return -1;
 			}
