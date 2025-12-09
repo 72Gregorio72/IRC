@@ -9,6 +9,7 @@ Channel::Channel() {
 
 Channel::~Channel() {
 	users.clear();
+	inviteList.clear();
 }
 
 Channel::Channel(std::string name, Server *serv) {
@@ -34,6 +35,7 @@ Channel::Channel(const Channel &other) {
 	inviteOnly = other.inviteOnly;
     topic = other.topic;
 	password = other.password;
+	inviteList = other.inviteList;
 }
 
 
@@ -46,6 +48,7 @@ Channel &Channel::operator=(const Channel &other) {
 		inviteOnly = other.inviteOnly;
         topic = other.topic;
 		password = other.password;
+		inviteList = other.inviteList;
 	}
     return *this;
 }
@@ -66,20 +69,28 @@ std::vector<User> Channel::getUsers() {
 	return users;
 }
 
+std::vector<std::string> Channel::getInviteList() {
+	return inviteList;
+}
+
 void    Channel::setTopic(std::string src_topic) {
     topic = src_topic;
+}
+
+void	Channel::addInviteList(std::string nickname) {
+	inviteList.push_back(nickname);
 }
 
 void Channel::addUser(User *user) {
 
 	users.push_back(*user);
-	std::cout << "User " << users[0].getNickName() << std::endl;
+	//std::cout << "User " << users[0].getNickName() << std::endl;
 	std::string joinMsg = ":" + user->getNickName() + "!" + user->getUserName() + "@localhost JOIN :" + channel_name + "\r\n";
     
     if (users.size() == 1)
 		users.back().SetOp(true);
 	
-    std::cout << "User " << users[0]._isOp() << std::endl;
+    //std::cout << "User " << users[0]._isOp() << std::endl;
     for (size_t i = 0; i < users.size(); i++) {
         int fd = users[i].sd;
         send(fd, joinMsg.c_str(), joinMsg.length(), MSG_NOSIGNAL);
@@ -97,12 +108,21 @@ void Channel::addUser(User *user) {
         namesList += users[i].getNickName() + " ";
     }
 
-	std::cout << "Names list: " << namesList << std::endl;
+	//std::cout << "Names list: " << namesList << std::endl;
 	
 	server->replyServToClient(RPL_NAMREPLY, user->getNickName(), user->sd, channel_name, namesList);
 
 	server->replyServToClient(RPL_ENDOFNAMES, user->getNickName(), user->sd, channel_name, "End of /NAMES list");
 }
+
+bool	Channel::nickInInviteList(std::string nickname) {
+	for (size_t i = 0; i < inviteList.size(); i++) {
+		if (inviteList[i] == nickname)
+			return true;
+	}
+	return false;
+}
+
 
 User *Channel::findUserByNickname(std::string nickname) {
 	for (size_t i = 0; i < users.size(); i++) {

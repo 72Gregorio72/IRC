@@ -20,6 +20,10 @@ void	Server::replyErrToClient(int numErrno, std::string nickname, std::string ch
 			msg += ":localhost 442 " + nickname + " " + channel + " :You're not on that channel\r\n";
 			break;
 
+		case ERR_USERONCHANNEL:
+			msg += ":localhost 443 " + nickname + " " + arg + " " + channel + " :Is already on channel\r\n";
+			break;
+
 		case ERR_NOSUCHNICK:
 			msg = ":localhost 401 " + nickname + " " + channel + " :No such nick/channel\r\n";
             break;
@@ -43,6 +47,7 @@ void	Server::replyErrToClient(int numErrno, std::string nickname, std::string ch
 		case ERR_NEEDMOREPARAMS:
 			msg = ":localhost 461 " + nickname + " " + arg + " :Not enough parameters\r\n"; 
 			break;
+
 		case ERR_BADCHANNELKEY:
 			msg = ":localhost 475 " + nickname + " " + channel + " :Cannot join channel (+k)\r\n";
 			break;

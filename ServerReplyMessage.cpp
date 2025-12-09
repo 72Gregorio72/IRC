@@ -17,6 +17,11 @@ void    Server::replyServToClient(int numErrno, std::string nickname, int sd, st
 		case RPL_TOPIC:
 			msg += ":localhost 332 " + nickname + " " + channelName + " :" + addMsg + "\r\n";
 			break;
+
+		case RPL_INVITING:
+			msg += ":localhost 341 " + nickname + " " + addMsg + " " + channelName + "\r\n";
+			break;
+		
 		default:
 			break;
 	}
