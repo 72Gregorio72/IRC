@@ -16,15 +16,18 @@ class Channel{
 
 		std::string getChannelName();
 		std::vector<User> getUsers();
+		std::vector<std::string> getInviteList();
 		bool	getInviteOnly();
 		std::string	getTopic();
 		std::string getPassword();
 
 		void addUser(User *user);
 		int removeUser(std::string nickname);
+		void	addInviteList(std::string nickname);
+
+		bool	nickInInviteList(std::string nickname);
 
 		bool	userInChannel(std::string nickname);
-		
 
 		User *findUserByNickname(std::string nickname);
 		User *findUserBySd(int sd);
@@ -37,6 +40,7 @@ class Channel{
 		Server	*server;
 		std::string channel_name;
 		std::vector <User> users;
+		std::vector <std::string> inviteList;
 		std::string password;
 		std::string topic;
 		bool	inviteOnly;

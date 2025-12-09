@@ -197,8 +197,7 @@ void	Server::sendPrivmsg(std::string msg, User* sender)
 		}
 		else
 		{
-			std::string reply = ":" + getServerName() + " 401 " + sender->getNickName() + " " + channelName + " :No such nick/channel\r\n";
-			send(sender->sd, reply.c_str(), reply.length(), MSG_NOSIGNAL);
+			replyErrToClient(ERR_NOSUCHNICK, sender->getNickName(), channelName, sender->sd, "");
 			return ;
 
 		}

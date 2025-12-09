@@ -102,7 +102,7 @@ bool Server::assignPasswordToChannel(std::string channels, std::string passwords
 		if (chanName == channel->getChannelName())
 		{
 			channel->setPassword(pass);
-			std::cout << "Assigning password: " << pass << " to channel: " << chanName << std::endl;
+			//std::cout << "Assigning password: " << pass << " to channel: " << chanName << std::endl;
 			return true;
 		}
 		chanName.clear();
@@ -317,6 +317,83 @@ int Server::parse_join(std::string msg) {
 	return 0;
 }
 
+int	Server::invite(std::string msg, int sd)
+{
+    User *userSender = find_by_sd(sd);
+	if (!userSender)
+        return (-1); 
+	if (msg.substr(0, 7) == "INVITE ") 
+        msg = msg.substr(7); 
+
+    size_t pos_end = msg.find_last_not_of("\r\n");
+    if (pos_end != std::string::npos) 
+        msg = msg.substr(0, pos_end + 1);
+    
+    size_t spacePos = msg.find(" ");
+	if (spacePos == std::string::npos)
+	{
+		replyErrToClient(ERR_NEEDMOREPARAMS, userSender->getNickName(), "INVITE", sd, "");
+        return (-1);
+	}
+	std::string nickInvited = msg.substr(0, spacePos);
+	std::string channelName = msg.substr(spacePos + 1);
+
+	if (channelName.empty())
+    {
+        replyErrToClient(ERR_NEEDMOREPARAMS, userSender->getNickName(), "INVITE", sd, "");
+        return (-1);
+    }
+
+	if (channelName.find("#") != 0 && channelName.find("&") != 0)
+		channelName = "#" + channelName;
+	Channel *channelToInvite = findChannelByName(channelName);
+	if (!channelToInvite)
+	{
+		replyErrToClient(ERR_NOSUCHCHANNEL, userSender->getNickName(), channelName, sd, "");
+		return (-1);
+	}
+
+	if (!channelToInvite->userInChannel(userSender->getNickName()))
+	{
+		replyErrToClient(ERR_NOTONCHANNEL, userSender->getNickName(), channelName, sd, "");	
+		return (-1);
+	}
+
+	User *userSenderChannel = channelToInvite->findUserBySd(sd);
+	if (!userSenderChannel)
+	{
+		replyErrToClient(ERR_NOSUCHNICK, userSender->getNickName(), channelName, sd, "");
+		return (-1);
+	}
+	if (channelToInvite->getInviteOnly() && !userSenderChannel->_isOp())
+	{
+		replyErrToClient(ERR_CHANOPRIVSNEEDED, userSenderChannel->getNickName(), channelName, sd, "");
+		return (-1);
+	}
+
+	User *userToInvite = find_by_nickname(nickInvited);
+	
+	if (!userToInvite)
+	{
+		replyErrToClient(ERR_NOSUCHNICK, nickInvited, channelName, sd, "");
+		return (-1);
+	}
+
+	if (channelToInvite->userInChannel(userToInvite->getNickName()))
+	{
+		replyErrToClient(ERR_USERONCHANNEL, userSenderChannel->getNickName(), channelName, sd, userToInvite->getNickName());
+		return (-1);
+	}
+	else
+	{
+		channelToInvite->addInviteList(userToInvite->getNickName());
+		replyServToClient(RPL_INVITING, userSenderChannel->getNickName(), sd, channelName, userToInvite->getNickName());
+		std::string replyMsg = ":" + userSenderChannel->getNickName() + "!" + userSenderChannel->getUserName() + "@localhost INVITE " + userToInvite->getNickName()  + " :" + channelName + "\r\n";
+		send(userToInvite->sd, replyMsg.c_str(), replyMsg.length(), MSG_NOSIGNAL);
+	}
+	return (0);
+}
+
 int Server::parse_msg(int sd) {
     if (sd < 0)
         return -1;
@@ -345,7 +422,7 @@ int Server::parse_msg(int sd) {
     }
 
     if (msg.find("JOIN ") != std::string::npos) {
-		std::cout << msg << std::endl;
+		//std::cout << msg << std::endl;
         size_t pos = msg.find("JOIN ");
         if (pos != std::string::npos) msg.erase(0, pos);
         msg.erase(0, 5);
@@ -388,7 +465,7 @@ int Server::parse_msg(int sd) {
 			Channel channel(channelName, this);
 			if (findChannelByName(channel.getChannelName()) != NULL) {
 				Channel* existingChannel = findChannelByName(channel.getChannelName());
-				if (existingChannel->getInviteOnly())
+				if (existingChannel->getInviteOnly() && !existingChannel->nickInInviteList(find_by_sd(sd)->getNickName()))
 				{
 					replyErrToClient(ERR_INVITEONLYCHAN, "", existingChannel->getChannelName(), sd, " :Cannot join channel (+i)");
 					return -1;
@@ -445,6 +522,9 @@ int Server::parse_msg(int sd) {
         return (part(msg, sd));
     }
 
+    else if (msg.find("INVITE ") != std::string::npos) {
+        return (invite(msg, sd));
+    }
 
     else if (msg.find("TOPIC ") != std::string::npos) {
         return (topic(msg, sd));
