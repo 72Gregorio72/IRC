@@ -344,8 +344,10 @@ int	Server::invite(std::string msg, int sd)
         return (-1);
     }
 
-	if (channelName.find("#") != 0 && channelName.find("&") != 0)
-		channelName = "#" + channelName;
+	if (channelName.find("#") != 0 && channelName.find("&") != 0) {
+		replyErrToClient(ERR_NOSUCHCHANNEL, find_by_sd(sd)->getNickName(), channelName, sd, "");
+		return -1;
+	}
 	Channel *channelToInvite = findChannelByName(channelName);
 	if (!channelToInvite)
 	{
