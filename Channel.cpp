@@ -5,6 +5,7 @@ Channel::Channel() {
 	topic = "";
 	password = "";
 	inviteOnly = false;
+	userLimit = -1;
 }
 
 Channel::~Channel() {
@@ -16,6 +17,7 @@ Channel::Channel(std::string name, Server *serv) {
     topic = "";
     server = serv;
 	inviteOnly = false;
+	userLimit = -1;
     if (name.length() > 200 || name.empty()) {
         channel_name = "invalid";
         return;
@@ -33,6 +35,7 @@ Channel::Channel(const Channel &other) {
 	users = other.users;
 	server = other.server;
 	inviteOnly = other.inviteOnly;
+	userLimit = other.userLimit;
     topic = other.topic;
 	password = other.password;
 	inviteList = other.inviteList;
@@ -47,6 +50,7 @@ Channel &Channel::operator=(const Channel &other) {
 		server = other.server;
 		inviteOnly = other.inviteOnly;
         topic = other.topic;
+		userLimit = other.userLimit;
 		password = other.password;
 		inviteList = other.inviteList;
 	}
@@ -59,6 +63,14 @@ bool	Channel::getInviteOnly() {
 
 std::string Channel::getChannelName() {
 	return channel_name;
+}
+
+int Channel::getUserLimit() {
+	return userLimit;
+}
+
+void Channel::setUserLimit(int limit) {
+	userLimit = limit;
 }
 
 std::string Channel::getTopic() {
@@ -123,6 +135,10 @@ bool	Channel::nickInInviteList(std::string nickname) {
 	return false;
 }
 
+
+void	Channel::setInviteOnly(bool value) {
+	inviteOnly = value;
+}
 
 User *Channel::findUserByNickname(std::string nickname) {
 	for (size_t i = 0; i < users.size(); i++) {

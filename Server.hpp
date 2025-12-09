@@ -17,6 +17,15 @@ class User;
 class Channel;
 class Balatro;
 
+struct flags{
+	bool	i;
+	bool	t;
+	bool	k;
+	bool	o;
+	bool	l;
+	int		setting;
+} typedef flags;
+
 class Server{
 
 	public:
@@ -69,6 +78,7 @@ class Server{
 		bool assignPasswordToChannel(std::string channels, std::string passwords, Channel *channel);
 		bool checkUserPassword(Channel *channel, std::string channelsCopy, std::string passwords);
 		int parse_join(std::string msg);
+		int mode(std::string msg, int sd);
 		bool alreadyInChannel(std::string nickname, std::string channelName);
 
 		Balatro* findBalatroBySd(int sd);

@@ -174,7 +174,7 @@ int Server::part(std::string msg, int sd){
 	Channel *channelWanted = findChannelByName(channelName);
 	if (!channelWanted)
 	{
-		std::cout << channelName << std::endl;
+		replyErrToClient(ERR_NOSUCHCHANNEL, userToRemove->getNickName(), channelName, sd, "");
 		return (-100);
 	}
 
@@ -344,8 +344,10 @@ int	Server::invite(std::string msg, int sd)
         return (-1);
     }
 
-	if (channelName.find("#") != 0 && channelName.find("&") != 0)
-		channelName = "#" + channelName;
+	if (channelName.find("#") != 0 && channelName.find("&") != 0) {
+		replyErrToClient(ERR_NOSUCHCHANNEL, find_by_sd(sd)->getNickName(), channelName, sd, "");
+		return -1;
+	}
 	Channel *channelToInvite = findChannelByName(channelName);
 	if (!channelToInvite)
 	{
@@ -394,6 +396,139 @@ int	Server::invite(std::string msg, int sd)
 	return (0);
 }
 
+int Server::mode(std::string msg, int sd) {
+	(void)sd;
+	size_t pos = msg.find("MODE ");
+	if (pos != std::string::npos) msg.erase(0, pos);
+	msg.erase(0, 5);
+	std::string channelName = msg.substr(0, msg.find(" "));
+	msg.erase(0, msg.find(" ") + 1);
+	if (channelName.find("#") != 0 && channelName.find("&") != 0) {
+		return -1; // Not not a channel name
+	}
+	Channel* channel = findChannelByName(channelName);
+	if (channel == NULL){
+		return -1; // No such channel
+	}
+
+	std::string args = msg;
+
+	std::string flagsStr = msg.substr(0, msg.find(" "));
+	msg.erase(0, msg.find(" ") + 1);
+	flags modeFlags;
+	modeFlags.i = false;
+	modeFlags.t = false;
+	modeFlags.k = false;
+	modeFlags.o = false;
+	modeFlags.l = false;
+	modeFlags.setting = 0;
+
+	for (size_t i = 0; i < flagsStr.length(); i++) {
+		if (flagsStr[i] == '+')
+			modeFlags.setting = 1;
+		else if (flagsStr[i] == '-')
+			modeFlags.setting = 2;
+		else if (modeFlags.setting == 0)
+			return -1; // No + or - before flags
+		else if (modeFlags.setting == 1) { // Adding flags
+			if (flagsStr[i] == 'i')
+				modeFlags.i = true;
+			else if (flagsStr[i] == 't')
+				modeFlags.t = true;
+			else if (flagsStr[i] == 'k')
+				modeFlags.k = true;
+			else if (flagsStr[i] == 'o')
+				modeFlags.o = true;
+			else if (flagsStr[i] == 'l')
+				modeFlags.l = true;
+			else
+				return -1; // Unknown flag
+		}
+		else if (modeFlags.setting == 2) { // Removing flags
+			if (flagsStr[i] == 'i')
+				modeFlags.i = false;
+			else if (flagsStr[i] == 't')
+				modeFlags.t = false;
+			else if (flagsStr[i] == 'k')
+				modeFlags.k = false;
+			else if (flagsStr[i] == 'o')
+				modeFlags.o = false;
+			else if (flagsStr[i] == 'l')
+				modeFlags.l = false;
+			else
+				return -1; // Unknown flag
+		}
+		else if (flagsStr[i] == 'i')
+			modeFlags.i = true;
+		else if (flagsStr[i] == 't')
+			modeFlags.t = true;
+		else if (flagsStr[i] == 'k')
+			modeFlags.k = true;
+		else if (flagsStr[i] == 'o')
+			modeFlags.o = true;
+		else if (flagsStr[i] == 'l')
+			modeFlags.l = true;
+		else
+			return -1; // Unknown flag
+		
+		if (modeFlags.i)
+			channel->setInviteOnly(true);
+		else
+			channel->setInviteOnly(false);
+		
+		if (modeFlags.t) {
+			// Implement topic restriction logic if needed
+		}
+
+		if (modeFlags.k) {
+			// Implement password logic if needed
+		}
+
+		if (modeFlags.o) {
+			std::vector<std::string> nicknames;
+			size_t nickPos;
+			while (!msg.empty()) {
+				nickPos = msg.find(" ");
+				std::string nickname;
+				if (nickPos != std::string::npos) {
+					nickname = msg.substr(0, nickPos);
+					msg.erase(0, nickPos + 1);
+				} else {
+					nickname = msg;
+					msg.clear();
+				}
+			}
+			std::cout << "nicknames to op/deop: " << nicknames.size() << std::endl;
+			for (size_t i = 0; i < nicknames.size(); i++) {
+				std::cout << "Processing nickname: " << nicknames[i] << std::endl;
+			}
+		}
+
+		if (modeFlags.l) {
+			int limit = 0;
+			if (!msg.empty()) {
+				limit = std::stoi(msg);
+				if (limit <= 0)
+					return -1; // Invalid limit
+				channel->setUserLimit(limit);
+			} else {
+				return -1; // No limit provided
+			}
+		} else {
+			channel->setUserLimit(-1); // No limit
+		}
+	}
+
+	std::cout << channelName << " mode flags set: "
+			  << "i=" << modeFlags.i << ", "
+			  << "t=" << modeFlags.t << ", "
+			  << "k=" << modeFlags.k << ", "
+			  << "o=" << modeFlags.o << ", "
+			  << "l=" << modeFlags.l << std::endl;
+	std::cout << "With args: " << args << std::endl;
+	return 0;
+}
+
 int Server::parse_msg(int sd) {
     if (sd < 0)
         return -1;
@@ -420,6 +555,11 @@ int Server::parse_msg(int sd) {
 		close(sd);
         return 0;
     }
+
+	if (msg.find("MODE ") != std::string::npos) {
+		mode(msg, sd);
+		return 0;
+	}
 
     if (msg.find("JOIN ") != std::string::npos) {
 		//std::cout << msg << std::endl;
@@ -459,7 +599,8 @@ int Server::parse_msg(int sd) {
 			else
 				channelName = channels;
 			if (channelName.find("#") != 0 && channelName.find("&") != 0) {
-				channelName = "#" + channelName;
+				replyErrToClient(ERR_NOSUCHCHANNEL, find_by_sd(sd)->getNickName(), channelName, sd, "");
+				return -1;
 			}
 			Channel channel(channelName, this);
 			if (findChannelByName(channel.getChannelName()) != NULL) {
