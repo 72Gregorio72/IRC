@@ -218,6 +218,7 @@ int Server::parse_entry(std::string msg, int sd){
 				return -72;
 			}
 			msg.erase(0, msg.find_first_of("\r\n"));
+			nickname.erase(nickname.find_last_not_of(" \r\n") + 1);
 			find_by_sd(sd)->setNickName(nickname);
 			return 0;
 		}
@@ -398,31 +399,77 @@ int	Server::invite(std::string msg, int sd)
 }
 
 int Server::mode(std::string msg, int sd) {
-	(void)sd;
+	int argIndex = 0;
 	size_t pos = msg.find("MODE ");
 	if (pos != std::string::npos) msg.erase(0, pos);
 	msg.erase(0, 5);
 	std::string channelName = msg.substr(0, msg.find(" "));
 	msg.erase(0, msg.find(" ") + 1);
 	if (channelName.find("#") != 0 && channelName.find("&") != 0) {
+		replyErrToClient(ERR_NOSUCHCHANNEL, find_by_sd(sd)->getNickName(), channelName, sd, "");
 		return -1; // Not not a channel name
 	}
 	Channel* channel = findChannelByName(channelName);
 	if (channel == NULL){
+		replyErrToClient(ERR_NOSUCHCHANNEL, find_by_sd(sd)->getNickName(), channelName, sd, "");
 		return -1; // No such channel
 	}
 
-	std::string args = msg;
+	if (channel->findUserByNickname(find_by_sd(sd)->getNickName()) == NULL){
+		replyErrToClient(ERR_NOTONCHANNEL, find_by_sd(sd)->getNickName(), channelName, sd, "");
+		return -1; // User not in channel
+	}
 
+	if (channel->findUserByNickname(find_by_sd(sd)->getNickName())->_isOp() == false){
+		replyErrToClient(ERR_CHANOPRIVSNEEDED, find_by_sd(sd)->getNickName(), channelName, sd, "");
+		return -1; // User is not operator
+	}
 	std::string flagsStr = msg.substr(0, msg.find(" "));
 	msg.erase(0, msg.find(" ") + 1);
 	flags modeFlags;
-	modeFlags.i = false;
-	modeFlags.t = false;
-	modeFlags.k = false;
-	modeFlags.o = false;
-	modeFlags.l = false;
+	modeFlags.i.flag = 0;
+	modeFlags.i.arg = "";
+
+	modeFlags.t.flag = 0;
+	modeFlags.t.arg = "";
+
+	modeFlags.k.flag = 0;
+	modeFlags.k.arg = "";
+
+	modeFlags.o.flag = 0;
+	modeFlags.o.arg = "";
+
+	modeFlags.l.flag = 0;
+	modeFlags.l.arg = "";
+
 	modeFlags.setting = 0;
+
+	std::vector<std::string> args;
+
+	for(size_t i = 0; i < msg.length(); ) {
+		if (msg[i] == ' ') {
+			i++;
+			continue;
+		}
+		size_t nextSpace = msg.find(' ', i);
+		if (nextSpace == std::string::npos) {
+			if (msg.find("\r\n", i) != std::string::npos)
+				args.push_back(msg.substr(i, msg.find("\r\n", i) - i));
+			else
+				args.push_back(msg.substr(i));
+			break;
+		} else {
+			args.push_back(msg.substr(i, nextSpace - i));
+			i = nextSpace;
+			while (i < msg.length() && msg[i] == ' ') {
+				i++;
+			}
+		}
+	}
+
+	for(size_t i = 0; i < args.size(); i++) {
+		std::cout << "Arg " << i << ": " << args[i] << std::endl;
+	}
 
 	for (size_t i = 0; i < flagsStr.length(); i++) {
 		if (flagsStr[i] == '+')
@@ -433,100 +480,111 @@ int Server::mode(std::string msg, int sd) {
 			return -1; // No + or - before flags
 		else if (modeFlags.setting == 1) { // Adding flags
 			if (flagsStr[i] == 'i')
-				modeFlags.i = true;
+				modeFlags.i.flag = 1;
 			else if (flagsStr[i] == 't')
-				modeFlags.t = true;
-			else if (flagsStr[i] == 'k')
-				modeFlags.k = true;
-			else if (flagsStr[i] == 'o')
-				modeFlags.o = true;
-			else if (flagsStr[i] == 'l')
-				modeFlags.l = true;
+				modeFlags.t.flag = 1;
+			else if (flagsStr[i] == 'k'){
+				modeFlags.k.arg = args[argIndex];
+				argIndex++;
+				modeFlags.k.flag = 1;
+			}
+			else if (flagsStr[i] == 'o'){
+				modeFlags.o.arg = args[argIndex];
+				argIndex++;
+				modeFlags.o.flag = 1;
+			}
+			else if (flagsStr[i] == 'l'){
+				modeFlags.l.arg = args[argIndex];
+				argIndex++;
+				modeFlags.l.flag = 1;
+			}
 			else
 				return -1; // Unknown flag
 		}
 		else if (modeFlags.setting == 2) { // Removing flags
 			if (flagsStr[i] == 'i')
-				modeFlags.i = false;
+				modeFlags.i.flag = 2;
 			else if (flagsStr[i] == 't')
-				modeFlags.t = false;
+				modeFlags.t.flag = 2;
 			else if (flagsStr[i] == 'k')
-				modeFlags.k = false;
-			else if (flagsStr[i] == 'o')
-				modeFlags.o = false;
+				modeFlags.k.flag = 2;
+			else if (flagsStr[i] == 'o'){
+				modeFlags.o.flag = 2;
+				modeFlags.o.arg = args[argIndex];
+				argIndex++;
+			}
 			else if (flagsStr[i] == 'l')
-				modeFlags.l = false;
+				modeFlags.l.flag = 2;
 			else
 				return -1; // Unknown flag
 		}
-		else if (flagsStr[i] == 'i')
-			modeFlags.i = true;
-		else if (flagsStr[i] == 't')
-			modeFlags.t = true;
-		else if (flagsStr[i] == 'k')
-			modeFlags.k = true;
-		else if (flagsStr[i] == 'o')
-			modeFlags.o = true;
-		else if (flagsStr[i] == 'l')
-			modeFlags.l = true;
-		else
-			return -1; // Unknown flag
 		
-		if (modeFlags.i)
+		if (modeFlags.i.flag == 1)
 			channel->setInviteOnly(true);
-		else
+		else if (modeFlags.i.flag == 2)
 			channel->setInviteOnly(false);
 		
-		if (modeFlags.t) {
+		if (modeFlags.t.flag == 1) {
 			// Implement topic restriction logic if needed
 		}
 
-		if (modeFlags.k) {
+		if (modeFlags.k.flag == 1) {
 			// Implement password logic if needed
 		}
 
-		if (modeFlags.o) {
-			std::vector<std::string> nicknames;
-			size_t nickPos;
-			while (!msg.empty()) {
-				nickPos = msg.find(" ");
-				std::string nickname;
-				if (nickPos != std::string::npos) {
-					nickname = msg.substr(0, nickPos);
-					msg.erase(0, nickPos + 1);
-				} else {
-					nickname = msg;
-					msg.clear();
+		if (modeFlags.o.flag == 1) {
+			std::cout << "Giving operator status to |" << modeFlags.o.arg << "|" << std::endl;
+			User* userToOp = channel->findUserByNickname(modeFlags.o.arg);
+			if (userToOp != NULL) {
+				userToOp->SetOp(true);
+				std::string opMsg = ":" + find_by_sd(sd)->getNickName() + "!" + find_by_sd(sd)->getUserName() + "@localhost MODE " + channelName + " +o " + modeFlags.o.arg + "\r\n";
+				std::vector<User> users = channel->getUsers();
+				for (size_t j = 0; j < users.size(); j++) {
+					int fd = users[j].sd;
+					send(fd, opMsg.c_str(), opMsg.length(), MSG_NOSIGNAL);
 				}
+			} else {
+				replyErrToClient(ERR_NOSUCHNICK, find_by_sd(sd)->getNickName(), channelName, sd, "");
+				return -1; // No such user to op
 			}
-			std::cout << "nicknames to op/deop: " << nicknames.size() << std::endl;
-			for (size_t i = 0; i < nicknames.size(); i++) {
-				std::cout << "Processing nickname: " << nicknames[i] << std::endl;
+		} else if (modeFlags.o.flag == 2) {
+			User* userToDeop = channel->findUserByNickname(modeFlags.o.arg);
+			if (userToDeop != NULL) {
+				userToDeop->SetOp(false);
+				std::string deopMsg = ":" + find_by_sd(sd)->getNickName() + "!" + find_by_sd(sd)->getUserName() + "@localhost MODE " + channelName + " -o " + modeFlags.o.arg + "\r\n";
+				std::vector<User> users = channel->getUsers();
+				for (size_t j = 0; j < users.size(); j++) {
+					int fd = users[j].sd;
+					send(fd, deopMsg.c_str(), deopMsg.length(), MSG_NOSIGNAL);
+				}
+			} else {
+				replyErrToClient(ERR_NOSUCHNICK, find_by_sd(sd)->getNickName(), channelName, sd, "");
+				return -1; // No such user to deop
 			}
 		}
 
-		// if (modeFlags.l) {
-		// 	int limit = 0;
-		// 	if (!msg.empty()) {
-		// 		limit = std::stoi(msg);
-		// 		if (limit <= 0)
-		// 			return -1; // Invalid limit
-		// 		channel->setUserLimit(limit);
-		// 	} else {
-		// 		return -1; // No limit provided
-		// 	}
-		// } else {
-		// 	channel->setUserLimit(-1); // No limit
-		// }
+		if (modeFlags.l.flag == 1) {
+			int limit = 0;
+			if (!msg.empty()) {
+				limit = std::atol(msg.c_str());
+				if (limit <= 0)
+					return -1; // Invalid limit
+				channel->setUserLimit(limit);
+			} else {
+				replyErrToClient(ERR_NEEDMOREPARAMS, find_by_sd(sd)->getNickName(), channelName, sd, "");
+				return -1; // No limit provided
+			}
+		} else if (modeFlags.l.flag == 2) {
+			channel->setUserLimit(-1); // No limit
+		}
 	}
 
 	std::cout << channelName << " mode flags set: "
-			  << "i=" << modeFlags.i << ", "
-			  << "t=" << modeFlags.t << ", "
-			  << "k=" << modeFlags.k << ", "
-			  << "o=" << modeFlags.o << ", "
-			  << "l=" << modeFlags.l << std::endl;
-	std::cout << "With args: " << args << std::endl;
+			  << "i=" << modeFlags.i.flag << ", "
+			  << "t=" << modeFlags.t.flag << ", "
+			  << "k=" << modeFlags.k.flag << ", "
+			  << "o=" << modeFlags.o.flag << ", "
+			  << "l=" << modeFlags.l.flag << std::endl;
 	return 0;
 }
 
@@ -558,8 +616,7 @@ int Server::parse_msg(int sd) {
     }
 
 	if (msg.find("MODE ") != std::string::npos) {
-		mode(msg, sd);
-		return 0;
+		return mode(msg, sd);
 	}
 
     if (msg.find("JOIN ") != std::string::npos) {
