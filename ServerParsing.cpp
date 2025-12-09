@@ -286,7 +286,8 @@ int Server::topic(std::string msg, int sd) {
     }
 
     else {
-        if (userSender->_isOp() == false) {
+
+        if (wantedChannel->getTopicChangeOnlyOp() && userSender->_isOp() == false) {
             replyErrToClient(ERR_CHANOPRIVSNEEDED, userSender->getNickName(), wantedChannel->getChannelName(), sd, "");
             return (-100);
         }
@@ -605,6 +606,13 @@ int Server::parse_msg(int sd) {
 			Channel channel(channelName, this);
 			if (findChannelByName(channel.getChannelName()) != NULL) {
 				Channel* existingChannel = findChannelByName(channel.getChannelName());
+
+				if (existingChannel->getUserLimit() > 0 && (int)existingChannel->getUsers().size() + 1 > existingChannel->getUserLimit())
+				{
+					replyErrToClient(ERR_CHANNELISFULL, find_by_sd(sd)->getNickName(), channelName, sd, "");
+					return -1;
+				}
+
 				if (existingChannel->getInviteOnly() && !existingChannel->nickInInviteList(find_by_sd(sd)->getNickName()))
 				{
 					replyErrToClient(ERR_INVITEONLYCHAN, "", existingChannel->getChannelName(), sd, " :Cannot join channel (+i)");

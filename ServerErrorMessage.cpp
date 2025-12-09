@@ -52,6 +52,9 @@ void	Server::replyErrToClient(int numErrno, std::string nickname, std::string ch
 			msg = ":localhost 475 " + nickname + " " + channel + " :Cannot join channel (+k)\r\n";
 			break;
 
+		case ERR_CHANNELISFULL:
+			msg = ":localhost 471 " + nickname + " " + channel + " :Cannot join channel (+l)\r\n";
+			break;
 		default:
 			break;
 	}
