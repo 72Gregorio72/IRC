@@ -5,6 +5,7 @@ Channel::Channel() {
 	topic = "";
 	password = "";
 	inviteOnly = false;
+	userLimit = -1;
 }
 
 Channel::~Channel() {
@@ -15,6 +16,7 @@ Channel::Channel(std::string name, Server *serv) {
     topic = "";
     server = serv;
 	inviteOnly = false;
+	userLimit = -1;
     if (name.length() > 200 || name.empty()) {
         channel_name = "invalid";
         return;
@@ -32,6 +34,7 @@ Channel::Channel(const Channel &other) {
 	users = other.users;
 	server = other.server;
 	inviteOnly = other.inviteOnly;
+	userLimit = other.userLimit;
     topic = other.topic;
 	password = other.password;
 }
@@ -45,6 +48,7 @@ Channel &Channel::operator=(const Channel &other) {
 		server = other.server;
 		inviteOnly = other.inviteOnly;
         topic = other.topic;
+		userLimit = other.userLimit;
 		password = other.password;
 	}
     return *this;
@@ -56,6 +60,14 @@ bool	Channel::getInviteOnly() {
 
 std::string Channel::getChannelName() {
 	return channel_name;
+}
+
+int Channel::getUserLimit() {
+	return userLimit;
+}
+
+void Channel::setUserLimit(int limit) {
+	userLimit = limit;
 }
 
 std::string Channel::getTopic() {
@@ -102,6 +114,10 @@ void Channel::addUser(User *user) {
 	server->replyServToClient(RPL_NAMREPLY, user->getNickName(), user->sd, channel_name, namesList);
 
 	server->replyServToClient(RPL_ENDOFNAMES, user->getNickName(), user->sd, channel_name, "End of /NAMES list");
+}
+
+void	Channel::setInviteOnly(bool value) {
+	inviteOnly = value;
 }
 
 User *Channel::findUserByNickname(std::string nickname) {

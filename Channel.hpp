@@ -32,6 +32,11 @@ class Channel{
 
 		void	setTopic(std::string src_topic);
 		void	setPassword(std::string password);
+
+		void	setInviteOnly(bool value);
+		void	setUserLimit(int limit);
+
+		int getUserLimit();
 	private:
 
 		Server	*server;
@@ -40,6 +45,7 @@ class Channel{
 		std::string password;
 		std::string topic;
 		bool	inviteOnly;
+		int		userLimit;
 };
 
 #endif
