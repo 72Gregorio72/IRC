@@ -41,4 +41,18 @@
 
 extern volatile sig_atomic_t g_sig_received;
 
+struct flagArg{
+	int flag;
+	std::string arg;
+} typedef flagArg;
+
+struct flags{
+	flagArg i;
+	flagArg	t;
+	flagArg	k;
+	flagArg	o;
+	flagArg	l;
+	int		setting;
+} typedef flags;
+
 #endif

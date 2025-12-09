@@ -17,15 +17,6 @@ class User;
 class Channel;
 class Balatro;
 
-struct flags{
-	bool	i;
-	bool	t;
-	bool	k;
-	bool	o;
-	bool	l;
-	int		setting;
-} typedef flags;
-
 class Server{
 
 	public:
