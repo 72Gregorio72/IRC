@@ -26,6 +26,7 @@
 #include <climits>
 #include <sstream>
 #include <stdlib.h>
+#include <cmath>
 
 #include "macros.h"
 

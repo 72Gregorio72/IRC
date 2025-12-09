@@ -2,9 +2,11 @@
 #define BALATRO_HPP
 
 #include "../ft_irc.h"
+#include "../User.hpp"
 #include "Card.hpp"
 
 class Card;
+class User;
 
 class Balatro {
 	public:
@@ -38,6 +40,16 @@ class Balatro {
 		void dealInitialHand();
 
 		void printUI();
+		std::vector<std::string> getCardRows(const Card& c);
+		std::vector<std::string> printDeck();
+		std::string centerText(std::string text, int width);
+		void getLeftPanelContent(int row, std::string& raw, std::string& colored);
+		std::string getRightPanelContent(int row, int handStart, int handH, int deckStart, int deckH, 
+										const std::vector<std::vector<std::string> > & cardMatrix, 
+										const std::vector<std::string>& deckVisual);
+		
+		int getSd();
+		void getMessagePrompt(std::string msg);
 	private:
 		int ante;
 		int discards;

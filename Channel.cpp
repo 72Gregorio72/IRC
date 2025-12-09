@@ -3,6 +3,7 @@
 Channel::Channel() {
 	channel_name = "";
 	topic = "";
+	password = "";
 	inviteOnly = false;
 }
 
@@ -32,6 +33,7 @@ Channel::Channel(const Channel &other) {
 	server = other.server;
 	inviteOnly = other.inviteOnly;
     topic = other.topic;
+	password = other.password;
 }
 
 
@@ -43,6 +45,7 @@ Channel &Channel::operator=(const Channel &other) {
 		server = other.server;
 		inviteOnly = other.inviteOnly;
         topic = other.topic;
+		password = other.password;
 	}
     return *this;
 }
@@ -171,4 +174,14 @@ int	Channel::count_operators()
 			count++;
 	}
 	return (count);
+}
+
+void	Channel::setPassword(std::string newPwd)
+{
+	this->password = newPwd;
+}
+
+std::string	Channel::getPassword()
+{
+	return this->password;
 }
