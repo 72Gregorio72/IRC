@@ -505,19 +505,19 @@ int Server::mode(std::string msg, int sd) {
 			}
 		}
 
-		if (modeFlags.l) {
-			int limit = 0;
-			if (!msg.empty()) {
-				limit = std::stoi(msg);
-				if (limit <= 0)
-					return -1; // Invalid limit
-				channel->setUserLimit(limit);
-			} else {
-				return -1; // No limit provided
-			}
-		} else {
-			channel->setUserLimit(-1); // No limit
-		}
+		// if (modeFlags.l) {
+		// 	int limit = 0;
+		// 	if (!msg.empty()) {
+		// 		limit = std::stoi(msg);
+		// 		if (limit <= 0)
+		// 			return -1; // Invalid limit
+		// 		channel->setUserLimit(limit);
+		// 	} else {
+		// 		return -1; // No limit provided
+		// 	}
+		// } else {
+		// 	channel->setUserLimit(-1); // No limit
+		// }
 	}
 
 	std::cout << channelName << " mode flags set: "

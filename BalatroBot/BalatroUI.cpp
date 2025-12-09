@@ -308,7 +308,7 @@ std::string Balatro::getRightPanelContent(int row, int handStart, int handH, int
     else if (row == deckStart + deckH) {
         std::string deckLabel = "(" + toString(deck.size()) + ")";
         int dPad = (26 - deckLabel.length()) / 2; 
-        right += "                              " + getSpaces(dPad) + deckLabel + getSpaces(26 - dPad - deckLabel.length()) + "\r\n";
+        right += "                              " + getSpaces(dPad) + deckLabel + getSpaces(26 - dPad - deckLabel.length());
     }
 
     return right;
