@@ -3,6 +3,7 @@
 Channel::Channel() {
 	channel_name = "";
 	topic = "";
+	password = "";
 	inviteOnly = false;
 }
 
@@ -32,6 +33,7 @@ Channel::Channel(const Channel &other) {
 	server = other.server;
 	inviteOnly = other.inviteOnly;
     topic = other.topic;
+	password = other.password;
 }
 
 
@@ -43,6 +45,7 @@ Channel &Channel::operator=(const Channel &other) {
 		server = other.server;
 		inviteOnly = other.inviteOnly;
         topic = other.topic;
+		password = other.password;
 	}
     return *this;
 }
@@ -77,7 +80,6 @@ void Channel::addUser(User *user) {
 		users.back().SetOp(true);
 	
     std::cout << "User " << users[0]._isOp() << std::endl;
-	send(user->sd, joinMsg.c_str(), joinMsg.length(), MSG_NOSIGNAL);
     for (size_t i = 0; i < users.size(); i++) {
         int fd = users[i].sd;
         send(fd, joinMsg.c_str(), joinMsg.length(), MSG_NOSIGNAL);
@@ -105,6 +107,15 @@ void Channel::addUser(User *user) {
 User *Channel::findUserByNickname(std::string nickname) {
 	for (size_t i = 0; i < users.size(); i++) {
 		if (users[i].getNickName() == nickname) {
+			return &users[i];
+		}
+	}
+	return NULL;
+}
+
+User *Channel::findUserBySd(int sd) {
+	for (size_t i = 0; i < users.size(); i++) {
+		if (users[i].sd == sd) {
 			return &users[i];
 		}
 	}
@@ -163,4 +174,14 @@ int	Channel::count_operators()
 			count++;
 	}
 	return (count);
+}
+
+void	Channel::setPassword(std::string newPwd)
+{
+	this->password = newPwd;
+}
+
+std::string	Channel::getPassword()
+{
+	return this->password;
 }

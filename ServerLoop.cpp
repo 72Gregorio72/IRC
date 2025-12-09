@@ -59,16 +59,14 @@ void Server::handle_new_connection() {
         return; 
     }
 
-    serverdata.accept_fd = new_fd;
-
     fcntl(new_fd, F_SETFL, O_NONBLOCK);
 
-    FD_SET(serverdata.accept_fd, &serverdata.master_fd);
-    if (serverdata.accept_fd > serverdata.max_sd) {
-        serverdata.max_sd = serverdata.accept_fd;
+    FD_SET(new_fd, &serverdata.master_fd);
+    if (new_fd > serverdata.max_sd) {
+        serverdata.max_sd = new_fd;
     }
 
-    User *new_user = new User(serverdata.accept_fd);
+    User *new_user = new User(new_fd);
     new_user->buffer = "";
     add_user(new_user);
     
@@ -100,6 +98,7 @@ void Server::handle_client_read(int sd) {
 		}
 	} else {
 		std::cout << "Error: recv error" << std::endl;
+        close(sd);
 		FD_CLR(sd, &serverdata.master_fd);
 	}
 }
@@ -130,18 +129,17 @@ int Server::process_user_buffer(User *user, int sd) {
 }
 
 void Server::close_all() {
-
-    if (serverdata.accept_fd >= 0) {
-        close(serverdata.accept_fd);
-        //serverdata.accept_fd = -1;
+    for (int i = 0; i <= serverdata.max_sd; ++i) {
+        if (FD_ISSET(i, &serverdata.master_fd)) {
+            close(i);
+            FD_CLR(i, &serverdata.master_fd);
+        }
     }
+
+    for (size_t i = 0; i < users.size(); i++) {
+        delete users[i];
+    }
+    users.clear();
     
-    if (serverdata.socket_fd >= 0) {
-        close(serverdata.socket_fd);
-        //serverdata.socket_fd = -1;
-    }
-
-	for (size_t i = 0; i < users.size(); i++) {
-		close(users[i]->sd);
-	}
+    std::cout << "Server closed cleanly." << std::endl;
 }
