@@ -174,7 +174,7 @@ int Server::part(std::string msg, int sd){
 	Channel *channelWanted = findChannelByName(channelName);
 	if (!channelWanted)
 	{
-		std::cout << channelName << std::endl;
+		replyErrToClient(ERR_NOSUCHCHANNEL, userToRemove->getNickName(), channelName, sd, "");
 		return (-100);
 	}
 
@@ -382,7 +382,8 @@ int Server::parse_msg(int sd) {
 			else
 				channelName = channels;
 			if (channelName.find("#") != 0 && channelName.find("&") != 0) {
-				channelName = "#" + channelName;
+				replyErrToClient(ERR_NOSUCHCHANNEL, find_by_sd(sd)->getNickName(), channelName, sd, "");
+				return -1;
 			}
 			Channel channel(channelName, this);
 			if (findChannelByName(channel.getChannelName()) != NULL) {
