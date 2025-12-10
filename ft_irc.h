@@ -27,6 +27,10 @@
 #include <sstream>
 #include <stdlib.h>
 #include <cmath>
+#include <sstream>
+
+#include <cstdlib>
+#include <ctime>
 
 #include "macros.h"
 

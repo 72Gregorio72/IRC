@@ -7,11 +7,6 @@ std::string toString(const T& value) {
     return ss.str();
 }
 
-std::string getSpaces(int count) {
-    if (count < 0) return "";
-    return std::string(count, ' ');
-}
-
 std::vector<std::string> Balatro::getCardRows(const Card& c) {
     std::vector<std::string> rows;
     std::string rank = c.getRank();
@@ -198,7 +193,9 @@ void Balatro::getLeftPanelContent(int row, std::string& rawOut, std::string& col
         colOut = "         " + C_RED + BOLD + "GOAL CHIPS" + RESET + "          ";
     }
     else if (row == 3) {
-        std::string tVal = "300"; // Qui potresti mettere una variabile targetScore
+		std::stringstream ss;
+		ss << anteScore;
+        std::string tVal = ss.str(); // Qui potresti mettere una variabile targetScore
         std::string cVal = centerText(tVal, 29);
         rawOut = cVal;
         colOut = C_RED + BOLD + cVal + RESET;

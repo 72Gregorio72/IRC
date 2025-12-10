@@ -4,9 +4,28 @@
 #include "../ft_irc.h"
 #include "../User.hpp"
 #include "Card.hpp"
+#include "PokerHand.hpp"
+#include <algorithm>
 
+class PokerHand;
 class Card;
 class User;
+
+struct PokerHands {
+	PokerHand HighCard;
+	PokerHand OnePair;
+	PokerHand TwoPair;
+	PokerHand ThreeOfAKind;
+	PokerHand Straight;
+	PokerHand Flush;
+	PokerHand FullHouse;
+	PokerHand FourOfAKind;
+	PokerHand StraightFlush;
+	PokerHand RoyalFlush;
+	PokerHand FiveOfAKind;
+	PokerHand FlushHouse;
+	PokerHand FlushFive;
+} typedef PokerHands;
 
 class Balatro {
 	public:
@@ -38,29 +57,47 @@ class Balatro {
 		void startNewGame();
 		void shuffleDeck();
 		void dealInitialHand();
+		void playHand();
 
 		void printUI();
+		void printSelectedCardsUI();
+
+		int calculateAnteScore();
+
+		void initPokerHands();
+		
 		std::vector<std::string> getCardRows(const Card& c);
+		std::vector<std::string> getCardRowsSelected(const Card& c, bool isSelected);
 		std::vector<std::string> printDeck();
 		std::string centerText(std::string text, int width);
 		void getLeftPanelContent(int row, std::string& raw, std::string& colored);
 		std::string getRightPanelContent(int row, int handStart, int handH, int deckStart, int deckH, 
 										const std::vector<std::vector<std::string> > & cardMatrix, 
 										const std::vector<std::string>& deckVisual);
+		std::string getRightPanelContentSelected(int row, int handStart, int handH, int deckStart, int deckH, 
+										const std::vector<std::vector<std::string> > & cardMatrix, 
+										const std::vector<std::string>& deckVisual);
+		std::string getSpaces(int count);
 		
 		int getSd();
 		void getMessagePrompt(std::string msg);
+		int calculateHand();
 	private:
 		int ante;
+		int anteScore;
 		int discards;
 		std::vector<Card> hand;
 		std::vector<Card> deck;
+		std::vector<Card> selectedCards;
 		int hands;
 		int coins;
 		int currentBet;
 		int totalBet;
 		int sd;
 		User player;
+		PokerHands pokerHands;
+		bool isSuitSorting;
+		bool isRankSorting;
 };
 
 #endif
