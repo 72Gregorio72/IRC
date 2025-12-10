@@ -18,6 +18,8 @@ class Channel{
 		std::vector<User> getUsers();
 		std::vector<std::string> getInviteList();
 		bool	getInviteOnly();
+		bool	getTopicChangeOnlyOp();
+
 		std::string	getTopic();
 		std::string getPassword();
 
@@ -38,6 +40,8 @@ class Channel{
 
 		void	setInviteOnly(bool value);
 		void	setUserLimit(int limit);
+		void	setTopicChangeOnlyOp(bool value);
+
 
 		int getUserLimit();
 	private:
@@ -50,6 +54,7 @@ class Channel{
 		std::string topic;
 		bool	inviteOnly;
 		int		userLimit;
+		bool	topicChangeOnlyOp;
 };
 
 #endif

@@ -5,6 +5,7 @@ Channel::Channel() {
 	topic = "";
 	password = "";
 	inviteOnly = false;
+	topicChangeOnlyOp = false;
 	userLimit = -1;
 }
 
@@ -17,6 +18,7 @@ Channel::Channel(std::string name, Server *serv) {
     topic = "";
     server = serv;
 	inviteOnly = false;
+	topicChangeOnlyOp = false;
 	userLimit = -1;
     if (name.length() > 200 || name.empty()) {
         channel_name = "invalid";
@@ -39,6 +41,7 @@ Channel::Channel(const Channel &other) {
     topic = other.topic;
 	password = other.password;
 	inviteList = other.inviteList;
+	topicChangeOnlyOp = other.topicChangeOnlyOp;
 }
 
 
@@ -53,12 +56,17 @@ Channel &Channel::operator=(const Channel &other) {
 		userLimit = other.userLimit;
 		password = other.password;
 		inviteList = other.inviteList;
+		topicChangeOnlyOp = other.topicChangeOnlyOp;
 	}
     return *this;
 }
 
 bool	Channel::getInviteOnly() {
 	return inviteOnly;
+}
+
+bool	Channel::getTopicChangeOnlyOp() {
+	return topicChangeOnlyOp;
 }
 
 std::string Channel::getChannelName() {
@@ -88,6 +96,11 @@ std::vector<std::string> Channel::getInviteList() {
 void    Channel::setTopic(std::string src_topic) {
     topic = src_topic;
 }
+
+void	Channel::setTopicChangeOnlyOp(bool value) {
+	topicChangeOnlyOp = value;
+}
+
 
 void	Channel::addInviteList(std::string nickname) {
 	inviteList.push_back(nickname);

@@ -287,7 +287,8 @@ int Server::topic(std::string msg, int sd) {
     }
 
     else {
-        if (userSender->_isOp() == false) {
+
+        if (wantedChannel->getTopicChangeOnlyOp() && userSender->_isOp() == false) {
             replyErrToClient(ERR_CHANOPRIVSNEEDED, userSender->getNickName(), wantedChannel->getChannelName(), sd, "");
             return (-100);
         }
@@ -498,7 +499,12 @@ int Server::mode(std::string msg, int sd) {
 				modeFlags.l.flag = 1;
 			}
 			else
+			{
+				std::stringstream ss;
+				ss << flagsStr[i];
+				replyErrToClient(ERR_UNKNOWNMODE, find_by_sd(sd)->getNickName(), "", sd, ss.str());
 				return -1; // Unknown flag
+			}
 		}
 		else if (modeFlags.setting == 2) { // Removing flags
 			if (flagsStr[i] == 'i')
@@ -569,12 +575,78 @@ int Server::mode(std::string msg, int sd) {
 				if (limit <= 0)
 					return -1; // Invalid limit
 				channel->setUserLimit(limit);
+				std::string opMsg = ":" + find_by_sd(sd)->getNickName() + "!" + find_by_sd(sd)->getUserName() + "@localhost MODE " + channelName + " +l " + modeFlags.l.arg + "\r\n";
+				std::vector<User> users = channel->getUsers();
+				for (size_t j = 0; j < users.size(); j++) {
+					int fd = users[j].sd;
+					send(fd, opMsg.c_str(), opMsg.length(), MSG_NOSIGNAL);
+				}
 			} else {
 				replyErrToClient(ERR_NEEDMOREPARAMS, find_by_sd(sd)->getNickName(), channelName, sd, "");
 				return -1; // No limit provided
 			}
 		} else if (modeFlags.l.flag == 2) {
+			std::string deopMsg = ":" + find_by_sd(sd)->getNickName() + "!" + find_by_sd(sd)->getUserName() + "@localhost MODE " + channelName + " -l " + modeFlags.l.arg + "\r\n";
+			std::vector<User> users = channel->getUsers();
+			for (size_t j = 0; j < users.size(); j++) {
+				int fd = users[j].sd;
+				send(fd, deopMsg.c_str(), deopMsg.length(), MSG_NOSIGNAL);
+			}
 			channel->setUserLimit(-1); // No limit
+		}
+
+		if (modeFlags.k.flag == 1) {
+			channel->setPassword(modeFlags.k.arg);
+			std::string opMsg = ":" + find_by_sd(sd)->getNickName() + "!" + find_by_sd(sd)->getUserName() + "@localhost MODE " + channelName + " +k " + modeFlags.k.arg + "\r\n";
+			std::vector<User> users = channel->getUsers();
+			for (size_t j = 0; j < users.size(); j++) {
+				int fd = users[j].sd;
+				send(fd, opMsg.c_str(), opMsg.length(), MSG_NOSIGNAL);
+			}
+		} else if (modeFlags.k.flag == 2) {
+			channel->setPassword("");
+			std::string opMsg = ":" + find_by_sd(sd)->getNickName() + "!" + find_by_sd(sd)->getUserName() + "@localhost MODE " + channelName + " -k " + modeFlags.k.arg + "\r\n";
+			std::vector<User> users = channel->getUsers();
+			for (size_t j = 0; j < users.size(); j++) {
+				int fd = users[j].sd;
+				send(fd, opMsg.c_str(), opMsg.length(), MSG_NOSIGNAL);
+			}
+		}
+
+		if (modeFlags.i.flag == 1) {
+			channel->setInviteOnly(true);
+			std::string opMsg = ":" + find_by_sd(sd)->getNickName() + "!" + find_by_sd(sd)->getUserName() + "@localhost MODE " + channelName + " +i " + modeFlags.i.arg + "\r\n";
+			std::vector<User> users = channel->getUsers();
+			for (size_t j = 0; j < users.size(); j++) {
+				int fd = users[j].sd;
+				send(fd, opMsg.c_str(), opMsg.length(), MSG_NOSIGNAL);
+			}
+		} else if (modeFlags.i.flag == 2) {
+			channel->setInviteOnly(false);
+			std::string opMsg = ":" + find_by_sd(sd)->getNickName() + "!" + find_by_sd(sd)->getUserName() + "@localhost MODE " + channelName + " -i " + modeFlags.i.arg + "\r\n";
+			std::vector<User> users = channel->getUsers();
+			for (size_t j = 0; j < users.size(); j++) {
+				int fd = users[j].sd;
+				send(fd, opMsg.c_str(), opMsg.length(), MSG_NOSIGNAL);
+			}
+		}
+
+		if (modeFlags.t.flag == 1) {
+			channel->setTopicChangeOnlyOp(true);
+			std::string opMsg = ":" + find_by_sd(sd)->getNickName() + "!" + find_by_sd(sd)->getUserName() + "@localhost MODE " + channelName + " +t " + modeFlags.t.arg + "\r\n";
+			std::vector<User> users = channel->getUsers();
+			for (size_t j = 0; j < users.size(); j++) {
+				int fd = users[j].sd;
+				send(fd, opMsg.c_str(), opMsg.length(), MSG_NOSIGNAL);
+			}
+		} else if (modeFlags.t.flag == 2) {
+			channel->setTopicChangeOnlyOp(false);
+			std::string opMsg = ":" + find_by_sd(sd)->getNickName() + "!" + find_by_sd(sd)->getUserName() + "@localhost MODE " + channelName + " -t " + modeFlags.t.arg + "\r\n";
+			std::vector<User> users = channel->getUsers();
+			for (size_t j = 0; j < users.size(); j++) {
+				int fd = users[j].sd;
+				send(fd, opMsg.c_str(), opMsg.length(), MSG_NOSIGNAL);
+			}
 		}
 	}
 
@@ -655,13 +727,20 @@ int Server::parse_msg(int sd) {
 			}
 			else
 				channelName = channels;
-			if (channelName.find("#") != 0 && channelName.find("&") != 0) {
+			if ((channelName.find("#") != 0 && channelName.find("&") != 0) || channelName.length() > 200 || channelName.length() < 1) {
 				replyErrToClient(ERR_NOSUCHCHANNEL, find_by_sd(sd)->getNickName(), channelName, sd, "");
 				return -1;
 			}
 			Channel channel(channelName, this);
 			if (findChannelByName(channel.getChannelName()) != NULL) {
 				Channel* existingChannel = findChannelByName(channel.getChannelName());
+
+				if (existingChannel->getUserLimit() > 0 && (int)existingChannel->getUsers().size() + 1 > existingChannel->getUserLimit())
+				{
+					replyErrToClient(ERR_CHANNELISFULL, find_by_sd(sd)->getNickName(), channelName, sd, "");
+					return -1;
+				}
+
 				if (existingChannel->getInviteOnly() && !existingChannel->nickInInviteList(find_by_sd(sd)->getNickName()))
 				{
 					replyErrToClient(ERR_INVITEONLYCHAN, "", existingChannel->getChannelName(), sd, " :Cannot join channel (+i)");
