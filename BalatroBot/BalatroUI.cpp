@@ -193,9 +193,10 @@ void Balatro::getLeftPanelContent(int row, std::string& rawOut, std::string& col
         colOut = "         " + C_RED + BOLD + "GOAL CHIPS" + RESET + "          ";
     }
     else if (row == 3) {
+		std::cout << "ante score: " << anteScore << std::endl;
 		std::stringstream ss;
 		ss << anteScore;
-        std::string tVal = ss.str(); // Qui potresti mettere una variabile targetScore
+        std::string tVal = ss.str();
         std::string cVal = centerText(tVal, 29);
         rawOut = cVal;
         colOut = C_RED + BOLD + cVal + RESET;
@@ -207,7 +208,7 @@ void Balatro::getLeftPanelContent(int row, std::string& rawOut, std::string& col
         colOut = "        " + C_WHITE + "ROUND SCORE" + RESET + "          ";
     }
     else if (row == 6) {
-        std::string sVal = toString(currentBet);
+        std::string sVal = toString(totalBet);
         std::string cVal = centerText(sVal, 29);
         rawOut = cVal; 
         colOut = C_WHITE + BOLD + cVal + RESET;
@@ -275,40 +276,127 @@ void Balatro::getLeftPanelContent(int row, std::string& rawOut, std::string& col
 std::string Balatro::getRightPanelContent(int row, int handStart, int handH, int deckStart, int deckH, 
                                           const std::vector<std::vector<std::string> >& cardMatrix, 
                                           const std::vector<std::string>& deckVisual) {
-    std::string right = "";
+    
+    // --- CONFIGURAZIONE DIMENSIONI ---
+    int boxWidth = 44;          // Larghezza del box comandi
+    int targetRightCol = 85;    // Colonna base preferita per l'inizio del box
+    int cardWidth = 14;         // Larghezza visiva di una carta (13 char + 1 spazio)
 
-    // Render della Mano
+    // --- CALCOLO ALLINEAMENTO VERTICALE (CRUCIALE) ---
+    // Calcoliamo la larghezza VISIVA che la mano occupa (o occuperebbe).
+    // Questo serve per mantenere il box allineato verticalmente anche nelle righe vuote.
+    int currentHandWidth = hand.size() * cardWidth;
+    
+    // La colonna dove inizia il box è il massimo tra il target (85) e (larghezza mano + padding).
+    // Se la mano è molto larga, sposta il box a destra per tutte le righe.
+    int boxStartCol = targetRightCol;
+    if (currentHandWidth + 4 > targetRightCol) {
+        boxStartCol = currentHandWidth + 4;
+    }
+
+    // --- COLORI ---
+    std::string C_ORANGE  = "\x03" "07";
+    std::string C_RED     = "\x03" "04";
+    std::string C_BLUE    = "\x03" "12";
+    std::string C_GREEN   = "\x03" "03";
+    std::string C_YELLOW  = "\x03" "08";
+    std::string C_GREY    = "\x03" "14";
+    std::string C_WHITE   = "\x03" "00";
+    std::string BOLD      = "\x02";
+    std::string RESET     = "\x0f";
+
+    // --- 1. COSTRUZIONE CONTENUTO SINISTRO (MANO) ---
+    std::string leftPart = "";
+    int visibleLeftLen = 0; 
+
+    // A. Righe delle carte
     if (row >= handStart && row < handStart + handH) {
         int slice = row - handStart;
         for(size_t c = 0; c < cardMatrix.size(); c++) {
-            right += cardMatrix[c][slice] + " ";
+            leftPart += cardMatrix[c][slice] + " ";
         }
+        visibleLeftLen = currentHandWidth; // Qui la larghezza è quella delle carte
     }
-    // Numeri sotto le carte
+    // B. Riga dei numeri sotto le carte
     else if (row == handStart + handH) {
         for(size_t c = 0; c < hand.size(); c++) {
             std::string cardNum = "(" + toString(c + 1) + ")";
             int paddingLen = (13 - cardNum.length()) / 2;
-            right += getSpaces(paddingLen) + cardNum + getSpaces(13 - paddingLen - cardNum.length()) + " ";
+            std::string item = std::string(paddingLen, ' ') + cardNum + std::string(13 - paddingLen - cardNum.length(), ' ') + " ";
+            leftPart += item;
+        }
+        visibleLeftLen = currentHandWidth;
+    }
+    // C. Righe vuote (sopra o sotto la mano) -> visibleLeftLen resta 0
+
+    // --- 2. CALCOLO SPAZIATURA (FIX) ---
+    // Calcoliamo gli spazi necessari per arrivare ESATTAMENTE a boxStartCol.
+    // Se visibleLeftLen è 0 (righe vuote), stamperà tutti gli spazi necessari (boxStartCol).
+    // Se visibleLeftLen è piena (righe carte), stamperà solo la differenza.
+    int paddingNeeded = boxStartCol - visibleLeftLen;
+    if (paddingNeeded < 0) paddingNeeded = 0;
+
+    std::string spacer = std::string(paddingNeeded, ' ');
+
+    // --- 3. COSTRUZIONE CONTENUTO DESTRO (BOX o DECK) ---
+    std::string rightPart = "";
+    std::string vBorder = C_ORANGE + "│" + RESET; 
+
+    // A. ZONA BOX COMANDI (Dalla cima fino a toccare il mazzo)
+    if (row < deckStart) {
+        // Bordo Superiore
+        if (row == 0) {
+            rightPart = C_ORANGE + "┌──────────────────────────────────────────┐" + RESET;
+        }
+        // Bordo Inferiore (Solo se siamo esattamente sopra il mazzo)
+        else if (row == deckStart - 1) {
+             rightPart = C_ORANGE + "└──────────────────────────────────────────┘" + RESET;
+        }
+        // Contenuto Interno
+        else {
+            std::string text = "";
+            int r = row; 
+
+            // Definisci il contenuto delle righe
+            if (r == 1)      text = BOLD + centerText("COMMANDS", boxWidth - 2) + RESET;
+            else if (r == 2) text = C_ORANGE + "├──────────────────────────────────────────┤" + RESET;
+            else if (r == 3) text = " " + C_GREEN + "!select" + RESET + " <id1> <id2>" + C_GREY + "  (es: !select 1 3 4) " + RESET;
+            else if (r == 5) text = " " + C_RED + "!discard" + C_GREY + "  (Discard selection)            " + RESET;
+            else if (r == 7) text = " " + C_BLUE + "!play" + C_GREY + "  (Play selection)                  " + RESET;
+            else if (r == 9) text = " " + C_YELLOW + "!sort suit/rank" + C_GREY + "  (Order your hand)       " + RESET;
+            else {
+                // Righe vuote riempitive fino al deck
+                text = std::string(boxWidth - 2, ' ');
+            }
+
+            // Gestione bordi laterali
+            if (r == 2) {
+                rightPart = text;
+            } else {
+                if (r > 10) text = std::string(boxWidth - 2, ' ');
+                rightPart = vBorder + text + vBorder;
+            }
         }
     }
-    // Spazio vuoto se non ci sono carte in quel punto
-    else {
-        right += getSpaces(hand.size() * 14);
-    }
-
-    // Render del Deck
-    if (row >= deckStart && row < deckStart + deckH) {
+    // B. ZONA DECK (Sotto il box)
+    else if (row >= deckStart && row < deckStart + deckH) {
         int dSlice = row - deckStart;
-        right += "                                " + deckVisual[dSlice];
+        std::string deckRow = deckVisual[dSlice];
+        
+        // Centriamo il mazzo rispetto al box
+        int deckPadLen = (boxWidth - 20) / 2; // 20 è circa la larghezza del mazzo
+        if (deckPadLen < 0) deckPadLen = 0;
+        std::string deckPad = std::string(deckPadLen, ' ');
+        rightPart = deckPad + deckRow;
     }
     else if (row == deckStart + deckH) {
         std::string deckLabel = "(" + toString(deck.size()) + ")";
-        int dPad = (26 - deckLabel.length()) / 2; 
-        right += "                              " + getSpaces(dPad) + deckLabel + getSpaces(26 - dPad - deckLabel.length());
+        int labelPadLen = (boxWidth - deckLabel.length()) / 2;
+        rightPart = std::string(labelPadLen, ' ') + deckLabel; 
     }
 
-    return right;
+    // Ritorna la riga completa: Carte (o vuoto) + Spaziatore (variabile) + Box
+    return leftPart + spacer + rightPart;
 }
 
 void Balatro::printUI() {

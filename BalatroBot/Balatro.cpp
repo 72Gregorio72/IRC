@@ -1,10 +1,10 @@
 #include "Balatro.hpp"
 
-Balatro::Balatro() : ante(0), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(0), player(), pokerHands(), isSuitSorting(false) {
+Balatro::Balatro() : ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(0), player(), pokerHands(), isSuitSorting(false) {
     std::srand(static_cast<unsigned int>(std::time(NULL)));
 }
 
-Balatro::Balatro(int sd, User player) : ante(0), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(sd), player(player), pokerHands(), isRankSorting(false) {
+Balatro::Balatro(int sd, User player) : ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(sd), player(player), pokerHands(), isRankSorting(false) {
     std::srand(static_cast<unsigned int>(std::time(NULL)));
 }
 Balatro::~Balatro() {}
@@ -64,6 +64,7 @@ void Balatro::initPokerHands() {
 }
 
 void Balatro::startNewRound() {
+	anteScore = calculateAnteScore();
 	hand.clear();
 	deck.clear();
 	selectedCards.clear();
@@ -88,7 +89,6 @@ void Balatro::dealInitialHand() {
         hand.push_back(deck.back());
         deck.pop_back();
     }
-    printSelectedCardsUI();
 }
 
 int getRankValue(std::string rank) {
@@ -394,6 +394,11 @@ void Balatro::playHand() {
 			}
 		}
 	}
+	while (hand.size() < 8 && !deck.empty()) {
+		hand.push_back(deck.back());
+		deck.pop_back();
+	}
+	selectedCards.clear();
 	if (totalBet >= anteScore){
 		ante++;
 		startNewRound();
@@ -412,6 +417,7 @@ void Balatro::shuffleDeck(){
 void Balatro::startNewGame() {
 	startNewRound();
 	initPokerHands();
-	ante = 0;
+	ante = 1;
 	anteScore = calculateAnteScore();
+	printUI();
 }
