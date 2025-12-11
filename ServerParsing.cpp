@@ -783,6 +783,7 @@ int Server::parse_msg(int sd) {
         {
             msg.erase(0, pos + 8);
 			if (msg.find("BalatroBot") != std::string::npos){
+				msg.erase(0, msg.find("BalatroBot") + 12);
 				findBalatroBySd(sd)->getMessagePrompt(msg);
 				return 0;
 			}

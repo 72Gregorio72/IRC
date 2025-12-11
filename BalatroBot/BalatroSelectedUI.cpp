@@ -1,0 +1,178 @@
+#include "Balatro.hpp"
+#include <sstream>
+
+// Helper per gli spazi
+std::string Balatro::getSpaces(int count) {
+    if (count < 0) return "";
+    return std::string(count, ' ');
+}
+
+// Funzione Unificata: Gestisce sia carte normali che selezionate
+// Se isSelected = true, la carta viene stampata "in alto" (senza padding sopra)
+// Se isSelected = false, la carta viene stampata "in basso" (con padding sopra)
+std::vector<std::string> Balatro::getCardRowsSelected(const Card& c, bool isSelected) {
+    std::vector<std::string> rows;
+    std::string rank = c.getRank();
+    std::string suit = c.getSuit();
+    
+    // Definizioni colori
+    std::string RED = "\x03" "04";
+    std::string ORANGE = "\x03" "07";
+    std::string BLACK = "\x03" "01";
+    std::string BLUE = "\x03" "12";
+    std::string RESET = "\x0f";
+
+    std::string color = BLACK; 
+    std::string symbol = "";
+    
+    if (suit == "Hearts")        { symbol = "♥"; color = RED; }
+    else if (suit == "Diamonds") { symbol = "♦"; color = ORANGE; }
+    else if (suit == "Spades")   { symbol = "♠"; color = BLACK; }
+    else if (suit == "Clubs")    { symbol = "♣"; color = BLUE; }
+    
+    std::string sym = color + symbol; 
+
+    std::string rL = rank + (rank == "10" ? "" : " ");
+    std::string rR = (rank == "10" ? "" : " ") + rank;
+
+    // Pattern grafici
+    std::string mid = "     " + sym + "     ";
+    std::string col = "  " + sym + "     " + sym + "  ";
+    std::string midCol = "  " + sym + "  " + sym + "  " + sym + "  ";
+
+    // Costruzione delle 5 righe interne
+    std::string line[5]; 
+    for(int i=0; i<5; i++) line[i] = "           "; 
+
+    if (rank == "J" || rank == "Q" || rank == "K") {
+        line[1] = "     " + color + rank + "     "; 
+        line[2] = "     " + sym + "     ";
+        line[3] = "     " + color + rank + "     ";
+    }
+    else if (rank == "A") {
+        line[2] = mid;
+    }
+    else {
+        int r = 0;
+        if (rank == "2") r=2; else if (rank == "3") r=3; else if (rank == "4") r=4;
+        else if (rank == "5") r=5; else if (rank == "6") r=6; else if (rank == "7") r=7;
+        else if (rank == "8") r=8; else if (rank == "9") r=9; else if (rank == "10") r=10;
+
+        if (r == 9) {
+            line[0] = col; line[1] = col; line[2] = mid; line[3] = col; line[4] = col;
+        }
+        else if (r == 10) {
+            line[0] = col; line[1] = midCol; line[2] = mid; line[3] = col; line[4] = col;
+        }
+        else {
+            if (r >= 4) { line[0] = col; line[4] = col; }
+            if (r == 6 || r == 7 || r == 8) { line[2] = col; }
+            if (r == 2 || r == 3) { line[0] = mid; line[4] = mid; }
+            if (r == 3 || r == 5) { line[2] = mid; }
+            if (r == 7) { line[1] = mid; }
+            if (r == 8) { line[1] = mid; line[3] = mid; }
+        }
+    }
+
+    // Costruiamo le 9 righe della grafica della carta
+    std::vector<std::string> cardGraphic;
+    cardGraphic.push_back(color + "┌───────────┐" + RESET);      
+    cardGraphic.push_back(color + "│ " + rL + "        │" + RESET); 
+    cardGraphic.push_back(color + "│" + line[0] + "│" + RESET);    
+    cardGraphic.push_back(color + "│" + line[1] + "│" + RESET);    
+    cardGraphic.push_back(color + "│" + line[2] + "│" + RESET);    
+    cardGraphic.push_back(color + "│" + line[3] + "│" + RESET);    
+    cardGraphic.push_back(color + "│" + line[4] + "│" + RESET);    
+    cardGraphic.push_back(color + "│        " + rR + " │" + RESET); 
+    cardGraphic.push_back(color + "└───────────┘" + RESET);
+
+    // --- LOGICA DI SPOSTAMENTO VERTICALE (PADDING) ---
+    // La larghezza di una carta è 13 caratteri
+    std::string emptyRow = "             "; 
+
+    // Selezionata: Carta in alto (0-8), Spazio vuoto sotto (9-10)
+    if (isSelected) {
+        for(size_t i = 0; i < cardGraphic.size(); i++) rows.push_back(cardGraphic[i]);
+        rows.push_back(emptyRow);
+        rows.push_back(emptyRow);
+    } 
+    // Non Selezionata: Spazio vuoto sopra (0-1), Carta in basso (2-10)
+    else {
+        rows.push_back(emptyRow);
+        rows.push_back(emptyRow);
+        for(size_t i = 0; i < cardGraphic.size(); i++) rows.push_back(cardGraphic[i]);
+    }
+
+    return rows; // Ritorna sempre 11 righe
+}
+
+void Balatro::printSelectedCardsUI() {
+    std::string prefix = ":BalatroBot PRIVMSG " + player.getNickName() + " :";
+    
+    int totalRows = 58;
+    int leftColWidth = 29; 
+
+    // 1. Preparazione grafica carte (con logica selezione integrata)
+    std::vector< std::vector<std::string> > cardMatrix;
+
+	if (selectedCards.empty()) {
+		// Se non ci sono carte selezionate, stampiamo la UI normale
+		printUI();
+		return;
+	}
+    
+    for(size_t i = 0; i < hand.size(); i++) {
+        // Controlla se l'indice 'i' è presente nel vettore selectedCards
+        bool isSelected = false;
+		for (size_t j = 0; j < selectedCards.size(); j++) {
+			if (hand[i].getRank() == selectedCards[j].getRank() &&
+				hand[i].getSuit() == selectedCards[j].getSuit()) {
+				isSelected = true;
+				break;
+			}
+		}
+        // Passiamo isSelected alla funzione: la matrice avrà carte spostate visivamente
+        cardMatrix.push_back(getCardRowsSelected(hand[i], isSelected));
+    }
+
+    std::vector<std::string> deckVisual = printDeck();
+    
+    // 2. Calcolo altezze e offset
+    // Nota: handHeight ora sarà 11 (9 + 2 di padding)
+    int handHeight = (!cardMatrix.empty() && !cardMatrix[0].empty()) ? cardMatrix[0].size() : 0;
+    int deckHeight = deckVisual.size();
+
+    int bottomBase = totalRows - 3; 
+    int handStartRow = bottomBase - handHeight;
+    int deckStartRow = bottomBase - deckHeight;
+
+    std::string msg = "";
+
+    // 3. Header pulizia e bordi
+    for(int i=0; i<10; i++) msg += prefix + " \r\n";
+    msg += prefix + "═══════════════════════════════" + "╦" + "═════════════════════════════════════════════════════════════════";
+    msg += prefix + "═════════════════════════════════════════════════════════════════════════════════════════════════════\r\n";
+    
+    // 4. Ciclo principale di rendering righe
+    for (int row = 0; row < totalRows; ++row) {
+        
+        // A. Ottieni pannello sinistro
+        std::string leftRaw, leftColor;
+        getLeftPanelContent(row, leftRaw, leftColor);
+
+        // B. Calcola padding per allineamento verticale
+        std::string padding = getSpaces(leftColWidth - leftRaw.length());
+        std::string leftPanel = leftColor + padding;
+
+        // C. Ottieni pannello destro
+        std::string rightPanel = getRightPanelContent(row, handStartRow, handHeight, deckStartRow, deckHeight, cardMatrix, deckVisual);
+        
+        msg += prefix + " " + leftPanel + " ║ " + "                             " + rightPanel + "\r\n";
+    }
+
+    // 5. Chiusura bordi
+    msg += prefix + "═══════════════════════════════" + "╩" + "═════════════════════════════════════════════════════════════════";
+    msg += prefix + "═════════════════════════════════════════════════════════════════════════════════════════════════════\r\n";
+
+    send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+}

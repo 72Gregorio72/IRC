@@ -9,6 +9,8 @@ SRCS		=   main.cpp Server.cpp \
 				BalatroBot/Balatro.cpp \
 				BalatroBot/Card.cpp \
 				BalatroBot/BalatroUI.cpp \
+				BalatroBot/BalatroSelectedUI.cpp \
+				BalatroBot/PokerHand.cpp \
 
 OBJS		= $(SRCS:.cpp=.o)
 
