@@ -403,6 +403,7 @@ void Balatro::playHand() {
 		ante++;
 		startNewRound();
 	}
+	//hands--;
 	std::cout << "current score: " << totalBet << std::endl;
 }
 
