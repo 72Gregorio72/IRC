@@ -402,6 +402,60 @@ std::string Balatro::getRightPanelContent(int row, int handStart, int handH, int
 void Balatro::printUI() {
     std::string prefix = ":BalatroBot PRIVMSG " + player.getNickName() + " :";
     
+    // Definizioni colori
+    std::string C_RED     = "\x03" "04";
+    std::string C_WHITE   = "\x03" "00";
+    std::string C_YELLOW  = "\x03" "08";
+    std::string BOLD      = "\x02";
+    std::string RESET     = "\x0f";
+
+    // --- LOGICA GAME OVER (C++98) ---
+    if (gameOver) {
+        std::string msg = "";
+        
+        // Pulizia schermo iniziale
+        for(int i=0; i<50; i++) msg += prefix + " \r\n";
+
+        // Costruzione ASCII Art tramite push_back (C++98 safe)
+        std::vector<std::string> art;
+        art.push_back("  /$$$$$$   /$$$$$$  /$$      /$$ /$$$$$$$$        /$$$$$$  /$$    /$$ /$$$$$$$$ /$$$$$$$   ");
+        art.push_back(" /$$__  $$ /$$__  $$| $$$    /$$$| $$_____/       /$$__  $$| $$   | $$| $$_____/| $$__  $$  ");
+        art.push_back("| $$  \\__/| $$  \\ $$| $$$$  /$$$$| $$            | $$  \\ $$| $$   | $$| $$      | $$  \\ $$  ");
+        art.push_back("| $$ /$$$$| $$$$$$$$| $$ $$/$$ $$| $$$$$         | $$  | $$|  $$ / $$/| $$$$$   | $$$$$$$/  ");
+        art.push_back("| $$|_  $$| $$__  $$| $$  $$$| $$| $$__/         | $$  | $$ \\  $$ $$/ | $$__/   | $$__  $$  ");
+        art.push_back("| $$  \\ $$| $$  | $$| $$ \\ $ | $$| $$            | $$  | $$  \\  $$$/  | $$      | $$  \\ $$  ");
+        art.push_back("|  $$$$$$/| $$  | $$| $$ \\/  | $$| $$$$$$$$      |  $$$$$$/   \\  $/   | $$$$$$$$| $$  | $$  ");
+        art.push_back(" \\______/ |__/  |__/|__/     |__/|________/       \\______/     \\_/    |________/|__/  |__/  ");
+
+        // Ciclo for classico con indice (C++98 compliant)
+        for (size_t i = 0; i < art.size(); ++i) {
+            // Usiamo una larghezza fissa (es. 100) per centrare l'arte
+            std::string centeredLine = centerText(art[i], 100); 
+            msg += prefix + C_RED + BOLD + centeredLine + RESET + "\r\n";
+        }
+
+        msg += prefix + " \r\n";
+        msg += prefix + " \r\n";
+
+        // Stampa punteggio finale
+        // Nota: toString è il template che hai definito all'inizio
+        std::string scoreText = "FINAL SCORE: " + toString(totalBet); 
+        std::string centeredScore = centerText(scoreText, 100);
+        msg += prefix + C_WHITE + BOLD + centeredScore + RESET + "\r\n";
+
+        std::string restartText = "Type /balatro to play again";
+        std::string centeredRestart = centerText(restartText, 100);
+        msg += prefix + C_YELLOW + centeredRestart + RESET + "\r\n";
+
+        // Pulizia finale
+        for(int i=0; i<20; i++) msg += prefix + " \r\n";
+
+        send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+        return; // Interrompe l'esecuzione per non stampare il tavolo
+    }
+
+    // --- LOGICA DI GIOCO STANDARD ---
+
     int totalRows = 58;
     int leftColWidth = 29; 
 
@@ -413,8 +467,9 @@ void Balatro::printUI() {
     std::vector<std::string> deckVisual = printDeck();
     
     // 2. Calcolo altezze e offset
-    int handHeight = (!cardMatrix.empty() && !cardMatrix[0].empty()) ? cardMatrix[0].size() : 0;
-    int deckHeight = deckVisual.size();
+    // Controllo size > 0 per evitare crash su vettori vuoti
+    int handHeight = (!cardMatrix.empty() && !cardMatrix[0].empty()) ? (int)cardMatrix[0].size() : 0;
+    int deckHeight = (int)deckVisual.size();
 
     int bottomBase = totalRows - 3; 
     int handStartRow = bottomBase - handHeight;
@@ -422,29 +477,30 @@ void Balatro::printUI() {
 
     std::string msg = "";
 
-    // 3. Header pulizia e bordi
+    // 3. Header
     for(int i=0; i<10; i++) msg += prefix + " \r\n";
-	msg += prefix + "═══════════════════════════════" + "╦" + "═════════════════════════════════════════════════════════════════";
-	msg += prefix + "═════════════════════════════════════════════════════════════════════════════════════════════════════\r\n";
+    msg += prefix + "═══════════════════════════════" + "╦" + "═════════════════════════════════════════════════════════════════";
+    msg += prefix + "═════════════════════════════════════════════════════════════════════════════════════════════════════\r\n";
     
-    // 4. Ciclo principale di rendering righe
+    // 4. Ciclo principale rendering
     for (int row = 0; row < totalRows; ++row) {
         
-        // A. Ottieni pannello sinistro
         std::string leftRaw, leftColor;
         getLeftPanelContent(row, leftRaw, leftColor);
 
-        // B. Calcola padding per allineamento verticale
-        std::string padding = getSpaces(leftColWidth - leftRaw.length());
+        // Helper locale per gli spazi se non hai una funzione 'getSpaces' globale
+        int spacesNeeded = leftColWidth - (int)leftRaw.length();
+        if (spacesNeeded < 0) spacesNeeded = 0;
+        std::string padding = std::string(spacesNeeded, ' ');
+        
         std::string leftPanel = leftColor + padding;
 
-        // C. Ottieni pannello destro
         std::string rightPanel = getRightPanelContent(row, handStartRow, handHeight, deckStartRow, deckHeight, cardMatrix, deckVisual);
         
         msg += prefix + " " + leftPanel + " ║ " + "                             " + rightPanel + "\r\n";
     }
 
-    // 5. Chiusura bordi
+    // 5. Footer
     msg += prefix + "═══════════════════════════════" + "╩" + "═════════════════════════════════════════════════════════════════";
     msg += prefix + "═════════════════════════════════════════════════════════════════════════════════════════════════════\r\n";
 

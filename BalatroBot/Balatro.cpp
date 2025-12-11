@@ -1,16 +1,19 @@
 #include "Balatro.hpp"
 
+Balatro::Balatro() : gameOver(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(0), player(), pokerHands(), isSuitSorting(false) {
 Balatro::Balatro() : ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(0), player(), pokerHands(), isSuitSorting(false), isCashingOut(false) {
     std::srand(static_cast<unsigned int>(std::time(NULL)));
 }
 
+Balatro::Balatro(int sd, User player) : gameOver(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(sd), player(player), pokerHands(), isRankSorting(false) {
 Balatro::Balatro(int sd, User player) : ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(sd), player(player), pokerHands(), isRankSorting(false), isCashingOut(false) {
     std::srand(static_cast<unsigned int>(std::time(NULL)));
 }
 Balatro::~Balatro() {}
 
 Balatro::Balatro(const Balatro &other)
-	: ante(other.ante),
+	: gameOver(other.gameOver),
+	  ante(other.ante),
 	  anteScore(other.anteScore),
 	  discards(other.discards),
 	  hand(other.hand),
@@ -29,6 +32,7 @@ Balatro::Balatro(const Balatro &other)
 
 Balatro &Balatro::operator=(const Balatro &other) {
 	if (this != &other) {
+		gameOver = other.gameOver;
 		ante = other.ante;
 		anteScore = other.anteScore;
 		discards = other.discards;
@@ -70,6 +74,7 @@ void Balatro::startNewRound() {
 	hand.clear();
 	deck.clear();
 	selectedCards.clear();
+	gameOver = false;
 	currentBet = 0;
 	totalBet = 0;
 	discards = 4;
@@ -99,6 +104,14 @@ int getRankValue(std::string rank) {
     if (rank == "K") return 13;
     if (rank == "A") return 14;
     return std::atol(rank.c_str());
+}
+
+bool Balatro::isGameOver() {
+	return gameOver;
+}
+
+void	Balatro::setGameOver(bool value) {
+	gameOver = value;
 }
 
 bool compareCardsByRank(const Card& a, const Card& b) {
@@ -277,6 +290,13 @@ int Balatro::calculateHand() {
 }
 
 void Balatro::getMessagePrompt(std::string msg) {
+
+	if (gameOver) {
+		std::string msg = ":BalatroBot PRIVMSG " + player.getNickName() + " :Send /balatro to start a new round\r\n";
+		send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+		return ;
+	}
+
 	std::cout << "BalatroBot message: " << msg << std::endl;
 	if (msg.find("!") == 0) {
 		msg.erase(0, 1);
@@ -356,9 +376,18 @@ void Balatro::getMessagePrompt(std::string msg) {
             	std::sort(hand.begin(), hand.end(), compareCardsByRank);
 			printSelectedCardsUI();
 		} else if (msg.find("play") == 0) {
+			if (selectedCards.empty()) {
+				std::string msg = ":BalatroBot PRIVMSG " + player.getNickName() + " :No cards selected to play.\r\n";
+				send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+				return;
+			}
 			msg.erase(0, 4);
 			playHand();
 			selectedCards.clear();
+			if (isSuitSorting)
+            	std::sort(hand.begin(), hand.end(), compareCardsBySuit);
+			if (isRankSorting)
+            	std::sort(hand.begin(), hand.end(), compareCardsByRank);
 		} else if (msg.find("sort suit") == 0) {
             std::sort(hand.begin(), hand.end(), compareCardsBySuit);
             printSelectedCardsUI();
@@ -417,8 +446,20 @@ void Balatro::playHand() {
 		printEndRoundUI();
 		return ;
 	}
-	//hands--;
+	hands--;
+	if (isSuitSorting)
+		std::sort(hand.begin(), hand.end(), compareCardsBySuit);
+	if (isRankSorting)
+		std::sort(hand.begin(), hand.end(), compareCardsByRank);
 	printSelectedCardsUI();
+	if (hands == 0)
+	{
+		std::string msg = ":BalatroBot PRIVMSG " + player.getNickName() + " :Game Over MF\r\n";
+		send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+		setGameOver(true);
+		printUI();
+		return ;
+	}
 	std::cout << "current score: " << totalBet << std::endl;
 }
 
