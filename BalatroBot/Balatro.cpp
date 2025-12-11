@@ -1,10 +1,10 @@
 #include "Balatro.hpp"
 
-Balatro::Balatro() : ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(0), player(), pokerHands(), isSuitSorting(false) {
+Balatro::Balatro() : ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(0), player(), pokerHands(), isSuitSorting(false), isCashingOut(false) {
     std::srand(static_cast<unsigned int>(std::time(NULL)));
 }
 
-Balatro::Balatro(int sd, User player) : ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(sd), player(player), pokerHands(), isRankSorting(false) {
+Balatro::Balatro(int sd, User player) : ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(sd), player(player), pokerHands(), isRankSorting(false), isCashingOut(false) {
     std::srand(static_cast<unsigned int>(std::time(NULL)));
 }
 Balatro::~Balatro() {}
@@ -24,7 +24,8 @@ Balatro::Balatro(const Balatro &other)
 	  player(other.player),
 	  pokerHands(other.pokerHands),
 	  isSuitSorting(other.isSuitSorting),
-	  isRankSorting(other.isRankSorting) {}
+	  isRankSorting(other.isRankSorting), 
+	  isCashingOut(other.isCashingOut) {}
 
 Balatro &Balatro::operator=(const Balatro &other) {
 	if (this != &other) {
@@ -43,6 +44,7 @@ Balatro &Balatro::operator=(const Balatro &other) {
 		pokerHands = other.pokerHands;
 		isSuitSorting = other.isSuitSorting;
 		isRankSorting = other.isRankSorting;
+		isCashingOut = other.isCashingOut;
 	}
 	return *this;
 }
@@ -367,6 +369,19 @@ void Balatro::getMessagePrompt(std::string msg) {
             printSelectedCardsUI();
 			isSuitSorting = false;
 			isRankSorting = true;
+        } else if (msg.find("cash out") == 0) {
+			if (!isCashingOut){
+				std::string msg = ":BalatroBot PRIVMSG " + player.getNickName() + " :You are not in the cashing out screen\r\n";
+				send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+				return;
+			}
+			printShopUI();
+			isCashingOut = false;
+        } else if (msg.find("next") == 0) {
+			startNewRound();
+			printSelectedCardsUI();
+        } else if (msg.find("shop") == 0) {
+			printShopUI();
         }
 	}
 }
@@ -400,7 +415,6 @@ void Balatro::playHand() {
 	selectedCards.clear();
 	if (totalBet >= anteScore){
 		printEndRoundUI();
-		startNewRound();
 		return ;
 	}
 	//hands--;
