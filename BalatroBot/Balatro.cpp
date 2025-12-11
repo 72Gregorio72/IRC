@@ -380,6 +380,10 @@ void Balatro::getMessagePrompt(std::string msg) {
 			msg.erase(0, 4);
 			playHand();
 			selectedCards.clear();
+			if (isSuitSorting)
+            	std::sort(hand.begin(), hand.end(), compareCardsBySuit);
+			if (isRankSorting)
+            	std::sort(hand.begin(), hand.end(), compareCardsByRank);
 		} else if (msg.find("sort suit") == 0) {
             std::sort(hand.begin(), hand.end(), compareCardsBySuit);
             printSelectedCardsUI();
@@ -427,6 +431,10 @@ void Balatro::playHand() {
 		return ;
 	}
 	hands--;
+	if (isSuitSorting)
+		std::sort(hand.begin(), hand.end(), compareCardsBySuit);
+	if (isRankSorting)
+		std::sort(hand.begin(), hand.end(), compareCardsByRank);
 	printSelectedCardsUI();
 	if (hands == 0)
 	{
