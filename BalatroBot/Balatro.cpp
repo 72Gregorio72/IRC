@@ -357,7 +357,6 @@ void Balatro::getMessagePrompt(std::string msg) {
 			msg.erase(0, 4);
 			playHand();
 			selectedCards.clear();
-			printSelectedCardsUI();
 		} else if (msg.find("sort suit") == 0) {
             std::sort(hand.begin(), hand.end(), compareCardsBySuit);
             printSelectedCardsUI();
@@ -400,10 +399,12 @@ void Balatro::playHand() {
 	}
 	selectedCards.clear();
 	if (totalBet >= anteScore){
-		ante++;
+		printEndRoundUI();
 		startNewRound();
+		return ;
 	}
 	//hands--;
+	printSelectedCardsUI();
 	std::cout << "current score: " << totalBet << std::endl;
 }
 

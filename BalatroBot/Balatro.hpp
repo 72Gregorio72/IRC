@@ -61,6 +61,7 @@ class Balatro {
 
 		void printUI();
 		void printSelectedCardsUI();
+		void printEndRoundUI();
 
 		int calculateAnteScore();
 
