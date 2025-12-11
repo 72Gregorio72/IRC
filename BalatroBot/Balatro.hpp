@@ -82,8 +82,13 @@ class Balatro {
 		
 		int getSd();
 		void getMessagePrompt(std::string msg);
+		bool	isGameOver();
+		void	setGameOver(bool value);
 		int calculateHand();
 	private:
+
+		bool	gameOver;
+			
 		int ante;
 		int anteScore;
 		int discards;
