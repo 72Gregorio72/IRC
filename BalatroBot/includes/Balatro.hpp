@@ -1,12 +1,14 @@
 #ifndef BALATRO_HPP
 #define BALATRO_HPP
 
-#include "../ft_irc.h"
-#include "../User.hpp"
+#include "ft_irc.h"
+#include "User.hpp"
 #include "Card.hpp"
 #include "PokerHand.hpp"
 #include <algorithm>
+#include "../Jokers/IJoker.hpp"
 
+class IJoker;
 class PokerHand;
 class Card;
 class User;
@@ -105,6 +107,8 @@ class Balatro {
 		bool	isGameOver();
 		void	setGameOver(bool value);
 		int calculateHand();
+
+		void freeJokers();
 	private:
 
 		bool	gameOver;
@@ -125,6 +129,7 @@ class Balatro {
 		bool isSuitSorting;
 		bool isRankSorting;
 		bool isCashingOut;
+		std::vector<IJoker*> jokers;
 };
 
 #endif

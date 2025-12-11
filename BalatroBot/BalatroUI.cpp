@@ -1,4 +1,4 @@
-#include "Balatro.hpp"
+#include "includes/Balatro.hpp"
 
 template <typename T>
 std::string toString(const T& value) {

@@ -1,12 +1,11 @@
-#include "Balatro.hpp"
+#include "includes/Balatro.hpp"
+#include "Jokers/BaseJoker/BaseJoker.hpp"
 
-Balatro::Balatro() : gameOver(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(0), player(), pokerHands(), isSuitSorting(false) {
-Balatro::Balatro() : ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(0), player(), pokerHands(), isSuitSorting(false), isCashingOut(false) {
+Balatro::Balatro() : gameOver(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(0), player(), pokerHands(), isSuitSorting(false), isCashingOut(false) {
     std::srand(static_cast<unsigned int>(std::time(NULL)));
 }
 
-Balatro::Balatro(int sd, User player) : gameOver(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(sd), player(player), pokerHands(), isRankSorting(false) {
-Balatro::Balatro(int sd, User player) : ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(sd), player(player), pokerHands(), isRankSorting(false), isCashingOut(false) {
+Balatro::Balatro(int sd, User player) : gameOver(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(sd), player(player), pokerHands(), isRankSorting(false), isCashingOut(false) {
     std::srand(static_cast<unsigned int>(std::time(NULL)));
 }
 Balatro::~Balatro() {}
@@ -137,6 +136,8 @@ int getRankChips(std::string rank) {
     return std::atol(rank.c_str());
 }
 
+// ... (codice precedente invariato fino a calculateHand)
+
 int Balatro::calculateHand() {
     if (selectedCards.empty()) {
         std::cout << "DEBUG: Nessuna carta selezionata." << std::endl;
@@ -158,10 +159,9 @@ int Balatro::calculateHand() {
         Card currentCard = selectedCards[i];
         
         int rVal = getRankValue(currentCard.getRank());
-        int rChips = getRankChips(currentCard.getRank());
+        int rChips = getRankChips(currentCard.getRank()); // Assumiamo che getRankChips sia accessibile o definito prima
         
-        std::cout << "  [" << i << "] " << currentCard.getRank() << " " << currentCard.getSuit() 
-                  << " -> Valore: " << rVal << ", Chips: " << rChips << std::endl;
+        // ... (Logica di print invariata)
 
         if (currentCard.getSuit() != firstSuit) {
             isFlush = false;
@@ -172,16 +172,10 @@ int Balatro::calculateHand() {
         values.push_back(rVal);
     }
 
-    std::cout << "DEBUG: Controllo Flush -> " << (isFlush ? "SI" : "NO") << std::endl;
-
+    // ... (Logica di controllo Straight invariata) ...
     bool isStraight = false;
     if (selectedCards.size() == 5) {
         std::sort(values.begin(), values.end());
-        
-        std::cout << "DEBUG: Valori ordinati per Scala: ";
-        for(size_t i=0; i<values.size(); ++i) std::cout << values[i] << " ";
-        std::cout << std::endl;
-
         bool sequential = true;
         for (size_t i = 0; i < values.size() - 1; ++i) {
             if (values[i] + 1 != values[i+1]) {
@@ -189,15 +183,12 @@ int Balatro::calculateHand() {
                 break;
             }
         }
-        
         if (!sequential && values[0]==2 && values[1]==3 && values[2]==4 && values[3]==5 && values[4]==14) {
-            std::cout << "DEBUG: Rilevata scala bassa A-5" << std::endl;
             sequential = true;
         }
-        
         isStraight = sequential;
     }
-    std::cout << "DEBUG: Controllo Straight -> " << (isStraight ? "SI" : "NO") << std::endl;
+    // ...
 
     bool hasFiveOfAKind = false;
     bool hasFourOfAKind = false;
@@ -205,12 +196,9 @@ int Balatro::calculateHand() {
     bool hasPair = false;
     int pairCount = 0;
 
-    std::cout << "DEBUG: Conteggio Rank:" << std::endl;
+    // ... (Logica conteggio rank invariata) ...
     for (std::map<std::string, int>::iterator it = rankCounts.begin(); it != rankCounts.end(); ++it) {
-        std::cout << "  Rank " << it->first << ": " << it->second << " volte" << std::endl;
-        
         int count = it->second;
-
         if (count == 5) hasFiveOfAKind = true;
         if (count == 4) hasFourOfAKind = true;
         if (count == 3) hasThreeOfAKind = true;
@@ -220,73 +208,49 @@ int Balatro::calculateHand() {
         }
     }
 
-    std::cout << "DEBUG: Flags -> 5oaK: " << hasFiveOfAKind 
-              << ", 4oaK: " << hasFourOfAKind 
-              << ", 3oaK: " << hasThreeOfAKind 
-              << ", Pairs: " << pairCount << std::endl;
+    // --- IDENTIFICAZIONE MANO MIGLIORE ---
+    PokerHand* bestHand = &pokerHands.HighCard; // Default
 
     if (hasFiveOfAKind && isFlush) {
-        std::cout << "DEBUG: RISULTATO -> Flush Five" << std::endl;
-        return (pokerHands.FlushFive.getChips() + handChipsFromCards) * pokerHands.FlushFive.getMult();
+        bestHand = &pokerHands.FlushFive;
+    } else if (isFlush && hasThreeOfAKind && hasPair) {
+        bestHand = &pokerHands.FlushHouse;
+    } else if (hasFiveOfAKind) {
+        bestHand = &pokerHands.FiveOfAKind;
+    } else if (isFlush && isStraight && values.back() == 14 && values[0] == 10) { 
+        bestHand = &pokerHands.RoyalFlush;
+    } else if (isFlush && isStraight) {
+        bestHand = &pokerHands.StraightFlush;
+    } else if (hasFourOfAKind) {
+        bestHand = &pokerHands.FourOfAKind;
+    } else if (hasThreeOfAKind && hasPair) {
+        bestHand = &pokerHands.FullHouse;
+    } else if (isFlush && selectedCards.size() == 5) {
+        bestHand = &pokerHands.Flush;
+    } else if (isStraight) {
+        bestHand = &pokerHands.Straight;
+    } else if (hasThreeOfAKind) {
+        bestHand = &pokerHands.ThreeOfAKind;
+    } else if (pairCount >= 2) {
+        bestHand = &pokerHands.TwoPair;
+    } else if (hasPair) {
+        bestHand = &pokerHands.OnePair;
+    }
+    int currentChips = bestHand->getChips() + handChipsFromCards;
+    int currentMult = bestHand->getMult();
+
+    std::cout << "DEBUG: Base Score -> Chips: " << currentChips << " Mult: " << currentMult << std::endl;
+
+    for (size_t i = 0; i < jokers.size(); ++i) {
+        if (jokers[i]) {
+            std::cout << "DEBUG: Applicazione Joker " << i << std::endl;
+            jokers[i]->playJoker(currentChips, currentMult);
+        }
     }
 
-    if (isFlush && hasThreeOfAKind && hasPair) {
-        std::cout << "DEBUG: RISULTATO -> Flush House" << std::endl;
-        return (pokerHands.FlushHouse.getChips() + handChipsFromCards) * pokerHands.FlushHouse.getMult();
-    }
+    std::cout << "DEBUG: Final Score -> Chips: " << currentChips << " Mult: " << currentMult << " = " << (currentChips * currentMult) << std::endl;
 
-    if (hasFiveOfAKind) {
-        std::cout << "DEBUG: RISULTATO -> Five of a Kind" << std::endl;
-        return (pokerHands.FiveOfAKind.getChips() + handChipsFromCards) * pokerHands.FiveOfAKind.getMult();
-    }
-
-    if (isFlush && isStraight && values.back() == 14 && values[0] == 10) { 
-         std::cout << "DEBUG: RISULTATO -> Royal Flush" << std::endl;
-         return (pokerHands.RoyalFlush.getChips() + handChipsFromCards) * pokerHands.RoyalFlush.getMult();
-    }
-
-    if (isFlush && isStraight) {
-        std::cout << "DEBUG: RISULTATO -> Straight Flush" << std::endl;
-        return (pokerHands.StraightFlush.getChips() + handChipsFromCards) * pokerHands.StraightFlush.getMult();
-    }
-
-    if (hasFourOfAKind) {
-        std::cout << "DEBUG: RISULTATO -> Four of a Kind" << std::endl;
-        return (pokerHands.FourOfAKind.getChips() + handChipsFromCards) * pokerHands.FourOfAKind.getMult();
-    }
-
-    if (hasThreeOfAKind && hasPair) {
-        std::cout << "DEBUG: RISULTATO -> Full House" << std::endl;
-        return (pokerHands.FullHouse.getChips() + handChipsFromCards) * pokerHands.FullHouse.getMult();
-    }
-
-    if (isFlush && selectedCards.size() == 5) {
-        std::cout << "DEBUG: RISULTATO -> Flush" << std::endl;
-        return (pokerHands.Flush.getChips() + handChipsFromCards) * pokerHands.Flush.getMult();
-    }
-
-    if (isStraight) {
-        std::cout << "DEBUG: RISULTATO -> Straight" << std::endl;
-        return (pokerHands.Straight.getChips() + handChipsFromCards) * pokerHands.Straight.getMult();
-    }
-
-    if (hasThreeOfAKind) {
-        std::cout << "DEBUG: RISULTATO -> Three of a Kind" << std::endl;
-        return (pokerHands.ThreeOfAKind.getChips() + handChipsFromCards) * pokerHands.ThreeOfAKind.getMult();
-    }
-
-    if (pairCount >= 2) {
-        std::cout << "DEBUG: RISULTATO -> Two Pair" << std::endl;
-        return (pokerHands.TwoPair.getChips() + handChipsFromCards) * pokerHands.TwoPair.getMult();
-    }
-
-    if (hasPair) {
-        std::cout << "DEBUG: RISULTATO -> Pair" << std::endl;
-        return (pokerHands.OnePair.getChips() + handChipsFromCards) * pokerHands.OnePair.getMult();
-    }
-
-    std::cout << "DEBUG: RISULTATO -> High Card" << std::endl;
-    return (pokerHands.HighCard.getChips() + handChipsFromCards) * pokerHands.HighCard.getMult();
+    return currentChips * currentMult;
 }
 
 void Balatro::getMessagePrompt(std::string msg) {
@@ -426,6 +390,12 @@ int Balatro::calculateAnteScore() {
     return static_cast<int>(target);
 }
 
+void Balatro::freeJokers(){
+	for(size_t i = 0; i < jokers.size(); i++){
+		delete(jokers[i]);
+	}
+}
+
 void Balatro::playHand() {
 	totalBet += calculateHand();
 	for(size_t i = 0; i < selectedCards.size(); ++i) {
@@ -458,6 +428,7 @@ void Balatro::playHand() {
 		send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
 		setGameOver(true);
 		printUI();
+		freeJokers();
 		return ;
 	}
 	std::cout << "current score: " << totalBet << std::endl;
@@ -472,6 +443,12 @@ void Balatro::shuffleDeck(){
 }
 
 void Balatro::startNewGame() {
+	for (size_t i = 0; i < jokers.size(); ++i) {
+        delete jokers[i];
+    }
+    jokers.clear();
+
+    jokers.push_back(new BaseJoker());
 	startNewRound();
 	initPokerHands();
 	ante = 1;

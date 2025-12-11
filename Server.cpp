@@ -1,5 +1,5 @@
 #include "Server.hpp"
-#include "BalatroBot/Balatro.hpp"
+#include "BalatroBot/includes/Balatro.hpp"
 #include <string>
 
 Server::Server() : password("1234"), serverName("Pranglost") {}

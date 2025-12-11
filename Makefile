@@ -12,6 +12,7 @@ SRCS		=   main.cpp Server.cpp \
 				BalatroBot/BalatroSelectedUI.cpp \
 				BalatroBot/PokerHand.cpp \
 				BalatroBot/BalatroShopUI.cpp \
+				BalatroBot/Jokers/BaseJoker/BaseJoker.cpp \
 
 OBJS		= $(SRCS:.cpp=.o)
 
@@ -19,24 +20,31 @@ RM			= rm -f
 FLAGS		= -Wall -Wextra -Werror -std=c++98
 COMPILER	= c++
 
+INCLUDES = -Iincludes
+
 .cpp.o:
-	${COMPILER} ${FLAGS} -c $< -o ${<:.cpp=.o}
+	$(COMPILER) $(FLAGS) $(INCLUDES) -c $< -o $@
 
 all: $(NAME)
 
-$(NAME): ${OBJS}
-	${COMPILER} ${FLAGS} $(OBJS) -o $(NAME)
+# 2. Linker (crea l'eseguibile)
+$(NAME): $(OBJS)
+	$(COMPILER) $(FLAGS) $(OBJS) -o $(NAME)
 	@echo "$(GREEN)[$(NAME)]:\t PROJECT COMPILED$(RESET)"
 
+# --- Cleanup Rules ---
+
 clean:
-	$(RM) -f $(OBJS)
+	$(RM) $(OBJS)
 	@echo "$(RED)[$(NAME)]:\t CLEAN$(RESET)"
 
 fclean: clean
-	rm -f $(NAME)
+	$(RM) $(NAME)
 	@echo "$(RED)[$(NAME)]:\t FCLEAN$(RESET)"
 
 re: fclean all
+
+# --- Custom/Utility Rules ---
 
 vale: re
 	make clean
@@ -52,7 +60,9 @@ push: fclean
 testosterone: re
 	make clean
 	@clear
-	@./$(NAME) 7272 1234
+	./$(NAME) 7272 1234
+
+.PHONY: all clean fclean re vale push testosterone
 
 #COLORS
 
