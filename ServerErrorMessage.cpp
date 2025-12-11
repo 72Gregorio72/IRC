@@ -58,6 +58,8 @@ void	Server::replyErrToClient(int numErrno, std::string nickname, std::string ch
 
 		case ERR_UNKNOWNMODE:
 			msg = ":localhost 472 " + nickname + " " + arg + " :Is unknown mode char to me\r\n";
+			break ;
+	
 		default:
 			break;
 	}
