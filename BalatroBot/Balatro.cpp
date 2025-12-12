@@ -148,32 +148,12 @@ void Balatro::startNewRound() {
 	dealInitialHand();
 }
 
-void Balatro::dealInitialHand() {
-    hand.clear();
-    for (int i = 0; i < 8 && !deck.empty(); ++i) {
-        hand.push_back(deck.back());
-        deck.pop_back();
-    }
-}
-
 int getRankValue(std::string rank) {
     if (rank == "J") return 11;
     if (rank == "Q") return 12;
     if (rank == "K") return 13;
     if (rank == "A") return 14;
     return std::atol(rank.c_str());
-}
-
-bool Balatro::isGameOver() {
-	return gameOver;
-}
-
-void	Balatro::setGameOver(bool value) {
-	gameOver = value;
-}
-
-std::string Balatro::getBestHandName() const {
-	return bestHandName;
 }
 
 bool compareCardsByRank(const Card& a, const Card& b) {
@@ -200,7 +180,6 @@ int getRankChips(std::string rank) {
 }
 
 // ... (codice precedente invariato fino a calculateHand)
-
 int Balatro::calculateHand() {
     if (selectedCards.empty()) {
         std::cout << "DEBUG: Nessuna carta selezionata." << std::endl;
@@ -326,6 +305,7 @@ int Balatro::calculateHand() {
 
     return currentChips * currentMult;
 }
+
 
 void Balatro::getMessagePrompt(std::string msg) {
 
@@ -524,21 +504,6 @@ void Balatro::getMessagePrompt(std::string msg) {
 	}
 }
 
-int Balatro::calculateAnteScore() {
-    int currentAnte = (ante < 1) ? 1 : ante;
-    
-    double baseChips = 300.0;
-    double growthFactor = 1.5; 
-    
-    double target = baseChips * std::pow(growthFactor, currentAnte - 1);
-    
-    return static_cast<int>(target);
-}
-
-void Balatro::freeJokers() {
-    jokers.clear();
-}
-
 void Balatro::playHand() {
 	totalBet += calculateHand();
 	for(size_t i = 0; i < selectedCards.size(); ++i) {
@@ -575,27 +540,4 @@ void Balatro::playHand() {
 		return ;
 	}
 	std::cout << "current score: " << totalBet << std::endl;
-}
-
-int Balatro::getSd() {
-	return sd;
-}
-
-void Balatro::shuffleDeck(){
-	std::random_shuffle(deck.begin(), deck.end());
-}
-
-void Balatro::startNewGame() {
-    jokers.clear();
-    shopJokers.clear();
-    for (size_t i = 0; i < allJokers.size(); ++i) delete allJokers[i];
-    allJokers.clear();
-
-    initAllJokers();
-
-    startNewRound();
-    initPokerHands();
-    ante = 1;
-    anteScore = calculateAnteScore();
-    printUI();
 }
