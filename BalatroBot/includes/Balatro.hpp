@@ -1,12 +1,14 @@
 #ifndef BALATRO_HPP
 #define BALATRO_HPP
 
-#include "../ft_irc.h"
-#include "../User.hpp"
+#include "ft_irc.h"
+#include "User.hpp"
 #include "Card.hpp"
 #include "PokerHand.hpp"
 #include <algorithm>
+#include "../Jokers/IJoker.hpp"
 
+class IJoker;
 class PokerHand;
 class Card;
 class User;
@@ -26,6 +28,13 @@ struct PokerHands {
 	PokerHand FlushHouse;
 	PokerHand FlushFive;
 } typedef PokerHands;
+
+struct RowData {
+	std::string label;
+	int val;
+	std::string color;
+	int hiddenColorLen; // Lunghezza dei codici colore nella label per correggere l'allineamento
+};
 
 class Balatro {
 	public:
@@ -65,8 +74,21 @@ class Balatro {
 
 		int calculateAnteScore();
 
+		std::vector<std::string> createMsgBox(std::string text, std::string colorCode);
+		std::vector<std::string> createSimpleItem(int id, int cost);
+		void pasteObject(std::vector<std::string>& canvas, const std::vector<std::string>& object, int startRow, int startCol);
 		void initPokerHands();
-		
+		void printShopUI();
+		std::vector<std::string> createButton(std::string text, std::string subtext, std::string bgColorCode);
+		std::string repeat_char(int count, char c);
+
+		template <typename T>
+		std::string to_string_98(T value) {
+			std::stringstream ss;
+			ss << value;
+			return ss.str();
+		}
+
 		std::vector<std::string> getCardRows(const Card& c);
 		std::vector<std::string> getCardRowsSelected(const Card& c, bool isSelected);
 		std::vector<std::string> printDeck();
@@ -85,6 +107,8 @@ class Balatro {
 		bool	isGameOver();
 		void	setGameOver(bool value);
 		int calculateHand();
+
+		void freeJokers();
 	private:
 
 		bool	gameOver;
@@ -104,6 +128,8 @@ class Balatro {
 		PokerHands pokerHands;
 		bool isSuitSorting;
 		bool isRankSorting;
+		bool isCashingOut;
+		std::vector<IJoker*> jokers;
 };
 
 #endif

@@ -1,5 +1,5 @@
 #include "Server.hpp"
-#include "BalatroBot/Balatro.hpp"
+#include "BalatroBot/includes/Balatro.hpp"
 
 bool Server::checkUserPassword(Channel *channel, std::string channelsCopy, std::string passwords)
 {

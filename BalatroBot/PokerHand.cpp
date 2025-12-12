@@ -1,4 +1,4 @@
-#include "PokerHand.hpp"
+#include "includes/PokerHand.hpp"
 
 PokerHand::PokerHand(const std::string& name, int rank)
 	: name(name), rank(rank), baseMult(), baseChips() {}

@@ -1,7 +1,7 @@
 #ifndef CARD_HPP
 #define CARD_HPP
 
-#include "../ft_irc.h"
+#include "ft_irc.h"
 
 class Card {
 	public:

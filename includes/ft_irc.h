@@ -43,6 +43,8 @@
 #include "User.hpp"
 #include "Server.hpp"
 
+//jokers
+
 extern volatile sig_atomic_t g_sig_received;
 
 struct flagArg{

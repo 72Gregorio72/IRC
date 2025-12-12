@@ -1,4 +1,4 @@
-#include "Balatro.hpp"
+#include "includes/Balatro.hpp"
 #include <sstream>
 
 // Helper per gli spazi
@@ -177,176 +177,154 @@ void Balatro::printSelectedCardsUI() {
     send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
 }
 
-template <typename T>
-std::string to_string_98(T value) {
-    std::stringstream ss;
-    ss << value;
-    return ss.str();
-}
-
-// Helper per ripetere stringhe (simil-costruttore string(count, char))
-std::string repeat_char(int count, char c) {
+std::string Balatro::repeat_char(int count, char c) {
     if (count <= 0) return "";
     return std::string(count, c);
 }
 
-struct RowData {
-	std::string label;
-	int val;
-	std::string color;
-	int hiddenColorLen; // Lunghezza dei codici colore nella label per correggere l'allineamento
-};
-
 void Balatro::printEndRoundUI() {
+	isCashingOut = true;
     std::string prefix = ":BalatroBot PRIVMSG " + player.getNickName() + " :";
     
-    // Dimensioni
     int totalRows = 58;
     int leftColWidth = 29;
+    int rightColWidth = 65; // Larghezza approssimativa pannello destro
     
-    // Definizioni colori IRC
     std::string RED = "\x03" "04";
     std::string ORANGE = "\x03" "07";
-    std::string GREEN = "\x03" "09";  // Verde chiaro
+    std::string GREEN = "\x03" "09"; 
     std::string BLUE = "\x03" "12";
-    std::string GREY = "\x03" "14";   // Grigio scuro
+    std::string GREY = "\x03" "14";
     std::string WHITE = "\x03" "00";
     std::string RESET = "\x0f";
 
-    // --- 1. DATI PLACEHOLDER ---
-    long blindScoreReq = 10000;
-    int blindReward = 0; 
+    long blindScoreReq = anteScore;
+    int blindReward = 0;
     
-    int handsLeft = 3;
+    int handsLeft = hands;
     int moneyPerHand = 1;
     int handsReward = handsLeft * moneyPerHand;
     
-    //int discardsLeft = 2; 
     int interest = 0; 
     int bossBonus = 0;
     
     int totalCashOut = blindReward + handsReward + interest + bossBonus;
 
-    // --- 2. COSTRUZIONE DEL BOX "CASH OUT" ---
-    std::vector<std::string> boxLines;
-    int boxContentWidth = 36; 
+    std::vector<RowData> dataRows;
 
-    // Header del Box
-    std::string sTotal = to_string_98(totalCashOut);
-    std::string headerTitle = " Cash Out: $" + sTotal + " ";
+    // Riempiamo i dati
+    RowData r1; r1.label = "Score at least " + RED + to_string_98(blindScoreReq) + RESET; 
+    r1.val = blindReward; r1.color = GREEN; r1.hiddenColorLen = RED.length() + RESET.length();
+    dataRows.push_back(r1);
+
+    RowData r2; r2.label = BLUE + to_string_98(handsLeft) + RESET + " Remaining Hands ($1)"; 
+    r2.val = handsReward; r2.color = GREEN; r2.hiddenColorLen = BLUE.length() + RESET.length();
+    dataRows.push_back(r2);
+
+    RowData r3; r3.label = "Interest (max 5)"; 
+    r3.val = interest; r3.color = GREEN; r3.hiddenColorLen = 0;
+    dataRows.push_back(r3);
     
-    // Calcolo padding header per centrare
-    int padHead = (boxContentWidth - (int)headerTitle.length()) / 2;
-    if (padHead < 0) padHead = 0;
-    
-    std::string headerSpace = repeat_char(padHead, ' ');
-    // Bottone Arancione
-    std::string btn = "\x03" "00,07" + headerSpace + headerTitle + headerSpace + ((headerTitle.length() % 2 != 0) ? " " : "") + RESET;
-
-    boxLines.push_back(GREY + "╭──────────────────────────────────────╮" + RESET);
-    boxLines.push_back(GREY + "│" + RESET + " " + btn + " " + GREY + "│" + RESET);
-    boxLines.push_back(GREY + "├──────────────────────────────────────┤" + RESET);
-    
-    // Per C++98 dobbiamo costruire le righe manualmente senza lambda.
-    // Struttura dati temporanea per le righe: Label, Valore, ColoreValore, LunghezzaExtra(colori)
-
-    std::vector<RowData> rowsToPrint;
-    
-    // Riga 1: Score
-    RowData r1; 
-    r1.label = "Score at least " + RED + to_string_98(blindScoreReq) + RESET;
-    r1.val = blindReward; 
-    r1.color = GREEN;
-    r1.hiddenColorLen = RED.length() + RESET.length(); 
-    rowsToPrint.push_back(r1);
-
-    // Riga 2: Hands
-    RowData r2;
-    r2.label = BLUE + to_string_98(handsLeft) + RESET + " Remaining Hands ($1)";
-    r2.val = handsReward;
-    r2.color = GREEN;
-    r2.hiddenColorLen = BLUE.length() + RESET.length();
-    rowsToPrint.push_back(r2);
-
-    // Riga 3: Interest
-    RowData r3;
-    r3.label = "Interest (max 5)";
-    r3.val = interest;
-    r3.color = GREEN;
-    r3.hiddenColorLen = 0;
-    rowsToPrint.push_back(r3);
-
-    // Riga 4: Boss (opzionale)
     if (bossBonus > 0) {
-        RowData r4;
-        r4.label = "Boss Blind Defeated";
-        r4.val = bossBonus;
-        r4.color = GREEN;
-        r4.hiddenColorLen = 0;
-        rowsToPrint.push_back(r4);
-    } else {
-        // Riga vuota placeholder per mantenere l'altezza
-        RowData rEmpty;
-        rEmpty.label = ""; 
-        rEmpty.val = -1; // Flag per dire "vuoto"
-        rowsToPrint.push_back(rEmpty);
+        RowData r4; r4.label = "Boss Blind Defeated"; 
+        r4.val = bossBonus; r4.color = GREEN; r4.hiddenColorLen = 0;
+        dataRows.push_back(r4);
     }
 
-    // Processamento righe
-    for(size_t i = 0; i < rowsToPrint.size(); ++i) {
-        if (rowsToPrint[i].val == -1) {
-            // Riga vuota
-            boxLines.push_back(GREY + "│" + RESET + repeat_char(boxContentWidth + 2, ' ') + GREY + "│" + RESET);
-            continue;
-        }
+    std::vector<std::string> boxLines;
+    int boxInternalWidth = 38;
 
-        std::string sVal = "$" + to_string_98(rowsToPrint[i].val);
-        
-        // Calcolo puntini: Lunghezza scatola - (Label visibile + Valore + spazi)
-        int visibleLabelLen = (int)rowsToPrint[i].label.length() - rowsToPrint[i].hiddenColorLen;
-        int dots = boxContentWidth - (visibleLabelLen + (int)sVal.length() + 2);
+    std::string sTotal = to_string_98(totalCashOut);
+    std::string title = " Cash Out: $" + sTotal + " ";
+    int padHead = (boxInternalWidth - (int)title.length()) / 2;
+    if (padHead < 0) padHead = 0;
+    std::string btn = "\x03" "00,07" + repeat_char(padHead, ' ') + title + repeat_char(padHead, ' ') + ((title.length() % 2 != 0) ? " " : "") + RESET;
+
+    boxLines.push_back(GREY + "╭────────────────────────────────────────╮" + RESET);
+    boxLines.push_back(GREY + "│" + RESET + " " + btn + " " + GREY + "│" + RESET);
+    boxLines.push_back(GREY + "├────────────────────────────────────────┤" + RESET);
+
+    for(size_t i=0; i<dataRows.size(); ++i) {
+        std::string sVal = "$" + to_string_98(dataRows[i].val);
+        int visibleLen = (int)dataRows[i].label.length() - dataRows[i].hiddenColorLen;
+        int dots = boxInternalWidth - (visibleLen + (int)sVal.length() + 2);
         if (dots < 0) dots = 0;
 
-        std::string dottedLine = repeat_char(dots, '.');
-        
-        std::string finalLine = rowsToPrint[i].label + " " + GREY + dottedLine + RESET + " " + rowsToPrint[i].color + sVal + RESET;
-        boxLines.push_back(GREY + "│" + RESET + " " + finalLine + " " + GREY + "│" + RESET);
+        std::string line = dataRows[i].label + " " + GREY + repeat_char(dots, '.') + RESET + " " + dataRows[i].color + sVal + RESET;
+        boxLines.push_back(GREY + "│" + RESET + " " + line + " " + GREY + "│" + RESET);
     }
 
-    boxLines.push_back(GREY + "╰──────────────────────────────────────╯" + RESET);
+    std::vector<std::string> deckVisual = printDeck(); // Recupera la grafica del mazzo
+    int deckHeight = (int)deckVisual.size();
 
-
-    // --- 3. RENDERING ---
-    int boxHeight = (int)boxLines.size();
-    int startBoxRow = (totalRows / 2) - (boxHeight / 2);
-
-    std::string msg = "";
+    int boxStartRow = 20; 
+    int boxEndRow = totalRows - 3; // Lascia spazio per il footer inferiore
+    int contentHeight = (int)boxLines.size();
     
-    // Header UI
-    msg += prefix + "═══════════════════════════════" + "╦" + "═════════════════════════════════════════════════════════════════\r\n";
-
+    std::string msg = "";
+    msg += prefix + "═══════════════════════════════" + "╦" + "═════════════════════════════════════════════════════════════════";
+    msg += prefix + "═════════════════════════════════════════════════════════════════════════════════════════════════════\r\n";
+    
     for (int row = 0; row < totalRows; ++row) {
-        // A. Pannello Sinistro
         std::string leftRaw, leftColor;
         getLeftPanelContent(row, leftRaw, leftColor);
-        
-        std::string padding = repeat_char(leftColWidth - (int)leftRaw.length(), ' ');
-        std::string leftPanel = leftColor + padding;
+        std::string leftPanel = leftColor + repeat_char(leftColWidth - (int)leftRaw.length(), ' ');
 
-        // B. Pannello Destro
-        std::string rightPanel = "";
+        std::string rightPanelContent = repeat_char(rightColWidth, ' '); // Sfondo vuoto
+
+        int deckStartRow = (totalRows - 3) - deckHeight;
+        if (row >= deckStartRow && row < (totalRows - 3)) {
+            int deckRowIdx = row - deckStartRow;
+            if (deckRowIdx < deckHeight) {
+                std::string deckLine = deckVisual[deckRowIdx];
+            }
+        }
+        std::string rowStr = "";
         
-        if (row >= startBoxRow && row < startBoxRow + boxHeight) {
-            int boxIdx = row - startBoxRow;
-            // Padding fisso a sinistra per centrare il box nell'area destra
-            rightPanel = "             " + boxLines[boxIdx]; 
-        } 
+        std::string boxPart = "                                          ";
         
-        msg += prefix + " " + leftPanel + " ║ " + rightPanel + "\r\n";
+        if (row >= boxStartRow && row < boxEndRow) {
+            int boxIdx = row - boxStartRow;
+            
+            if (boxIdx < contentHeight) {
+                // Parte col contenuto (Header, soldi, ecc)
+                boxPart = boxLines[boxIdx];
+            } else if (row == boxEndRow - 1) {
+                // Ultima riga del box: chiusura
+                boxPart = GREY + "╰────────────────────────────────────────╯" + RESET;
+            } else {
+                // Parte centrale vuota "stirata" fino in fondo
+                boxPart = GREY + "│" + RESET + repeat_char(boxInternalWidth + 2, ' ') + GREY + "│" + RESET;
+            }
+        } else {
+            boxPart = "                                          "; // Invisibile fuori dal range
+        }
+
+        std::string deckPart = "";
+        if (row >= deckStartRow && row < (totalRows - 3)) {
+            int dIdx = row - deckStartRow;
+            if (dIdx >= 0 && dIdx < (int)deckVisual.size()) {
+                deckPart = deckVisual[dIdx];
+            }
+        }
+        
+        std::string spacerLeft = "                  ";
+        
+        
+        if (!deckPart.empty()) {
+             rowStr = "                                                            " + boxPart + "                                                     " + deckPart; 
+        } else {
+             rowStr = "                                                            " + boxPart;
+        }
+
+        msg += prefix + " " + leftPanel + " ║" + rowStr + "\r\n";
     }
 
     // Footer UI
-    msg += prefix + "═══════════════════════════════" + "╩" + "═════════════════════════════════════════════════════════════════\r\n";
+    msg += prefix + "═══════════════════════════════" + "╩" + "═════════════════════════════════════════════════════════════════";
+    msg += prefix + "═════════════════════════════════════════════════════════════════════════════════════════════════════\r\n";
     
     send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+	coins = totalCashOut;
 }
+
