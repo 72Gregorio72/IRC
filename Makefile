@@ -13,6 +13,10 @@ SRCS		=   main.cpp Server.cpp \
 				BalatroBot/PokerHand.cpp \
 				BalatroBot/BalatroShopUI.cpp \
 				BalatroBot/Jokers/BaseJoker/BaseJoker.cpp \
+				BalatroBot/Jokers/GluttonousJoker/GluttonousJoker.cpp \
+				BalatroBot/Jokers/GreedyJoker/GreedyJoker.cpp \
+				BalatroBot/Jokers/LustyJoker/LustyJoker.cpp \
+				BalatroBot/Jokers/WrathfulJoker/WrathfulJoker.cpp \
 
 OBJS		= $(SRCS:.cpp=.o)
 

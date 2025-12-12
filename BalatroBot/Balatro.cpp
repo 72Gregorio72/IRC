@@ -1,5 +1,9 @@
 #include "includes/Balatro.hpp"
 #include "Jokers/BaseJoker/BaseJoker.hpp"
+#include "Jokers/GreedyJoker/GreedyJoker.hpp"
+#include "Jokers/WrathfulJoker/WrathfulJoker.hpp"
+#include "Jokers/LustyJoker/LustyJoker.hpp"
+#include "Jokers/GluttonousJoker/GluttonousJoker.hpp"
 
 Balatro::Balatro() : gameOver(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(0), player(), pokerHands(), isSuitSorting(false), isCashingOut(false), jokers(), allJokers() {
     std::srand(static_cast<unsigned int>(std::time(NULL)));
@@ -8,7 +12,18 @@ Balatro::Balatro() : gameOver(false), ante(1), anteScore(0), discards(4), hands(
 Balatro::Balatro(int sd, User *player) : gameOver(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(sd), player(player), pokerHands(), isRankSorting(false), isCashingOut(false), jokers(), allJokers() {
     std::srand(static_cast<unsigned int>(std::time(NULL)));
 }
-Balatro::~Balatro() {}
+Balatro::~Balatro() {
+    for (size_t i = 0; i < jokers.size(); ++i) {
+        delete jokers[i]; 
+    }
+    jokers.clear();
+    for (size_t i = 0; i < allJokers.size(); ++i) {
+        delete allJokers[i];
+    }
+    allJokers.clear();
+    
+    shopJokers.clear();
+}
 
 Balatro::Balatro(const Balatro &other)
 	: gameOver(other.gameOver),
@@ -69,9 +84,20 @@ void Balatro::initPokerHands() {
     pokerHands.FlushFive.setPokerHand("Flush Five", 13, 160, 16);
 }
 
+std::vector<Card> Balatro::getSelectedCards() {
+	return selectedCards;
+}
+
 void Balatro::initAllJokers() {
-	allJokers.push_back(BaseJoker());
-	allJokers.push_back(GreedyJoker());
+	if (!allJokers.empty()) {
+        return; 
+    }
+
+    allJokers.push_back(new BaseJoker());
+    allJokers.push_back(new GreedyJoker());
+    allJokers.push_back(new LustyJoker());
+    allJokers.push_back(new WrathfulJoker());
+    allJokers.push_back(new GluttonousJoker());
 }
 
 void Balatro::startNewRound() {
@@ -378,6 +404,8 @@ void Balatro::getMessagePrompt(std::string msg) {
         } else if (msg.find("next") == 0) {
 			startNewRound();
 			printSelectedCardsUI();
+        } else if (msg.find("shopUI") == 0) {
+			printShopUI();
         } else if (msg.find("shop") == 0) {
 			printShopUI();
         }
@@ -399,6 +427,7 @@ void Balatro::freeJokers(){
 	for(size_t i = 0; i < jokers.size(); i++){
 		delete(jokers[i]);
 	}
+	jokers.clear();
 }
 
 void Balatro::playHand() {

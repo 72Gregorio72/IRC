@@ -110,6 +110,9 @@ class Balatro {
 
 		void freeJokers();
 		void initAllJokers();
+		void generateShopJokers();
+		std::vector<std::string> createJokerItem(IJoker* joker);
+		std::vector<Card> getSelectedCards();
 	private:
 
 		bool	gameOver;
@@ -131,7 +134,8 @@ class Balatro {
 		bool isRankSorting;
 		bool isCashingOut;
 		std::vector<IJoker*> jokers;
-		std::vector<IJoker> allJokers;
+        std::vector<IJoker*> allJokers; 
+        std::vector<IJoker*> shopJokers;
 };
 
 #endif

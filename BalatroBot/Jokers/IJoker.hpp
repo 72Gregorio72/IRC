@@ -18,6 +18,7 @@ class IJoker
         virtual void playJoker(int &chips, int &mult, Balatro *bot) = 0;
 
 		virtual int getCost() = 0;
+		virtual std::string getName() = 0;
 };
 
 #endif
