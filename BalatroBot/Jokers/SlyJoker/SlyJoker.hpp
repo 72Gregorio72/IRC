@@ -1,0 +1,29 @@
+#ifndef SLY_JOKER_HPP
+#define SLY_JOKER_HPP
+
+#include "../IJoker.hpp"
+#include "Server.hpp"
+
+class Server;
+
+class SlyJoker : public IJoker {
+
+	public:
+		SlyJoker();
+		SlyJoker(const SlyJoker& other);
+		~SlyJoker();
+
+        void printJoker();
+        void playJoker(int& chips, int& mult, Balatro *bot);
+
+		int getCost();
+		std::string getName();
+
+	private:
+		Balatro *bot;
+		int cost;
+		std::string effect;
+		std::string name;
+};
+
+#endif

@@ -4,25 +4,35 @@
 #include "Jokers/WrathfulJoker/WrathfulJoker.hpp"
 #include "Jokers/LustyJoker/LustyJoker.hpp"
 #include "Jokers/GluttonousJoker/GluttonousJoker.hpp"
+#include "Jokers/JollyJoker/JollyJoker.hpp"
+#include "Jokers/ZanyJoker/ZanyJoker.hpp"
+#include "Jokers/MadJoker/MadJoker.hpp"
+#include "Jokers/CrazyJoker/CrazyJoker.hpp"
+#include "Jokers/DrollJoker/DrollJoker.hpp"
+#include "Jokers/SlyJoker/SlyJoker.hpp"
+#include "Jokers/WilyJoker/WilyJoker.hpp"
+#include "Jokers/CleverJoker/CleverJoker.hpp"
+#include "Jokers/DeviousJoker/DeviousJoker.hpp"
+#include "Jokers/CraftyJoker/CraftyJoker.hpp"
 
-Balatro::Balatro() : gameOver(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(0), player(), pokerHands(), isSuitSorting(false), isCashingOut(false), jokers(), allJokers() {
+Balatro::Balatro() : gameOver(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(0), player(), pokerHands(), isSuitSorting(false), isCashingOut(false), isShopUI(false), jokers(), allJokers(), bestHandName("") {
     std::srand(static_cast<unsigned int>(std::time(NULL)));
 }
 
-Balatro::Balatro(int sd, User *player) : gameOver(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(sd), player(player), pokerHands(), isRankSorting(false), isCashingOut(false), jokers(), allJokers() {
+Balatro::Balatro(int sd, User *player) : gameOver(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(sd), player(player), pokerHands(), isRankSorting(false), isCashingOut(false), isShopUI(false), jokers(), allJokers(), bestHandName("") {
     std::srand(static_cast<unsigned int>(std::time(NULL)));
 }
+
 Balatro::~Balatro() {
-    for (size_t i = 0; i < jokers.size(); ++i) {
-        delete jokers[i]; 
-    }
+    // 1. Svuota i vettori secondari SENZA fare delete (sono solo riferimenti)
     jokers.clear();
+    shopJokers.clear();
+
+    // 2. Cancella la memoria vera e propria dal "proprietario" (allJokers)
     for (size_t i = 0; i < allJokers.size(); ++i) {
         delete allJokers[i];
     }
     allJokers.clear();
-    
-    shopJokers.clear();
 }
 
 Balatro::Balatro(const Balatro &other)
@@ -42,7 +52,10 @@ Balatro::Balatro(const Balatro &other)
 	  pokerHands(other.pokerHands),
 	  isSuitSorting(other.isSuitSorting),
 	  isRankSorting(other.isRankSorting), 
-	  isCashingOut(other.isCashingOut), jokers() {}
+	  isCashingOut(other.isCashingOut),
+	  isShopUI(other.isShopUI),
+	  jokers(other.jokers),
+	  bestHandName(other.bestHandName) {}
 
 Balatro &Balatro::operator=(const Balatro &other) {
 	if (this != &other) {
@@ -63,7 +76,9 @@ Balatro &Balatro::operator=(const Balatro &other) {
 		isSuitSorting = other.isSuitSorting;
 		isRankSorting = other.isRankSorting;
 		isCashingOut = other.isCashingOut;
+		isShopUI = other.isShopUI;
 		jokers = other.jokers;
+		bestHandName = bestHandName;
 	}
 	return *this;
 }
@@ -98,6 +113,18 @@ void Balatro::initAllJokers() {
     allJokers.push_back(new LustyJoker());
     allJokers.push_back(new WrathfulJoker());
     allJokers.push_back(new GluttonousJoker());
+	allJokers.push_back(new BaseJoker());
+	allJokers.push_back(new GreedyJoker());
+	allJokers.push_back(new JollyJoker());
+	allJokers.push_back(new ZanyJoker());
+	allJokers.push_back(new MadJoker());
+	allJokers.push_back(new CrazyJoker());
+	allJokers.push_back(new DrollJoker());
+	allJokers.push_back(new SlyJoker());
+	allJokers.push_back(new WilyJoker());
+	allJokers.push_back(new CleverJoker());
+	allJokers.push_back(new DeviousJoker());
+	allJokers.push_back(new CraftyJoker());
 }
 
 void Balatro::startNewRound() {
@@ -143,6 +170,10 @@ bool Balatro::isGameOver() {
 
 void	Balatro::setGameOver(bool value) {
 	gameOver = value;
+}
+
+std::string Balatro::getBestHandName() const {
+	return bestHandName;
 }
 
 bool compareCardsByRank(const Card& a, const Card& b) {
@@ -245,28 +276,40 @@ int Balatro::calculateHand() {
 
     if (hasFiveOfAKind && isFlush) {
         bestHand = &pokerHands.FlushFive;
+		bestHandName = pokerHands.FlushFive.getName();
     } else if (isFlush && hasThreeOfAKind && hasPair) {
         bestHand = &pokerHands.FlushHouse;
+		bestHandName = pokerHands.FlushHouse.getName();
     } else if (hasFiveOfAKind) {
         bestHand = &pokerHands.FiveOfAKind;
+		bestHandName = pokerHands.FiveOfAKind.getName();
     } else if (isFlush && isStraight && values.back() == 14 && values[0] == 10) { 
         bestHand = &pokerHands.RoyalFlush;
+		bestHandName = pokerHands.RoyalFlush.getName();
     } else if (isFlush && isStraight) {
         bestHand = &pokerHands.StraightFlush;
+		bestHandName = pokerHands.StraightFlush.getName();
     } else if (hasFourOfAKind) {
         bestHand = &pokerHands.FourOfAKind;
+		bestHandName = pokerHands.FourOfAKind.getName();
     } else if (hasThreeOfAKind && hasPair) {
         bestHand = &pokerHands.FullHouse;
+		bestHandName = pokerHands.FullHouse.getName();
     } else if (isFlush && selectedCards.size() == 5) {
         bestHand = &pokerHands.Flush;
+		bestHandName = pokerHands.Flush.getName();
     } else if (isStraight) {
         bestHand = &pokerHands.Straight;
+		bestHandName = pokerHands.Straight.getName();
     } else if (hasThreeOfAKind) {
         bestHand = &pokerHands.ThreeOfAKind;
+		bestHandName = pokerHands.ThreeOfAKind.getName();
     } else if (pairCount >= 2) {
         bestHand = &pokerHands.TwoPair;
+		bestHandName = pokerHands.TwoPair.getName();
     } else if (hasPair) {
         bestHand = &pokerHands.OnePair;
+		bestHandName = pokerHands.OnePair.getName();
     }
     int currentChips = bestHand->getChips() + handChipsFromCards;
     int currentMult = bestHand->getMult();
@@ -402,12 +445,81 @@ void Balatro::getMessagePrompt(std::string msg) {
 			printShopUI();
 			isCashingOut = false;
         } else if (msg.find("next") == 0) {
+			if (!isShopUI){
+				std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :You are not in the shop screen\r\n";
+				send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+				return;
+			}
 			startNewRound();
 			printSelectedCardsUI();
+			isShopUI = false;
         } else if (msg.find("shopUI") == 0) {
 			printShopUI();
         } else if (msg.find("shop") == 0) {
-			printShopUI();
+            if (!isShopUI) {
+                std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :You are not in the shop screen\r\n";
+                send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+                return;
+            }
+            std::string params = "";
+            if (msg.length() > 5) params = msg.substr(5);
+            
+            std::stringstream ss(params);
+            int tempIndex;
+            std::vector<int> indicesToBuy;
+
+            while (ss >> tempIndex) {
+                // Convertiamo da 1-based (utente) a 0-based (vector)
+                indicesToBuy.push_back(tempIndex - 1);
+            }
+
+            if (indicesToBuy.empty()) {
+                std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :Usage: !shop <id> (e.g. !shop 1 3)\r\n";
+                send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+                return;
+            }
+            std::sort(indicesToBuy.begin(), indicesToBuy.end(), std::greater<int>());
+            
+            std::vector<int>::iterator it = std::unique(indicesToBuy.begin(), indicesToBuy.end());
+            indicesToBuy.resize(std::distance(indicesToBuy.begin(), it));
+
+            bool updateUI = false;
+
+            for (size_t i = 0; i < indicesToBuy.size(); ++i) {
+                int idx = indicesToBuy[i];
+
+                if (idx < 0 || idx >= (int)shopJokers.size()) {
+                    continue;
+                }
+
+                IJoker* targetJoker = shopJokers[idx];
+
+                if (jokers.size() >= 5) {
+                    std::string err = ":BalatroBot PRIVMSG " + player->getNickName() + " :Not enough space for " + targetJoker->getName() + "\r\n";
+                    send(sd, err.c_str(), err.length(), MSG_NOSIGNAL);
+                    continue;
+                }
+
+                if (coins < targetJoker->getCost()) {
+                    std::string err = ":BalatroBot PRIVMSG " + player->getNickName() + " :Not enough coins for " + targetJoker->getName() + "\r\n";
+                    send(sd, err.c_str(), err.length(), MSG_NOSIGNAL);
+                    continue;
+                }
+
+                coins -= targetJoker->getCost();
+                
+                jokers.push_back(targetJoker);
+                
+                shopJokers.erase(shopJokers.begin() + idx);
+
+                std::string success = ":BalatroBot PRIVMSG " + player->getNickName() + " :Bought " + targetJoker->getName() + "\r\n";
+                send(sd, success.c_str(), success.length(), MSG_NOSIGNAL);
+                
+                updateUI = true;
+            }
+            if (updateUI) {
+                printShopUI();
+            }
         }
 	}
 }
@@ -423,11 +535,8 @@ int Balatro::calculateAnteScore() {
     return static_cast<int>(target);
 }
 
-void Balatro::freeJokers(){
-	for(size_t i = 0; i < jokers.size(); i++){
-		delete(jokers[i]);
-	}
-	jokers.clear();
+void Balatro::freeJokers() {
+    jokers.clear();
 }
 
 void Balatro::playHand() {
@@ -477,15 +586,16 @@ void Balatro::shuffleDeck(){
 }
 
 void Balatro::startNewGame() {
-	for (size_t i = 0; i < jokers.size(); ++i) {
-        delete jokers[i];
-    }
     jokers.clear();
+    shopJokers.clear();
+    for (size_t i = 0; i < allJokers.size(); ++i) delete allJokers[i];
+    allJokers.clear();
 
-    jokers.push_back(new BaseJoker());
-	startNewRound();
-	initPokerHands();
-	ante = 1;
-	anteScore = calculateAnteScore();
-	printUI();
+    initAllJokers();
+
+    startNewRound();
+    initPokerHands();
+    ante = 1;
+    anteScore = calculateAnteScore();
+    printUI();
 }
