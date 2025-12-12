@@ -25,3 +25,7 @@ int DeviousJoker::getCost(){
 std::string DeviousJoker::getName() {
 	return name;
 }
+
+std::string DeviousJoker::getEffect() {
+	return effect;
+}

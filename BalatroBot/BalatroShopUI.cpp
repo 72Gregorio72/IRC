@@ -74,58 +74,109 @@ void Balatro::generateShopJokers() {
     }
 }
 
+// Helper per spezzare il testo su più righe (Word Wrap)
+std::vector<std::string> wrapText(std::string text, int maxWidth) {
+    std::vector<std::string> lines;
+    std::istringstream words(text);
+    std::string word;
+    std::string currentLine;
+
+    while (words >> word) {
+        // Controlliamo la lunghezza visiva (senza codici colore, se il testo ne avesse)
+        // Qui assumiamo che la descrizione sia testo pulito per semplicità
+        if (currentLine.length() + word.length() + 1 > (size_t)maxWidth) {
+            lines.push_back(currentLine);
+            currentLine = word;
+        } else {
+            if (!currentLine.empty()) currentLine += " ";
+            currentLine += word;
+        }
+    }
+    if (!currentLine.empty()) lines.push_back(currentLine);
+    return lines;
+}
+
 std::vector<std::string> Balatro::createJokerItem(IJoker* joker) {
     std::vector<std::string> box;
     
+    // --- DEFINIZIONE COLORI E BORDI ---
     std::string RESET = "\x0f";
     std::string GREY  = "\x03" "14";
     std::string WHITE = "\x03" "00";
-    std::string GREEN = "\x03" "09"; // Colore soldi
-    std::string RED   = "\x03" "04"; // Colore nome Joker
+    std::string GREEN = "\x03" "09"; 
+    std::string RED   = "\x03" "04"; 
+    std::string BLUE  = "\x03" "12";
 
-    std::string TL = "\xE2\x95\xAD"; std::string TR = "\xE2\x95\xAE";
-    std::string BL = "\xE2\x95\xB0"; std::string BR = "\xE2\x95\xAF";
-    std::string H  = "\xE2\x94\x80"; std::string V  = "\xE2\x94\x82";
+    // Bordi UTF-8
+    std::string TL = "\xE2\x95\xAD"; std::string TR = "\xE2\x95\xAE"; // ╭ ╮
+    std::string BL = "\xE2\x95\xB0"; std::string BR = "\xE2\x95\xAF"; // ╰ ╯
+    std::string H  = "\xE2\x94\x80"; std::string V  = "\xE2\x94\x82"; // ─ │
+    
+    // Connettori per la linea divisoria (├ ┤)
+    std::string T_L = "\xE2\x94\x9C"; 
+    std::string T_R = "\xE2\x94\xA4"; 
 
-    // Recupera dati reali dal Joker
+    // --- DATI JOKER ---
+    // Assumo tu abbia un metodo getDescription() o getEffect(). 
+    // Se non lo hai, sostituisci con una stringa fissa o costruiscila qui.
     std::string name = joker->getName();
+    std::string effect = joker->getEffect(); // <--- Assicurati che questo metodo esista in IJoker
     std::string cost = "$" + to_string_98(joker->getCost());
 
-    // Larghezza fissa interna (12 spazi per far stare nomi medi)
-    int width = 12;
+    // --- DIMENSIONI ---
+    int width = 16;         // Larghezza totale interna
+    int fixedHeight = 8;    // Altezza FISSA del contenuto (esclusi bordi sopra/sotto)
+                            // Totale righe = fixedHeight + 2 (bordi)
 
-    // Se il nome è troppo lungo, lo tronchiamo
-    if (name.length() > (size_t)width) {
-        name = name.substr(0, width);
-    }
-
-    // 1. Bordo Superiore
+    // 1. BORDO SUPERIORE
     box.push_back(GREY + TL + repeat_string(width, H) + TR + RESET);
 
-    // 2. Nome del Joker (Centrato)
-    int vLenN = getVisualLength(name);
-    int padN = (width - vLenN) / 2;
+    // 2. NOME (Centrato)
+    if (name.length() > (size_t)width) name = name.substr(0, width);
+    int padN = (width - getVisualLength(name)) / 2;
     if (padN < 0) padN = 0;
     
     box.push_back(GREY + V + RESET + 
                   repeat_char(padN, ' ') + RED + name + RESET + 
-                  repeat_char(width - padN - vLenN, ' ') + 
+                  repeat_char(width - padN - getVisualLength(name), ' ') + 
                   GREY + V + RESET);
 
-    // 3. Spazio vuoto decorativo (o label "JOKER")
-    box.push_back(GREY + V + repeat_char(width, ' ') + V + RESET);
+    // 3. DIVISORE (├──────────────┤)
+    box.push_back(GREY + T_L + repeat_string(width, H) + T_R + RESET);
 
-    // 4. Costo del Joker (Centrato)
-    int vLenC = getVisualLength(cost);
-    int padC = (width - vLenC) / 2;
+    // 4. EFFETTO (Word Wrapped) e COSTO
+    // Calcoliamo quanto spazio abbiamo
+    // Abbiamo 'fixedHeight' righe totali. 
+    // Abbiamo già usato 1 riga per il Nome e 1 per il Divisore.
+    // Rimangono (fixedHeight - 2) righe per Effetto + Costo.
+    
+    std::vector<std::string> effectLines = wrapText(effect, width);
+    
+    int linesUsed = 0;
+    int linesAvailable = fixedHeight - 2; // -2 perché ho usato nome e divisore
+
+    // Stampiamo le righe dell'effetto
+    for (size_t i = 0; i < effectLines.size(); ++i) {
+        if (linesUsed >= linesAvailable - 1) break; // Lascia sempre 1 riga per il costo
+        
+        std::string line = effectLines[i];
+        int pad = width - getVisualLength(line);
+        box.push_back(GREY + V + RESET + BLUE + line + RESET + repeat_char(pad, ' ') + GREY + V + RESET);
+        linesUsed++;
+    }
+
+    // Riempiamo con righe vuote se l'effetto è corto
+    while (linesUsed < linesAvailable - 1) {
+        box.push_back(GREY + V + repeat_char(width, ' ') + GREY + V + RESET);
+        linesUsed++;
+    }
+
+    // 5. COSTO (Ultima riga interna, allineata a destra o sinistra)
+    int padC = width - getVisualLength(cost) - 1; // -1 per un po' di margine
     if (padC < 0) padC = 0;
+    box.push_back(GREY + V + RESET + " " + GREEN + cost + RESET + repeat_char(padC, ' ') + GREY + V + RESET);
 
-    box.push_back(GREY + V + RESET + 
-                  repeat_char(padC, ' ') + GREEN + cost + RESET + 
-                  repeat_char(width - padC - vLenC, ' ') + 
-                  GREY + V + RESET);
-
-    // 5. Bordo Inferiore
+    // 6. BORDO INFERIORE
     box.push_back(GREY + BL + repeat_string(width, H) + BR + RESET);
 
     return box;
@@ -246,8 +297,8 @@ std::vector<std::string> Balatro::createMsgBox(std::string text, std::string col
 
 // --- FUNZIONE PRINCIPALE ---
 void Balatro::printShopUI() {
-	isShopUI = true;
-	coins = 1000;
+    isShopUI = true;
+    coins = 1000; // O recupera coins reali
     std::string prefix = ":BalatroBot PRIVMSG " + player->getNickName() + " :";
     
     int totalRows = 58;
@@ -261,56 +312,53 @@ void Balatro::printShopUI() {
     std::vector<std::string> rightCanvas(totalRows, repeat_char(rightColWidth, ' '));
 
     // 2. LOGICA JOKER SHOP
-    // Se non ci sono joker nel negozio (es. nuovo round), generalic
     if (shopJokers.empty()) {
         generateShopJokers();
     }
 
     if (!shopJokers.empty()) {
-        // Creiamo la grafica per i joker presenti nel vettore shopJokers
         std::vector< std::vector<std::string> > jokerImages;
         for (size_t i = 0; i < shopJokers.size(); ++i) {
             jokerImages.push_back(createJokerItem(shopJokers[i]));
         }
 
-        // Parametri posizionamento
-        int startY = 5;
-        int startX = 2; // Un po' più a sinistra per farci stare 4 carte larghe
-        int gapSize = 2; // Spazio tra le carte
+        // --- POSIZIONAMENTO CARTE ---
+        int startY = 4;   // Iniziamo alla riga 4
+        int startX = 1;   // Margine sinistro minimo
+        int gapSize = 1;  // Gap ridotto a 1 spazio per far stare 4 carte larghe
         std::string spacer = repeat_char(gapSize, ' ');
 
-        // Assumiamo che tutte le carte abbiano la stessa altezza
         int itemsHeight = (int)jokerImages[0].size(); 
         std::vector<std::string> mergedRow(itemsHeight, "");
 
-        // Uniamo le immagini in una riga orizzontale
+        // Unione orizzontale
         for (int r = 0; r < itemsHeight; ++r) {
             for (size_t i = 0; i < jokerImages.size(); ++i) {
                 mergedRow[r] += jokerImages[i][r];
-                // Se non è l'ultimo, aggiungi spacer
                 if (i < jokerImages.size() - 1) {
                     mergedRow[r] += spacer;
                 }
             }
         }
-        // Incolla la riga di carte sul canvas
+        // Incolla sul canvas
         pasteObject(rightCanvas, mergedRow, startY, startX);
     } else {
-        // Fallback se non ci sono joker (es. database vuoto)
         std::vector<std::string> msg = createMsgBox("SOLD OUT", ORANGE);
         pasteObject(rightCanvas, msg, 5, 4);
     }
 
-    // 3. Comandi (Next / Buy)
+    // 3. Comandi (Spostati più in basso per non sovrapporsi alle carte lunghe)
+    // Le carte occupano circa 9-10 righe, finendo verso riga 14.
+    
     std::vector<std::string> nextBox = createMsgBox("!next to continue", ORANGE);
-    pasteObject(rightCanvas, nextBox, 12, 22);
+    pasteObject(rightCanvas, nextBox, 16, 22); // Spostato a riga 16
 
-    // Nota: L'indice per comprare ora si riferisce all'indice visuale (1, 2, 3...)
     std::vector<std::string> buyBox = createMsgBox("!shop <1-" + to_string_98(shopJokers.size()) + "> to buy", BLUE);
-    pasteObject(rightCanvas, buyBox, 17, 15);
+    pasteObject(rightCanvas, buyBox, 20, 15); // Spostato a riga 20
 
-    // 4. Stampa Finale
+    // 4. Stampa Finale (Identica a prima)
     std::string msg = "";
+    // Header
     msg += prefix + "═══════════════════════════════" + "╦" + "═════════════════════════════════════════════════════════════════";
     msg += prefix + "═════════════════════════════════════════════════════════════════════════════════════════════════════\r\n";
     
@@ -329,8 +377,9 @@ void Balatro::printShopUI() {
         
         msg += prefix + " " + leftPanel + " ║ " + rightPanel + "\r\n";
     }
-
+    // Footer
     msg += prefix + "═══════════════════════════════" + "╩" + "═════════════════════════════════════════════════════════════════";
     msg += prefix + "═════════════════════════════════════════════════════════════════════════════════════════════════════\r\n";
+    
     send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
 }

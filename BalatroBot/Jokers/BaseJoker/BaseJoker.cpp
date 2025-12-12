@@ -23,3 +23,7 @@ int BaseJoker::getCost(){
 std::string BaseJoker::getName(){
 	return name;
 }
+
+std::string BaseJoker::getEffect(){
+	return effect;
+}

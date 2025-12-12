@@ -14,6 +14,10 @@ std::string LustyJoker::getName(){
     return name;
 }
 
+std::string LustyJoker::getEffect(){
+    return effect;
+}
+
 void LustyJoker::playJoker(int& chips, int& mult, Balatro *bot) {
     (void)chips;
     mult += 4;
