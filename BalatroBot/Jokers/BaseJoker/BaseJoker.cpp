@@ -1,20 +1,19 @@
 #include "BaseJoker.hpp"
 
-BaseJoker::BaseJoker() : cost(0) {}
+BaseJoker::BaseJoker() : cost(2), effect("+4 Mult") {}
 
 BaseJoker::~BaseJoker() {}
 
-BaseJoker::BaseJoker(const BaseJoker &other) : cost(other.cost) {}
+BaseJoker::BaseJoker(const BaseJoker &other) : cost(other.cost), effect(other.effect) {}
 
 void BaseJoker::printJoker(){
     // Implementazione UI se necessaria
 }
 
-// Logica specifica: Aggiunge +4 al Mult
-void BaseJoker::playJoker(int& chips, int& mult){
-    (void)chips; // Evita warning unused parameter
+void BaseJoker::playJoker(int& chips, int& mult, Balatro *bot){
+    (void)chips;
+	(void)bot;
     mult += 4;
-    std::cout << "DEBUG: BaseJoker attivato! Mult +4. Nuovo Mult: " << mult << std::endl;
 }
 
 int BaseJoker::getCost(){

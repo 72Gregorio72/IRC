@@ -33,7 +33,7 @@ struct RowData {
 	std::string label;
 	int val;
 	std::string color;
-	int hiddenColorLen; // Lunghezza dei codici colore nella label per correggere l'allineamento
+	int hiddenColorLen;
 };
 
 class Balatro {
@@ -130,6 +130,7 @@ class Balatro {
 		bool isRankSorting;
 		bool isCashingOut;
 		std::vector<IJoker*> jokers;
+		std::vector<IJoker> allJokers;
 };
 
 #endif
