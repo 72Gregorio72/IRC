@@ -69,6 +69,11 @@ void Balatro::initPokerHands() {
     pokerHands.FlushFive.setPokerHand("Flush Five", 13, 160, 16);
 }
 
+void Balatro::initAllJokers() {
+	allJokers.push_back(BaseJoker());
+	allJokers.push_back(GreedyJoker());
+}
+
 void Balatro::startNewRound() {
 	anteScore = calculateAnteScore();
 	hand.clear();

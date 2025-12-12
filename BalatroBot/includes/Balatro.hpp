@@ -109,6 +109,7 @@ class Balatro {
 		int calculateHand();
 
 		void freeJokers();
+		void initAllJokers();
 	private:
 
 		bool	gameOver;
