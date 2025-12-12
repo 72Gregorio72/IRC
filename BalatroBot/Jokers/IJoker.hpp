@@ -15,7 +15,7 @@ class IJoker
     public:
         virtual ~IJoker() {}
         virtual void printJoker() = 0;
-        virtual void playJoker(int &chips, int &mult) = 0;
+        virtual void playJoker(int &chips, int &mult, Balatro *bot) = 0;
 
 		virtual int getCost() = 0;
 };

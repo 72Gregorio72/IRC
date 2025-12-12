@@ -1,11 +1,11 @@
 #include "includes/Balatro.hpp"
 #include "Jokers/BaseJoker/BaseJoker.hpp"
 
-Balatro::Balatro() : gameOver(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(0), player(), pokerHands(), isSuitSorting(false), isCashingOut(false) {
+Balatro::Balatro() : gameOver(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(0), player(), pokerHands(), isSuitSorting(false), isCashingOut(false), jokers(), allJokers() {
     std::srand(static_cast<unsigned int>(std::time(NULL)));
 }
 
-Balatro::Balatro(int sd, User *player) : gameOver(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(sd), player(player), pokerHands(), isRankSorting(false), isCashingOut(false) {
+Balatro::Balatro(int sd, User *player) : gameOver(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(sd), player(player), pokerHands(), isRankSorting(false), isCashingOut(false), jokers(), allJokers() {
     std::srand(static_cast<unsigned int>(std::time(NULL)));
 }
 Balatro::~Balatro() {}
@@ -27,7 +27,7 @@ Balatro::Balatro(const Balatro &other)
 	  pokerHands(other.pokerHands),
 	  isSuitSorting(other.isSuitSorting),
 	  isRankSorting(other.isRankSorting), 
-	  isCashingOut(other.isCashingOut) {}
+	  isCashingOut(other.isCashingOut), jokers() {}
 
 Balatro &Balatro::operator=(const Balatro &other) {
 	if (this != &other) {
@@ -48,6 +48,7 @@ Balatro &Balatro::operator=(const Balatro &other) {
 		isSuitSorting = other.isSuitSorting;
 		isRankSorting = other.isRankSorting;
 		isCashingOut = other.isCashingOut;
+		jokers = other.jokers;
 	}
 	return *this;
 }
@@ -66,6 +67,11 @@ void Balatro::initPokerHands() {
     pokerHands.FiveOfAKind.setPokerHand("Five of a Kind", 11, 120, 12);
     pokerHands.FlushHouse.setPokerHand("Flush House", 12, 140, 14);
     pokerHands.FlushFive.setPokerHand("Flush Five", 13, 160, 16);
+}
+
+void Balatro::initAllJokers() {
+	allJokers.push_back(BaseJoker());
+	allJokers.push_back(GreedyJoker());
 }
 
 void Balatro::startNewRound() {
@@ -243,8 +249,7 @@ int Balatro::calculateHand() {
 
     for (size_t i = 0; i < jokers.size(); ++i) {
         if (jokers[i]) {
-            std::cout << "DEBUG: Applicazione Joker " << i << std::endl;
-            jokers[i]->playJoker(currentChips, currentMult);
+            jokers[i]->playJoker(currentChips, currentMult, this);
         }
     }
 
