@@ -107,7 +107,7 @@ std::vector<std::string> Balatro::getCardRowsSelected(const Card& c, bool isSele
 }
 
 void Balatro::printSelectedCardsUI() {
-    std::string prefix = ":BalatroBot PRIVMSG " + player.getNickName() + " :";
+    std::string prefix = ":BalatroBot PRIVMSG " + player->getNickName() + " :";
     
     int totalRows = 58;
     int leftColWidth = 29; 
@@ -184,7 +184,7 @@ std::string Balatro::repeat_char(int count, char c) {
 
 void Balatro::printEndRoundUI() {
 	isCashingOut = true;
-    std::string prefix = ":BalatroBot PRIVMSG " + player.getNickName() + " :";
+    std::string prefix = ":BalatroBot PRIVMSG " + player->getNickName() + " :";
     
     int totalRows = 58;
     int leftColWidth = 29;

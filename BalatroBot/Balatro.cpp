@@ -5,7 +5,7 @@ Balatro::Balatro() : gameOver(false), ante(1), anteScore(0), discards(4), hands(
     std::srand(static_cast<unsigned int>(std::time(NULL)));
 }
 
-Balatro::Balatro(int sd, User player) : gameOver(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(sd), player(player), pokerHands(), isRankSorting(false), isCashingOut(false) {
+Balatro::Balatro(int sd, User *player) : gameOver(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(sd), player(player), pokerHands(), isRankSorting(false), isCashingOut(false) {
     std::srand(static_cast<unsigned int>(std::time(NULL)));
 }
 Balatro::~Balatro() {}
@@ -256,7 +256,7 @@ int Balatro::calculateHand() {
 void Balatro::getMessagePrompt(std::string msg) {
 
 	if (gameOver) {
-		std::string msg = ":BalatroBot PRIVMSG " + player.getNickName() + " :Send /balatro to start a new round\r\n";
+		std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :Send /balatro to start a new round\r\n";
 		send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
 		return ;
 	}
@@ -286,7 +286,7 @@ void Balatro::getMessagePrompt(std::string msg) {
 					index--;
 					std::cout << "Parsed index: " << index << std::endl;
 					if (index >= 8){
-						std::string msg = ":BalatroBot PRIVMSG " + player.getNickName() + " :Invalid card index: " + tokens[i] + "\r\n";
+						std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :Invalid card index: " + tokens[i] + "\r\n";
 						send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
 						return;
 					}
@@ -310,12 +310,12 @@ void Balatro::getMessagePrompt(std::string msg) {
 		} else if (msg.find("discard") == 0) {
 			msg.erase(0, 7);
 			if (selectedCards.empty()) {
-				std::string msg = ":BalatroBot PRIVMSG " + player.getNickName() + " :No cards selected to discard.\r\n";
+				std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :No cards selected to discard.\r\n";
 				send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
 				return;
 			}
 			if (discards == 0){
-				std::string msg = ":BalatroBot PRIVMSG " + player.getNickName() + " :You have finished your discards.\r\n";
+				std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :You have finished your discards.\r\n";
 				send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
 				return;
 			}
@@ -341,7 +341,7 @@ void Balatro::getMessagePrompt(std::string msg) {
 			printSelectedCardsUI();
 		} else if (msg.find("play") == 0) {
 			if (selectedCards.empty()) {
-				std::string msg = ":BalatroBot PRIVMSG " + player.getNickName() + " :No cards selected to play.\r\n";
+				std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :No cards selected to play.\r\n";
 				send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
 				return;
 			}
@@ -364,7 +364,7 @@ void Balatro::getMessagePrompt(std::string msg) {
 			isRankSorting = true;
         } else if (msg.find("cash out") == 0) {
 			if (!isCashingOut){
-				std::string msg = ":BalatroBot PRIVMSG " + player.getNickName() + " :You are not in the cashing out screen\r\n";
+				std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :You are not in the cashing out screen\r\n";
 				send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
 				return;
 			}
@@ -424,7 +424,7 @@ void Balatro::playHand() {
 	printSelectedCardsUI();
 	if (hands == 0)
 	{
-		std::string msg = ":BalatroBot PRIVMSG " + player.getNickName() + " :Game Over MF\r\n";
+		std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :Game Over MF\r\n";
 		send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
 		setGameOver(true);
 		printUI();

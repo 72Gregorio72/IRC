@@ -206,7 +206,7 @@ void	Server::sendPrivmsg(std::string msg, User* sender)
 }
 
 void Server::addBalatroBot(int sd, User player){
-	Balatro newBot(sd, player);
+	Balatro newBot(sd, &player);
 	balatroBots.push_back(newBot);
 }
 
