@@ -858,7 +858,10 @@ int Server::parse_msg(int sd) {
     }
 
 	if (msg.find("balatro") != std::string::npos) {
-		addBalatroBot(sd, *find_by_sd(sd));
+		User *u = find_by_sd(sd);
+		if (u) {
+			addBalatroBot(sd, u); // Passi direttamente il puntatore
+		}
 		if (findBalatroBySd(sd) != NULL)
 			findBalatroBySd(sd)->startNewGame();
 	}

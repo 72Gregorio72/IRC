@@ -12,7 +12,7 @@ void DeviousJoker::printJoker(){
 
 
 void DeviousJoker::playJoker(int& chips, int& mult, Balatro *bot){
-    (void)chips;
+    (void)mult;
 	(void)bot;
 	if (bot->getBestHandName() == "Straight")
     	chips += 100;

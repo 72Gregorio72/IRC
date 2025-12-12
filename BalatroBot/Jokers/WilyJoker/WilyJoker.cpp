@@ -12,7 +12,7 @@ void WilyJoker::printJoker(){
 
 
 void WilyJoker::playJoker(int& chips, int& mult, Balatro *bot){
-    (void)chips;
+    (void)mult;
 	(void)bot;
 	if (bot->getBestHandName() == "Three of a Kind")
     	chips += 100;

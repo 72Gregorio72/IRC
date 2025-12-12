@@ -73,15 +73,16 @@ class Server{
 		bool alreadyInChannel(std::string nickname, std::string channelName);
 
 		Balatro* findBalatroBySd(int sd);
+		void addBalatroBot(int sd, User *player);
 
-		void addBalatroBot(int sd, User player);
+		void startGame(int sd);
 	private:
 		std::vector<Channel> allChannels;
 		std::string password;
 		data serverdata;
 		std::vector <User *> users;
 		std::string	serverName;
-		std::vector<Balatro> balatroBots;
+		std::vector<Balatro *> balatroBots;
 };
 
 #endif

@@ -12,7 +12,7 @@ void CleverJoker::printJoker(){
 
 
 void CleverJoker::playJoker(int& chips, int& mult, Balatro *bot){
-    (void)chips;
+    (void)mult;
 	(void)bot;
 	if (bot->getBestHandName() == "Two Pair")
     	chips += 80;

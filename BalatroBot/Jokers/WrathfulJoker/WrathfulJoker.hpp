@@ -1,16 +1,17 @@
-#ifndef GREEDYJOKER_HPP
-#define GREEDYJOKER_HPP
+#ifndef WRATHFULJOKER_HPP
+#define WRATHFULJOKER_HPP
 
 #include "../IJoker.hpp"
 #include "Server.hpp"
 
 class Server;
 
-class GreedyJoker : public IJoker {
+class WrathfulJoker : public IJoker {
 	public:
-		GreedyJoker();
-		GreedyJoker(const GreedyJoker& other);
-		~GreedyJoker();
+		WrathfulJoker();
+		WrathfulJoker(const WrathfulJoker& other);
+		
+		~WrathfulJoker();
 
         void printJoker();
         void playJoker(int& chips, int& mult, Balatro *bot);

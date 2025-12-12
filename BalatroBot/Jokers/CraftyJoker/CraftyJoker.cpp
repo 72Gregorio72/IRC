@@ -12,7 +12,7 @@ void CraftyJoker::printJoker(){
 
 
 void CraftyJoker::playJoker(int& chips, int& mult, Balatro *bot){
-    (void)chips;
+    (void)mult;
 	(void)bot;
 	if (bot->getBestHandName() == "Flush")
     	chips += 80;
