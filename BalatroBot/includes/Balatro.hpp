@@ -52,6 +52,7 @@ class Balatro {
 		int getCoins() const;
 		int getCurrentBet() const;
 		int getTotalBet() const;
+		std::string getBestHandName() const;
 
 		void setAnte(int newAnte);
 		void setDiscards(int newDiscards);
@@ -132,6 +133,7 @@ class Balatro {
 		bool isCashingOut;
 		std::vector<IJoker*> jokers;
 		std::vector<IJoker> allJokers;
+		std::string bestHandName;
 };
 
 #endif

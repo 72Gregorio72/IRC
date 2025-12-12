@@ -1,11 +1,11 @@
 #include "includes/Balatro.hpp"
 #include "Jokers/BaseJoker/BaseJoker.hpp"
 
-Balatro::Balatro() : gameOver(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(0), player(), pokerHands(), isSuitSorting(false), isCashingOut(false), jokers(), allJokers() {
+Balatro::Balatro() : gameOver(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(0), player(), pokerHands(), isSuitSorting(false), isCashingOut(false), jokers(), allJokers(), bestHandName("") {
     std::srand(static_cast<unsigned int>(std::time(NULL)));
 }
 
-Balatro::Balatro(int sd, User *player) : gameOver(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(sd), player(player), pokerHands(), isRankSorting(false), isCashingOut(false), jokers(), allJokers() {
+Balatro::Balatro(int sd, User *player) : gameOver(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(sd), player(player), pokerHands(), isRankSorting(false), isCashingOut(false), jokers(), allJokers(), bestHandName("") {
     std::srand(static_cast<unsigned int>(std::time(NULL)));
 }
 Balatro::~Balatro() {}
@@ -27,7 +27,7 @@ Balatro::Balatro(const Balatro &other)
 	  pokerHands(other.pokerHands),
 	  isSuitSorting(other.isSuitSorting),
 	  isRankSorting(other.isRankSorting), 
-	  isCashingOut(other.isCashingOut), jokers() {}
+	  isCashingOut(other.isCashingOut), jokers(), bestHandName(other.bestHandName) {}
 
 Balatro &Balatro::operator=(const Balatro &other) {
 	if (this != &other) {
@@ -49,6 +49,7 @@ Balatro &Balatro::operator=(const Balatro &other) {
 		isRankSorting = other.isRankSorting;
 		isCashingOut = other.isCashingOut;
 		jokers = other.jokers;
+		bestHandName = bestHandName;
 	}
 	return *this;
 }
@@ -72,6 +73,16 @@ void Balatro::initPokerHands() {
 void Balatro::initAllJokers() {
 	allJokers.push_back(BaseJoker());
 	allJokers.push_back(GreedyJoker());
+	allJokers.push_back(JollyJoker());
+	allJokers.push_back(ZanyJoker());
+	allJokers.push_back(MadJoker());
+	allJokers.push_back(CrazyJoker());
+	allJokers.push_back(DrollJoker());
+	allJokers.push_back(SlyJoker());
+	allJokers.push_back(WilyJoker());
+	allJokers.push_back(CleverJoker());
+	allJokers.push_back(DeviousJoker());
+	allJokers.push_back(CraftyJoker());
 }
 
 void Balatro::startNewRound() {
@@ -117,6 +128,10 @@ bool Balatro::isGameOver() {
 
 void	Balatro::setGameOver(bool value) {
 	gameOver = value;
+}
+
+std::string Balatro::getBestHandName() const {
+	return bestHandName;
 }
 
 bool compareCardsByRank(const Card& a, const Card& b) {
@@ -219,28 +234,40 @@ int Balatro::calculateHand() {
 
     if (hasFiveOfAKind && isFlush) {
         bestHand = &pokerHands.FlushFive;
+		bestHandName = pokerHands.FlushFive.getName();
     } else if (isFlush && hasThreeOfAKind && hasPair) {
         bestHand = &pokerHands.FlushHouse;
+		bestHandName = pokerHands.FlushHouse.getName();
     } else if (hasFiveOfAKind) {
         bestHand = &pokerHands.FiveOfAKind;
+		bestHandName = pokerHands.FiveOfAKind.getName();
     } else if (isFlush && isStraight && values.back() == 14 && values[0] == 10) { 
         bestHand = &pokerHands.RoyalFlush;
+		bestHandName = pokerHands.RoyalFlush.getName();
     } else if (isFlush && isStraight) {
         bestHand = &pokerHands.StraightFlush;
+		bestHandName = pokerHands.StraightFlush.getName();
     } else if (hasFourOfAKind) {
         bestHand = &pokerHands.FourOfAKind;
+		bestHandName = pokerHands.FourOfAKind.getName();
     } else if (hasThreeOfAKind && hasPair) {
         bestHand = &pokerHands.FullHouse;
+		bestHandName = pokerHands.FullHouse.getName();
     } else if (isFlush && selectedCards.size() == 5) {
         bestHand = &pokerHands.Flush;
+		bestHandName = pokerHands.Flush.getName();
     } else if (isStraight) {
         bestHand = &pokerHands.Straight;
+		bestHandName = pokerHands.Straight.getName();
     } else if (hasThreeOfAKind) {
         bestHand = &pokerHands.ThreeOfAKind;
+		bestHandName = pokerHands.ThreeOfAKind.getName();
     } else if (pairCount >= 2) {
         bestHand = &pokerHands.TwoPair;
+		bestHandName = pokerHands.TwoPair.getName();
     } else if (hasPair) {
         bestHand = &pokerHands.OnePair;
+		bestHandName = pokerHands.OnePair.getName();
     }
     int currentChips = bestHand->getChips() + handChipsFromCards;
     int currentMult = bestHand->getMult();
