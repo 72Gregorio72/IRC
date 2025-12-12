@@ -160,7 +160,7 @@ std::vector<std::string> Balatro::createMsgBox(std::string text, std::string col
 
 // --- FUNZIONE PRINCIPALE ---
 void Balatro::printShopUI() {
-    std::string prefix = ":BalatroBot PRIVMSG " + player.getNickName() + " :";
+    std::string prefix = ":BalatroBot PRIVMSG " + player->getNickName() + " :";
     
     int totalRows = 58;
     int leftColWidth = 29;

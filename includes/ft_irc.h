@@ -42,6 +42,7 @@
 #include "Channel.hpp"
 #include "User.hpp"
 #include "Server.hpp"
+#include "../BalatroBot/includes/Balatro.hpp"
 
 //jokers
 

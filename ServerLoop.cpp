@@ -141,5 +141,10 @@ void Server::close_all() {
     }
     users.clear();
     
+	for (size_t i = 0; i < balatroBots.size(); i++) {
+		if (!balatroBots[i].isGameOver())
+			balatroBots[i].freeJokers();
+	}
+	
     std::cout << "Server closed cleanly." << std::endl;
 }

@@ -400,7 +400,7 @@ std::string Balatro::getRightPanelContent(int row, int handStart, int handH, int
 }
 
 void Balatro::printUI() {
-    std::string prefix = ":BalatroBot PRIVMSG " + player.getNickName() + " :";
+    std::string prefix = ":BalatroBot PRIVMSG " + player->getNickName() + " :";
     
     // Definizioni colori
     std::string C_RED     = "\x03" "04";

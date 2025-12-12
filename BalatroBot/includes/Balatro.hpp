@@ -42,7 +42,7 @@ class Balatro {
 		~Balatro();
 		Balatro(const Balatro &other);
 		Balatro &operator=(const Balatro &other);
-		Balatro(int sd, User player);
+		Balatro(int sd, User *player);
 
 		int getAnte() const;
 		int getDiscards() const;
@@ -124,7 +124,7 @@ class Balatro {
 		int currentBet;
 		int totalBet;
 		int sd;
-		User player;
+		User *player;
 		PokerHands pokerHands;
 		bool isSuitSorting;
 		bool isRankSorting;
