@@ -17,6 +17,8 @@ class GluttonousJoker : public IJoker {
 
 		int getCost();
 		std::string getName();
+		std::string getEffect();
+
 	private:
 		Balatro *bot;
 		int cost;

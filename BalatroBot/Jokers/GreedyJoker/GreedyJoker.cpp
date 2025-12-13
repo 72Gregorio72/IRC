@@ -27,3 +27,7 @@ int GreedyJoker::getCost(){
 std::string GreedyJoker::getName(){
 	return name;
 }
+
+std::string GreedyJoker::getEffect(){
+	return effect;
+}

@@ -25,3 +25,7 @@ int JollyJoker::getCost(){
 std::string JollyJoker::getName() {
 	return name;
 }
+
+std::string JollyJoker::getEffect() {
+	return effect;
+}

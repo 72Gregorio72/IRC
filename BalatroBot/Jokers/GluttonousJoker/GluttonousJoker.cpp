@@ -27,3 +27,7 @@ int GluttonousJoker::getCost(){
 std::string GluttonousJoker::getName(){
 	return name;
 }
+
+std::string GluttonousJoker::getEffect(){
+	return effect;
+}

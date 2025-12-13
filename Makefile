@@ -7,6 +7,7 @@ SRCS		=   main.cpp Server.cpp \
 				ServerParsing.cpp \
 				ServerReplyMessage.cpp \
 				BalatroBot/Balatro.cpp \
+				BalatroBot/BalatroGen.cpp \
 				BalatroBot/Card.cpp \
 				BalatroBot/BalatroUI.cpp \
 				BalatroBot/BalatroSelectedUI.cpp \

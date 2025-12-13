@@ -25,3 +25,7 @@ int CleverJoker::getCost(){
 std::string CleverJoker::getName() {
 	return name;
 }
+
+std::string CleverJoker::getEffect() {
+	return effect;
+}

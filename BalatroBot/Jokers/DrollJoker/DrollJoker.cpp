@@ -25,3 +25,7 @@ int DrollJoker::getCost(){
 std::string DrollJoker::getName() {
 	return name;
 }
+
+std::string DrollJoker::getEffect() {
+	return effect;
+}

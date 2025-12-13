@@ -10,6 +10,10 @@ std::string WrathfulJoker::getName(){
     return name;
 }
 
+std::string WrathfulJoker::getEffect(){
+    return effect;
+}
+
 void WrathfulJoker::printJoker(){
     // Implementazione UI se necessaria
 }

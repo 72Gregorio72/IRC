@@ -25,3 +25,7 @@ int ZanyJoker::getCost(){
 std::string ZanyJoker::getName() {
 	return name;
 }
+
+std::string ZanyJoker::getEffect() {
+	return effect;
+}
