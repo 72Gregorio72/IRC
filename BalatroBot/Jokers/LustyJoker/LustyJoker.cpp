@@ -19,11 +19,15 @@ std::string LustyJoker::getEffect(){
 }
 
 void LustyJoker::playJoker(int& chips, int& mult, Balatro *bot) {
-    (void)chips;
-    mult += 4;
-    for (std::vector<Card>::iterator it = bot->getSelectedCards().begin(); it != bot->getSelectedCards().end(); ++it) {
+    (void)chips; // Questo joker non modifica le chips
+
+    // 1. Salviamo le carte in una variabile locale per evitare il crash
+    std::vector<Card> playedCards = bot->getSelectedCards(); 
+
+    // 2. Iteriamo sulla variabile locale 'playedCards'
+    for (std::vector<Card>::iterator it = playedCards.begin(); it != playedCards.end(); ++it) {
         if (it->getSuit() == "Hearts") {
-            mult += 3;
+            mult += 3; // +3 Mult per ogni carta di Fiori giocata
         }
     }
 }
