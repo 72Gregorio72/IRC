@@ -5,6 +5,8 @@ Channel::Channel() {
 	topic = "";
 	password = "";
 	inviteOnly = false;
+	topicChangeOnlyOp = false;
+	userLimit = -1;
 }
 
 Channel::~Channel() {
@@ -16,6 +18,8 @@ Channel::Channel(std::string name, Server *serv) {
     topic = "";
     server = serv;
 	inviteOnly = false;
+	topicChangeOnlyOp = false;
+	userLimit = -1;
     if (name.length() > 200 || name.empty()) {
         channel_name = "invalid";
         return;
@@ -33,9 +37,11 @@ Channel::Channel(const Channel &other) {
 	users = other.users;
 	server = other.server;
 	inviteOnly = other.inviteOnly;
+	userLimit = other.userLimit;
     topic = other.topic;
 	password = other.password;
 	inviteList = other.inviteList;
+	topicChangeOnlyOp = other.topicChangeOnlyOp;
 }
 
 
@@ -47,8 +53,10 @@ Channel &Channel::operator=(const Channel &other) {
 		server = other.server;
 		inviteOnly = other.inviteOnly;
         topic = other.topic;
+		userLimit = other.userLimit;
 		password = other.password;
 		inviteList = other.inviteList;
+		topicChangeOnlyOp = other.topicChangeOnlyOp;
 	}
     return *this;
 }
@@ -57,8 +65,20 @@ bool	Channel::getInviteOnly() {
 	return inviteOnly;
 }
 
+bool	Channel::getTopicChangeOnlyOp() {
+	return topicChangeOnlyOp;
+}
+
 std::string Channel::getChannelName() {
 	return channel_name;
+}
+
+int Channel::getUserLimit() {
+	return userLimit;
+}
+
+void Channel::setUserLimit(int limit) {
+	userLimit = limit;
 }
 
 std::string Channel::getTopic() {
@@ -76,6 +96,11 @@ std::vector<std::string> Channel::getInviteList() {
 void    Channel::setTopic(std::string src_topic) {
     topic = src_topic;
 }
+
+void	Channel::setTopicChangeOnlyOp(bool value) {
+	topicChangeOnlyOp = value;
+}
+
 
 void	Channel::addInviteList(std::string nickname) {
 	inviteList.push_back(nickname);
@@ -123,6 +148,10 @@ bool	Channel::nickInInviteList(std::string nickname) {
 	return false;
 }
 
+
+void	Channel::setInviteOnly(bool value) {
+	inviteOnly = value;
+}
 
 User *Channel::findUserByNickname(std::string nickname) {
 	for (size_t i = 0; i < users.size(); i++) {

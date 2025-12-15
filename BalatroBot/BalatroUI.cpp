@@ -1,4 +1,4 @@
-#include "Balatro.hpp"
+#include "includes/Balatro.hpp"
 
 template <typename T>
 std::string toString(const T& value) {
@@ -7,9 +7,35 @@ std::string toString(const T& value) {
     return ss.str();
 }
 
-std::string getSpaces(int count) {
-    if (count < 0) return "";
-    return std::string(count, ' ');
+std::vector<std::string> Balatro::getCombinedJokersVisual(const std::vector<IJoker*>& targetJokers) {
+    if (targetJokers.empty()) {
+        return std::vector<std::string>();
+    }
+
+    // 1. Genera i singoli box
+    std::vector< std::vector<std::string> > jokerImages;
+    for (size_t i = 0; i < targetJokers.size(); ++i) {
+        jokerImages.push_back(createJokerItem(targetJokers[i]));
+    }
+
+    if (jokerImages.empty()) return std::vector<std::string>();
+
+    // 2. Unisci orizzontalmente
+    int itemsHeight = (int)jokerImages[0].size();
+    int gapSize = 1; 
+    std::string spacer = std::string(gapSize, ' ');
+
+    std::vector<std::string> mergedRow(itemsHeight, "");
+
+    for (int r = 0; r < itemsHeight; ++r) {
+        for (size_t i = 0; i < jokerImages.size(); ++i) {
+            mergedRow[r] += jokerImages[i][r];
+            if (i < jokerImages.size() - 1) {
+                mergedRow[r] += spacer;
+            }
+        }
+    }
+    return mergedRow;
 }
 
 std::vector<std::string> Balatro::getCardRows(const Card& c) {
@@ -198,7 +224,10 @@ void Balatro::getLeftPanelContent(int row, std::string& rawOut, std::string& col
         colOut = "         " + C_RED + BOLD + "GOAL CHIPS" + RESET + "          ";
     }
     else if (row == 3) {
-        std::string tVal = "300"; // Qui potresti mettere una variabile targetScore
+		std::cout << "ante score: " << anteScore << std::endl;
+		std::stringstream ss;
+		ss << anteScore;
+        std::string tVal = ss.str();
         std::string cVal = centerText(tVal, 29);
         rawOut = cVal;
         colOut = C_RED + BOLD + cVal + RESET;
@@ -210,7 +239,7 @@ void Balatro::getLeftPanelContent(int row, std::string& rawOut, std::string& col
         colOut = "        " + C_WHITE + "ROUND SCORE" + RESET + "          ";
     }
     else if (row == 6) {
-        std::string sVal = toString(currentBet);
+        std::string sVal = toString(totalBet);
         std::string cVal = centerText(sVal, 29);
         rawOut = cVal; 
         colOut = C_WHITE + BOLD + cVal + RESET;
@@ -278,88 +307,247 @@ void Balatro::getLeftPanelContent(int row, std::string& rawOut, std::string& col
 std::string Balatro::getRightPanelContent(int row, int handStart, int handH, int deckStart, int deckH, 
                                           const std::vector<std::vector<std::string> >& cardMatrix, 
                                           const std::vector<std::string>& deckVisual) {
-    std::string right = "";
+    
+    // --- CONFIGURAZIONE DIMENSIONI ---
+    int boxWidth = 44;          // Larghezza box comandi
+    int targetRightCol = 85;    // Dove inizia visivamente il box comandi
+    int cardWidth = 14;         
 
-    // Render della Mano
+    // --- CALCOLO SPAZIATURA ---
+    // Calcoliamo dove finiscono le carte per sapere quanti spazi mettere prima del box destro
+    int currentHandWidth = hand.size() * cardWidth;
+    int boxStartCol = targetRightCol;
+    
+    // Se la mano è troppo larga, sposta il box a destra
+    if (currentHandWidth + 4 > targetRightCol) {
+        boxStartCol = currentHandWidth + 4;
+    }
+
+    // --- COLORI ---
+    std::string C_ORANGE  = "\x03" "07";
+    std::string C_GREEN   = "\x03" "03";
+    std::string C_RED     = "\x03" "04";
+    std::string C_BLUE    = "\x03" "12";
+    std::string C_YELLOW  = "\x03" "08";
+    std::string C_GREY    = "\x03" "14";
+    std::string BOLD      = "\x02";
+    std::string RESET     = "\x0f";
+
+    // --- 1. CONTENUTO "SINISTRO" (CARTE DELLA MANO) ---
+    std::string leftPart = "";
+    int visibleLeftLen = 0; 
+
     if (row >= handStart && row < handStart + handH) {
         int slice = row - handStart;
         for(size_t c = 0; c < cardMatrix.size(); c++) {
-            right += cardMatrix[c][slice] + " ";
+            leftPart += cardMatrix[c][slice] + " ";
         }
+        visibleLeftLen = currentHandWidth;
     }
-    // Numeri sotto le carte
     else if (row == handStart + handH) {
         for(size_t c = 0; c < hand.size(); c++) {
             std::string cardNum = "(" + toString(c + 1) + ")";
             int paddingLen = (13 - cardNum.length()) / 2;
-            right += getSpaces(paddingLen) + cardNum + getSpaces(13 - paddingLen - cardNum.length()) + " ";
+            std::string item = std::string(paddingLen, ' ') + cardNum + std::string(13 - paddingLen - cardNum.length(), ' ') + " ";
+            leftPart += item;
         }
-    }
-    // Spazio vuoto se non ci sono carte in quel punto
-    else {
-        right += getSpaces(hand.size() * 14);
+        visibleLeftLen = currentHandWidth;
     }
 
-    // Render del Deck
-    if (row >= deckStart && row < deckStart + deckH) {
+    // --- 2. SPAZIATURA CENTRALE ---
+    int paddingNeeded = boxStartCol - visibleLeftLen;
+    if (paddingNeeded < 0) paddingNeeded = 0;
+    std::string spacer = std::string(paddingNeeded, ' ');
+
+    // --- 3. CONTENUTO DESTRO (BOX COMANDI + DECK) ---
+    std::string rightPart = "";
+    std::string vBorder = C_ORANGE + "│" + RESET; 
+
+    // Fissiamo l'inizio del box comandi in alto (es. riga 2)
+    int boxCommandStartRow = 2; 
+
+    // A. HEADER BOX
+    if (row == 0) {
+        rightPart = C_ORANGE + "┌──────────────────────────────────────────┐" + RESET;
+    }
+    // B. SEZIONE COMANDI
+    else if (row >= boxCommandStartRow && row < deckStart) {
+        
+        int r = row - boxCommandStartRow + 1; // Riga relativa
+
+        if (row == deckStart - 1) {
+             rightPart = C_ORANGE + "└──────────────────────────────────────────┘" + RESET;
+        }
+        else {
+            std::string text = "";
+            if (r == 1)      text = BOLD + centerText("COMMANDS", boxWidth - 2) + RESET;
+            else if (r == 2) text = C_ORANGE + "├──────────────────────────────────────────┤" + RESET;
+            else if (r == 3) text = " " + C_GREEN + "!select" + RESET + " <id> " + C_GREY + "(es: !select 1 3)" + RESET;
+            else if (r == 5) text = " " + C_RED + "!discard" + C_GREY + " (Discard selected)" + RESET;
+            else if (r == 7) text = " " + C_BLUE + "!play" + C_GREY + "    (Play selected)" + RESET;
+            else if (r == 9) text = " " + C_YELLOW + "!sort rank" + C_GREY + " (Sort Hand)" + RESET;
+            else {
+                text = std::string(boxWidth - 2, ' '); 
+            }
+
+            if (r == 2) {
+                rightPart = text;
+            } else {
+                 int txtLen = getVisualLength(text);
+                 if (txtLen > boxWidth - 2) text = std::string(boxWidth - 2, ' '); 
+                 int padRight = (boxWidth - 2) - txtLen;
+                 if(padRight < 0) padRight = 0;
+                 rightPart = vBorder + text + std::string(padRight, ' ') + vBorder;
+            }
+        }
+    }
+    // C. RIEMPIMENTO VERTICALE (Tra header e box comandi, se c'è spazio)
+    else if (row < deckStart && row > 0) {
+        rightPart = vBorder + std::string(boxWidth - 2, ' ') + vBorder;
+    }
+    // D. SEZIONE DECK
+    else if (row >= deckStart && row < deckStart + deckH) {
         int dSlice = row - deckStart;
-        right += "                                " + deckVisual[dSlice];
+        std::string deckRow = deckVisual[dSlice];
+        int deckPadLen = (boxWidth - 20) / 2;
+        if (deckPadLen < 0) deckPadLen = 0;
+        rightPart = std::string(deckPadLen, ' ') + deckRow;
     }
     else if (row == deckStart + deckH) {
         std::string deckLabel = "(" + toString(deck.size()) + ")";
-        int dPad = (26 - deckLabel.length()) / 2; 
-        right += "                              " + getSpaces(dPad) + deckLabel + getSpaces(26 - dPad - deckLabel.length()) + "\r\n";
+        int labelPadLen = (boxWidth - deckLabel.length()) / 2;
+        rightPart = std::string(labelPadLen, ' ') + deckLabel; 
     }
 
-    return right;
+    return leftPart + spacer + rightPart;
 }
-
 void Balatro::printUI() {
-    std::string prefix = ":BalatroBot PRIVMSG " + player.getNickName() + " :";
+    std::string prefix = ":BalatroBot PRIVMSG " + player->getNickName() + " :";
     
+    std::string C_RED     = "\x03" "04";
+    std::string C_WHITE   = "\x03" "00";
+    std::string C_YELLOW  = "\x03" "08";
+    std::string BOLD      = "\x02";
+    std::string RESET     = "\x0f";
+
+    // --- GAME OVER CHECK ---
+    if (gameOver) {
+        std::string msg = "";
+        // Pulizia schermo
+        for(int i=0; i<50; i++) msg += prefix + " \r\n";
+
+        std::vector<std::string> art;
+        art.push_back("  /$$$$$$   /$$$$$$  /$$      /$$ /$$$$$$$$        /$$$$$$  /$$    /$$ /$$$$$$$$ /$$$$$$$   ");
+        art.push_back(" /$$__  $$ /$$__  $$| $$$    /$$$| $$_____/       /$$__  $$| $$   | $$| $$_____/| $$__  $$  ");
+        art.push_back("| $$  \\__/| $$  \\ $$| $$$$  /$$$$| $$            | $$  \\ $$| $$   | $$| $$      | $$  \\ $$  ");
+        art.push_back("| $$ /$$$$| $$$$$$$$| $$ $$/$$ $$| $$$$$         | $$  | $$|  $$ / $$/| $$$$$   | $$$$$$$/  ");
+        art.push_back("| $$|_  $$| $$__  $$| $$  $$$| $$| $$__/         | $$  | $$ \\  $$ $$/ | $$__/   | $$__  $$  ");
+        art.push_back("| $$  \\ $$| $$  | $$| $$ \\ $ | $$| $$            | $$  | $$  \\  $$$/  | $$      | $$  \\ $$  ");
+        art.push_back("|  $$$$$$/| $$  | $$| $$ \\/  | $$| $$$$$$$$      |  $$$$$$/   \\  $/   | $$$$$$$$| $$  | $$  ");
+        art.push_back(" \\______/ |__/  |__/|__/     |__/|________/       \\______/     \\_/    |________/|__/  |__/  ");
+
+        for (size_t i = 0; i < art.size(); ++i) {
+            std::string centeredLine = centerText(art[i], 100); 
+            msg += prefix + C_RED + BOLD + centeredLine + RESET + "\r\n";
+        }
+
+        msg += prefix + " \r\n";
+        msg += prefix + " \r\n";
+
+        std::string scoreText = "FINAL SCORE: " + toString(totalBet); 
+        std::string centeredScore = centerText(scoreText, 100);
+        msg += prefix + C_WHITE + BOLD + centeredScore + RESET + "\r\n";
+
+        std::string restartText = "Type /balatro to play again";
+        std::string centeredRestart = centerText(restartText, 100);
+        msg += prefix + C_YELLOW + centeredRestart + RESET + "\r\n";
+
+        // Footer pulizia
+        for(int i=0; i<20; i++) msg += prefix + " \r\n";
+
+        send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+        return; 
+    }
+
+    // --- LOGICA DI GIOCO STANDARD ---
+
     int totalRows = 58;
     int leftColWidth = 29; 
 
-    // 1. Preparazione grafica carte e mazzo
+    // 1. Preparazione Grafica Elementi
+    // Carte
     std::vector< std::vector<std::string> > cardMatrix;
     for(size_t i = 0; i < hand.size(); i++) {
         cardMatrix.push_back(getCardRows(hand[i]));
     }
+    // Mazzo
     std::vector<std::string> deckVisual = printDeck();
+    // Joker (Grafica combinata)
+    std::vector<std::string> jokersVisual = getCombinedJokersVisual(this->jokers); 
     
-    // 2. Calcolo altezze e offset
-    int handHeight = (!cardMatrix.empty() && !cardMatrix[0].empty()) ? cardMatrix[0].size() : 0;
-    int deckHeight = deckVisual.size();
+    // 2. Calcolo altezze e posizioni verticali
+    int handHeight = (!cardMatrix.empty() && !cardMatrix[0].empty()) ? (int)cardMatrix[0].size() : 0;
+    int deckHeight = (int)deckVisual.size();
+    int jokerHeight = (int)jokersVisual.size();
 
     int bottomBase = totalRows - 3; 
     int handStartRow = bottomBase - handHeight;
     int deckStartRow = bottomBase - deckHeight;
+    
+    // Posizione verticale dei Joker: Riga 2 (subito sotto la linea di header)
+    int jokerStartRow = 2; 
 
     std::string msg = "";
 
-    // 3. Header pulizia e bordi
+    // 3. Header Tavolo
     for(int i=0; i<10; i++) msg += prefix + " \r\n";
-	msg += prefix + "═══════════════════════════════" + "╦" + "═════════════════════════════════════════════════════════════════";
-	msg += prefix + "═════════════════════════════════════════════════════════════════════════════════════════════════════\r\n";
+    msg += prefix + "═══════════════════════════════" + "╦" + "═════════════════════════════════════════════════════════════════";
+    msg += prefix + "═════════════════════════════════════════════════════════════════════════════════════════════════════\r\n";
     
-    // 4. Ciclo principale di rendering righe
+    // 4. Ciclo di Rendering (Riga per riga)
     for (int row = 0; row < totalRows; ++row) {
         
-        // A. Ottieni pannello sinistro
+        // --- Pannello Sinistro (Stats) ---
         std::string leftRaw, leftColor;
         getLeftPanelContent(row, leftRaw, leftColor);
+        int spacesNeeded = leftColWidth - (int)leftRaw.length();
+        if (spacesNeeded < 0) spacesNeeded = 0;
+        std::string leftPanel = leftColor + std::string(spacesNeeded, ' ');
 
-        // B. Calcola padding per allineamento verticale
-        std::string padding = getSpaces(leftColWidth - leftRaw.length());
-        std::string leftPanel = leftColor + padding;
-
-        // C. Ottieni pannello destro
+        // --- Pannello Destro Base (Senza Joker) ---
+        // Contiene la mano (in basso) e il box comandi/deck (a destra)
         std::string rightPanel = getRightPanelContent(row, handStartRow, handHeight, deckStartRow, deckHeight, cardMatrix, deckVisual);
         
-        msg += prefix + " " + leftPanel + " ║ " + "                             " + rightPanel + "\r\n";
+        // --- INIEZIONE JOKER NEL CENTRO ---
+        // Se siamo nelle righe dedicate ai joker...
+        if (row >= jokerStartRow && row < jokerStartRow + jokerHeight) {
+            // Ottieni la riga grafica del joker corrente
+            std::string jLine = jokersVisual[row - jokerStartRow];
+            
+            // Calcolo posizione orizzontale
+            // Il Box Comandi inizia circa a colonna 85.
+            // Vogliamo centrare i joker nello spazio disponibile (0 -> 85). Centro = ~42.
+            int centerPos = 42;
+            int visualLen = getVisualLength(jLine);
+            int startPos = centerPos - (visualLen / 2);
+            
+            if (startPos < 2) startPos = 2; // Margine minimo sinistro
+
+            // Controllo sovrapposizione: Assicuriamoci che rightPanel sia abbastanza lunga
+            // e che non stiamo scrivendo sopra il box comandi
+            if (startPos + visualLen < (int)rightPanel.length()) {
+                // Sovrascriviamo gli spazi vuoti con la grafica del joker.
+                // Nota: replace accetta la lunghezza in bytes, ma noi stiamo rimpiazzando spazi (1 byte = 1 char).
+                // Quindi rimuoviamo 'visualLen' spazi e inseriamo 'jLine'.
+                rightPanel.replace(startPos, visualLen, jLine);
+            }
+        }
+
+        // Assemblaggio messaggio IRC
+        msg += prefix + " " + leftPanel + " ║ " + rightPanel + "\r\n";
     }
 
-    // 5. Chiusura bordi
+    // 5. Footer Tavolo
     msg += prefix + "═══════════════════════════════" + "╩" + "═════════════════════════════════════════════════════════════════";
     msg += prefix + "═════════════════════════════════════════════════════════════════════════════════════════════════════\r\n";
 

@@ -1,5 +1,5 @@
 #include "Server.hpp"
-#include "BalatroBot/Balatro.hpp"
+#include "BalatroBot/includes/Balatro.hpp"
 #include <string>
 
 Server::Server() : password("1234"), serverName("Pranglost") {}
@@ -162,6 +162,23 @@ User	*Server::find_by_nickname(std::string nickname){
 	return NULL;
 }
 
+void Server::startGame(int sd) {
+    User* user = find_by_sd(sd);
+    if (!user) return;
+
+    // 1. ALLOCAZIONE DINAMICA
+    Balatro* newGame = new Balatro(sd, user);
+    
+    // 2. INIZIALIZZAZIONE (Opzionale ma consigliata subito)
+    newGame->initAllJokers(); 
+    newGame->startNewGame(); // O startNewRound()
+
+    // 3. SALVATAGGIO DEL PUNTATORE
+    balatroBots.push_back(newGame);
+    
+    std::cout << "Gioco Balatro creato per socket " << sd << std::endl;
+}
+
 void	Server::sendPrivmsg(std::string msg, User* sender)
 {
 	size_t pos = msg.find(" ");
@@ -205,15 +222,21 @@ void	Server::sendPrivmsg(std::string msg, User* sender)
 
 }
 
-void Server::addBalatroBot(int sd, User player){
-	Balatro newBot(sd, player);
-	balatroBots.push_back(newBot);
+void Server::addBalatroBot(int sd, User *player) {
+    Balatro* newBot = new Balatro(sd, player);
+    
+    // Inizializza subito per sicurezza
+    newBot->initAllJokers();
+    newBot->startNewGame();
+
+    balatroBots.push_back(newBot);
+    std::cout << "Balatro Bot aggiunto per socket: " << sd << std::endl;
 }
 
 Balatro* Server::findBalatroBySd(int sd){
 	for (size_t i = 0; i < balatroBots.size(); i++) {
-		if (balatroBots[i].getSd() == sd) {
-			return &balatroBots[i];
+		if (balatroBots[i]->getSd() == sd) {
+			return balatroBots[i];
 		}
 	}
 	return NULL;

@@ -110,6 +110,7 @@ int Server::process_user_buffer(User *user, int sd) {
         std::cout << "Complete message from socket " << sd << ": " << complete_msg << std::endl;
 
         serverdata.msg[0] = '\0';
+		std::memset(serverdata.msg, 0, sizeof(serverdata.msg));
         strncpy(serverdata.msg, complete_msg.c_str(), sizeof(serverdata.msg) - 1);
         int number = parse_msg(sd);
         if (number == -72) {
@@ -141,5 +142,15 @@ void Server::close_all() {
     }
     users.clear();
     
+	// for (size_t i = 0; i < balatroBots.size(); i++) {
+	// 	if (!balatroBots[i]->isGameOver())
+	// 		balatroBots[i]->freeJokers();
+	// }
+
+	for (size_t i = 0; i < balatroBots.size(); ++i) {
+        delete balatroBots[i];
+    }
+    balatroBots.clear();
+
     std::cout << "Server closed cleanly." << std::endl;
 }
