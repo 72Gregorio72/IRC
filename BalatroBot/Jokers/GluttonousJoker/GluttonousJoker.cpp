@@ -1,10 +1,10 @@
 #include "GluttonousJoker.hpp"
 
-GluttonousJoker::GluttonousJoker() : cost(5), effect("Played cards with club suit give +3 Mult when scored"), name("Gluttonous Joker") {}
+GluttonousJoker::GluttonousJoker() :bot(), cost(5), effect("Played cards with club suit give +3 Mult when scored"), name("Gluttonous Joker") {}
 
 GluttonousJoker::~GluttonousJoker() {}
 
-GluttonousJoker::GluttonousJoker(const GluttonousJoker &other) : cost(other.cost), effect(other.effect), name(other.name) {}
+GluttonousJoker::GluttonousJoker(const GluttonousJoker &other) :bot(other.bot), cost(other.cost), effect(other.effect), name(other.name) {}
 
 void GluttonousJoker::printJoker(){
     // Implementazione UI se necessaria

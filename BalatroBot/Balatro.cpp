@@ -78,7 +78,7 @@ Balatro &Balatro::operator=(const Balatro &other) {
 		isCashingOut = other.isCashingOut;
 		isShopUI = other.isShopUI;
 		jokers = other.jokers;
-		bestHandName = bestHandName;
+		bestHandName = other.bestHandName;
 		pendingShopIndex = other.pendingShopIndex;
 	}
 	return *this;

@@ -1,10 +1,10 @@
 #include "JollyJoker.hpp"
 
-JollyJoker::JollyJoker() : cost(3), effect("+8 mult if a Pair is present"), name("Jolly Joker") {}
+JollyJoker::JollyJoker() :bot(), cost(3), effect("+8 mult if a Pair is present"), name("Jolly Joker") {}
 
 JollyJoker::~JollyJoker() {}
 
-JollyJoker::JollyJoker(const JollyJoker &other) : cost(other.cost), effect(other.effect), name(other.name) {}
+JollyJoker::JollyJoker(const JollyJoker &other) :bot(other.bot), cost(other.cost), effect(other.effect), name(other.name) {}
 
 void JollyJoker::printJoker(){
     // Implementazione UI se necessaria

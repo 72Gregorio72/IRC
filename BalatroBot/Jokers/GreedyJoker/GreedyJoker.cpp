@@ -1,10 +1,10 @@
 #include "GreedyJoker.hpp"
 
-GreedyJoker::GreedyJoker() : cost(5), effect("Played cards with Diamond suit give +3 Mult when scored"), name("Greedy Joker") {}
+GreedyJoker::GreedyJoker() :bot(), cost(5), effect("Played cards with Diamond suit give +3 Mult when scored"), name("Greedy Joker") {}
 
 GreedyJoker::~GreedyJoker() {}
 
-GreedyJoker::GreedyJoker(const GreedyJoker &other) : cost(other.cost), effect(other.effect) {}
+GreedyJoker::GreedyJoker(const GreedyJoker &other) :bot(other.bot), cost(other.cost), effect(other.effect) {}
 
 void GreedyJoker::printJoker(){
     // Implementazione UI se necessaria

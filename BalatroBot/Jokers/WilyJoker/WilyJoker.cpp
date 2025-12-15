@@ -1,10 +1,10 @@
 #include "WilyJoker.hpp"
 
-WilyJoker::WilyJoker() : cost(4), effect("+100 chips if a Three of a Kind is present"), name("Wily Joker") {}
+WilyJoker::WilyJoker() :bot(), cost(4), effect("+100 chips if a Three of a Kind is present"), name("Wily Joker") {}
 
 WilyJoker::~WilyJoker() {}
 
-WilyJoker::WilyJoker(const WilyJoker &other) : cost(other.cost), effect(other.effect), name(other.name) {}
+WilyJoker::WilyJoker(const WilyJoker &other) :bot(other.bot), cost(other.cost), effect(other.effect), name(other.name) {}
 
 void WilyJoker::printJoker(){
     // Implementazione UI se necessaria

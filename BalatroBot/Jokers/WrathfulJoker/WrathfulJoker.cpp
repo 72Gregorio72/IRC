@@ -1,10 +1,10 @@
 #include "WrathfulJoker.hpp"
 
-WrathfulJoker::WrathfulJoker() : cost(5), effect("Played cards with Spade suit give +3 Mult when scored") ,name("Wrathful Joker"){}
+WrathfulJoker::WrathfulJoker() :bot(), cost(5), effect("Played cards with Spade suit give +3 Mult when scored") ,name("Wrathful Joker"){}
 
 WrathfulJoker::~WrathfulJoker() {}
 
-WrathfulJoker::WrathfulJoker(const WrathfulJoker &other) : cost(other.cost), effect(other.effect), name(other.name) {}
+WrathfulJoker::WrathfulJoker(const WrathfulJoker &other) :bot(other.bot), cost(other.cost), effect(other.effect), name(other.name) {}
 
 std::string WrathfulJoker::getName(){
     return name;

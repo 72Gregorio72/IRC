@@ -1,10 +1,10 @@
 #include "ZanyJoker.hpp"
 
-ZanyJoker::ZanyJoker() : cost(4), effect("+12 mult if a Three of a Kind is present"), name("Zany Joker") {}
+ZanyJoker::ZanyJoker() :bot(), cost(4), effect("+12 mult if a Three of a Kind is present"), name("Zany Joker") {}
 
 ZanyJoker::~ZanyJoker() {}
 
-ZanyJoker::ZanyJoker(const ZanyJoker &other) : cost(other.cost), effect(other.effect), name(other.name) {}
+ZanyJoker::ZanyJoker(const ZanyJoker &other) :bot(other.bot), cost(other.cost), effect(other.effect), name(other.name) {}
 
 void ZanyJoker::printJoker(){
     // Implementazione UI se necessaria

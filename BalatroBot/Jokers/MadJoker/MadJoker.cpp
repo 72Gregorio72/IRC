@@ -1,10 +1,10 @@
 #include "MadJoker.hpp"
 
-MadJoker::MadJoker() : cost(4), effect("+10 mult if a Two Pair is present"), name("Mad Joker") {}
+MadJoker::MadJoker() :bot(), cost(4), effect("+10 mult if a Two Pair is present"), name("Mad Joker") {}
 
 MadJoker::~MadJoker() {}
 
-MadJoker::MadJoker(const MadJoker &other) : cost(other.cost), effect(other.effect), name(other.name) {}
+MadJoker::MadJoker(const MadJoker &other) :bot(other.bot), cost(other.cost), effect(other.effect), name(other.name) {}
 
 void MadJoker::printJoker(){
     // Implementazione UI se necessaria

@@ -3,6 +3,8 @@
 
 #include "../IJoker.hpp"
 
+class Balatro;
+
 class BaseJoker : public IJoker {
 	public:
 		BaseJoker();

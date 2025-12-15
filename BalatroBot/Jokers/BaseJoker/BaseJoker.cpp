@@ -1,10 +1,10 @@
 #include "BaseJoker.hpp"
 
-BaseJoker::BaseJoker() : cost(2), effect("+4 Mult"), name("Base Joker") {}
+BaseJoker::BaseJoker() : bot(), cost(2), effect("+4 Mult"), name("Base Joker") {}
 
 BaseJoker::~BaseJoker() {}
 
-BaseJoker::BaseJoker(const BaseJoker &other) : cost(other.cost), effect(other.effect), name(other.name) {}
+BaseJoker::BaseJoker(const BaseJoker &other) : bot(other.bot), cost(other.cost), effect(other.effect), name(other.name) {}
 
 void BaseJoker::printJoker(){
     // Implementazione UI se necessaria

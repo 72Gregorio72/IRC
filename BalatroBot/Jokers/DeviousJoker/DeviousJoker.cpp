@@ -1,10 +1,10 @@
 #include "DeviousJoker.hpp"
 
-DeviousJoker::DeviousJoker() : cost(4), effect("+100 chips if a Straight is present"), name("Devious Joker") {}
+DeviousJoker::DeviousJoker() : bot(), cost(4), effect("+100 chips if a Straight is present"), name("Devious Joker") {}
 
 DeviousJoker::~DeviousJoker() {}
 
-DeviousJoker::DeviousJoker(const DeviousJoker &other) : cost(other.cost), effect(other.effect), name(other.name) {}
+DeviousJoker::DeviousJoker(const DeviousJoker &other) : bot(other.bot), cost(other.cost), effect(other.effect), name(other.name) {}
 
 void DeviousJoker::printJoker(){
     // Implementazione UI se necessaria

@@ -1,10 +1,10 @@
 #include "CraftyJoker.hpp"
 
-CraftyJoker::CraftyJoker() : cost(4), effect("+80 chips if a Flush is present"), name("Crafty Joker") {}
+CraftyJoker::CraftyJoker() : bot(), cost(4), effect("+80 chips if a Flush is present"), name("Crafty Joker") {}
 
 CraftyJoker::~CraftyJoker() {}
 
-CraftyJoker::CraftyJoker(const CraftyJoker &other) : cost(other.cost), effect(other.effect), name(other.name) {}
+CraftyJoker::CraftyJoker(const CraftyJoker &other) : bot(other.bot), cost(other.cost), effect(other.effect), name(other.name) {}
 
 void CraftyJoker::printJoker(){
     // Implementazione UI se necessaria

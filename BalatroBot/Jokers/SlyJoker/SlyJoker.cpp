@@ -1,10 +1,10 @@
 #include "SlyJoker.hpp"
 
-SlyJoker::SlyJoker() : cost(3), effect("+50 chips if a Pair is present"), name("Sly Joker") {}
+SlyJoker::SlyJoker() :bot(), cost(3), effect("+50 chips if a Pair is present"), name("Sly Joker") {}
 
 SlyJoker::~SlyJoker() {}
 
-SlyJoker::SlyJoker(const SlyJoker &other) : cost(other.cost), effect(other.effect), name(other.name) {}
+SlyJoker::SlyJoker(const SlyJoker &other) :bot(other.bot), cost(other.cost), effect(other.effect), name(other.name) {}
 
 void SlyJoker::printJoker(){
     // Implementazione UI se necessaria

@@ -1,10 +1,10 @@
 #include "DrollJoker.hpp"
 
-DrollJoker::DrollJoker() : cost(4), effect("+10 mult if a Flush is present"), name("Droll Joker") {}
+DrollJoker::DrollJoker() :bot(), cost(4), effect("+10 mult if a Flush is present"), name("Droll Joker") {}
 
 DrollJoker::~DrollJoker() {}
 
-DrollJoker::DrollJoker(const DrollJoker &other) : cost(other.cost), effect(other.effect), name(other.name) {}
+DrollJoker::DrollJoker(const DrollJoker &other) :bot(other.bot), cost(other.cost), effect(other.effect), name(other.name) {}
 
 void DrollJoker::printJoker(){
     // Implementazione UI se necessaria

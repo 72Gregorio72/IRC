@@ -1,10 +1,10 @@
 #include "LustyJoker.hpp"
 
-LustyJoker::LustyJoker() : cost(5), effect("Played cards with Heart suit give +3 Mult when scored"), name("Lusty Joker"){}
+LustyJoker::LustyJoker() :bot(), cost(5), effect("Played cards with Heart suit give +3 Mult when scored"), name("Lusty Joker"){}
 
 LustyJoker::~LustyJoker() {}
 
-LustyJoker::LustyJoker(const LustyJoker &other) : cost(other.cost), effect(other.effect), name(other.name) {}
+LustyJoker::LustyJoker(const LustyJoker &other) :bot(other.bot), cost(other.cost), effect(other.effect), name(other.name) {}
 
 void LustyJoker::printJoker(){
     // Implementazione UI se necessaria

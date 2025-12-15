@@ -1,10 +1,10 @@
 #include "CleverJoker.hpp"
 
-CleverJoker::CleverJoker() : cost(4), effect("+80 chips if a Two Pair is present"), name("Clever Joker") {}
+CleverJoker::CleverJoker() : bot(), cost(4), effect("+80 chips if a Two Pair is present"), name("Clever Joker") {}
 
 CleverJoker::~CleverJoker() {}
 
-CleverJoker::CleverJoker(const CleverJoker &other) : cost(other.cost), effect(other.effect), name(other.name) {}
+CleverJoker::CleverJoker(const CleverJoker &other) : bot(other.bot), cost(other.cost), effect(other.effect), name(other.name) {}
 
 void CleverJoker::printJoker(){
     // Implementazione UI se necessaria
