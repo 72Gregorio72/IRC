@@ -15,11 +15,11 @@
 #include "Jokers/DeviousJoker/DeviousJoker.hpp"
 #include "Jokers/CraftyJoker/CraftyJoker.hpp"
 
-Balatro::Balatro() : gameOver(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(0), player(), pokerHands(), isSuitSorting(false), isCashingOut(false), isShopUI(false), jokers(), allJokers(), bestHandName("") {
+Balatro::Balatro() : gameOver(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(0), player(), pokerHands(), isSuitSorting(false), isCashingOut(false), isShopUI(false), jokers(), allJokers(), bestHandName(""), pendingShopIndex(-1) {
     std::srand(static_cast<unsigned int>(std::time(NULL)));
 }
 
-Balatro::Balatro(int sd, User *player) : gameOver(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(sd), player(player), pokerHands(), isRankSorting(false), isCashingOut(false), isShopUI(false), jokers(), allJokers(), bestHandName("") {
+Balatro::Balatro(int sd, User *player) : gameOver(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(sd), player(player), pokerHands(), isRankSorting(false), isCashingOut(false), isShopUI(false), jokers(), allJokers(), bestHandName(""), pendingShopIndex(-1) {
     std::srand(static_cast<unsigned int>(std::time(NULL)));
 }
 
@@ -55,7 +55,7 @@ Balatro::Balatro(const Balatro &other)
 	  isCashingOut(other.isCashingOut),
 	  isShopUI(other.isShopUI),
 	  jokers(other.jokers),
-	  bestHandName(other.bestHandName) {}
+	  bestHandName(other.bestHandName), pendingShopIndex(other.pendingShopIndex) {}
 
 Balatro &Balatro::operator=(const Balatro &other) {
 	if (this != &other) {
@@ -79,6 +79,7 @@ Balatro &Balatro::operator=(const Balatro &other) {
 		isShopUI = other.isShopUI;
 		jokers = other.jokers;
 		bestHandName = bestHandName;
+		pendingShopIndex = other.pendingShopIndex;
 	}
 	return *this;
 }
@@ -99,8 +100,8 @@ void Balatro::initPokerHands() {
     pokerHands.FlushFive.setPokerHand("Flush Five", 13, 160, 16);
 }
 
-std::vector<Card> Balatro::getSelectedCards() {
-	return selectedCards;
+const std::vector<Card>& Balatro::getSelectedCards() const {
+    return selectedCards;
 }
 
 void Balatro::initAllJokers() {
@@ -129,6 +130,7 @@ void Balatro::initAllJokers() {
 
 void Balatro::startNewRound() {
 	anteScore = calculateAnteScore();
+    coins = 1000;
 	hand.clear();
 	deck.clear();
 	selectedCards.clear();
@@ -475,10 +477,12 @@ void Balatro::getMessagePrompt(std::string msg) {
                 IJoker* targetJoker = shopJokers[idx];
 
                 if (jokers.size() >= 5) {
-                    std::string err = ":BalatroBot PRIVMSG " + player->getNickName() + " :Not enough space for " + targetJoker->getName() + "\r\n";
-                    send(sd, err.c_str(), err.length(), MSG_NOSIGNAL);
-                    continue;
-                }
+                pendingShopIndex = idx;
+                
+                std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :Max Jokers reached! Type !replace <1-5> to swap with " + targetJoker->getName() + " or ignore.\r\n";
+                send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+                return;
+            }
 
                 if (coins < targetJoker->getCost()) {
                     std::string err = ":BalatroBot PRIVMSG " + player->getNickName() + " :Not enough coins for " + targetJoker->getName() + "\r\n";
@@ -500,6 +504,54 @@ void Balatro::getMessagePrompt(std::string msg) {
             if (updateUI) {
                 printShopUI();
             }
+        } else if (msg.find("replace") == 0) {
+            // 1. Controllo se c'è un acquisto in sospeso
+            if (pendingShopIndex == -1) {
+                std::string err = ":BalatroBot PRIVMSG " + player->getNickName() + " :No purchase pending. Use !shop first.\r\n";
+                send(sd, err.c_str(), err.length(), MSG_NOSIGNAL);
+                return;
+            }
+
+            // 2. Controllo se il joker nello shop esiste ancora (safety check)
+            if (pendingShopIndex >= (int)shopJokers.size()) {
+                pendingShopIndex = -1; // Reset
+                printShopUI(); 
+                return;
+            }
+
+            // 3. Parsing dell'indice da sostituire (1-5)
+            msg.erase(0, 8); // rimuove "!replace"
+            int replaceIdx = std::atoi(msg.c_str()); 
+            replaceIdx--; // 0-based
+
+            if (replaceIdx < 0 || replaceIdx >= (int)jokers.size()) {
+                std::string err = ":BalatroBot PRIVMSG " + player->getNickName() + " :Invalid Joker index to replace.\r\n";
+                send(sd, err.c_str(), err.length(), MSG_NOSIGNAL);
+                return;
+            }
+
+            IJoker* newJoker = shopJokers[pendingShopIndex];
+            IJoker* oldJoker = jokers[replaceIdx];
+
+            // 4. Esecuzione Transazione
+            coins -= newJoker->getCost();
+            
+            // Rimuovo il vecchio joker dalla mano
+            jokers.erase(jokers.begin() + replaceIdx);
+            
+            // Aggiungo il nuovo joker
+            jokers.push_back(newJoker);
+
+            // Rimuovo il nuovo joker dallo shop
+            shopJokers.erase(shopJokers.begin() + pendingShopIndex);
+
+            // 5. Reset e Feedback
+            pendingShopIndex = -1; // Transazione completata
+            
+            std::string success = ":BalatroBot PRIVMSG " + player->getNickName() + " :Replaced " + oldJoker->getName() + " with " + newJoker->getName() + "\r\n";
+            send(sd, success.c_str(), success.length(), MSG_NOSIGNAL);
+            
+            printShopUI();
         }
 	}
 }

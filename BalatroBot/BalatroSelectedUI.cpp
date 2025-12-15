@@ -105,72 +105,78 @@ std::vector<std::string> Balatro::getCardRowsSelected(const Card& c, bool isSele
 
     return rows; // Ritorna sempre 11 righe
 }
-
 void Balatro::printSelectedCardsUI() {
     std::string prefix = ":BalatroBot PRIVMSG " + player->getNickName() + " :";
     
+    if (selectedCards.empty()) {
+        printUI();
+        return;
+    }
+
     int totalRows = 58;
     int leftColWidth = 29; 
 
-    // 1. Preparazione grafica carte (con logica selezione integrata)
+    // 1. Grafica Carte
     std::vector< std::vector<std::string> > cardMatrix;
-
-	if (selectedCards.empty()) {
-		// Se non ci sono carte selezionate, stampiamo la UI normale
-		printUI();
-		return;
-	}
-    
     for(size_t i = 0; i < hand.size(); i++) {
-        // Controlla se l'indice 'i' è presente nel vettore selectedCards
         bool isSelected = false;
-		for (size_t j = 0; j < selectedCards.size(); j++) {
-			if (hand[i].getRank() == selectedCards[j].getRank() &&
-				hand[i].getSuit() == selectedCards[j].getSuit()) {
-				isSelected = true;
-				break;
-			}
-		}
-        // Passiamo isSelected alla funzione: la matrice avrà carte spostate visivamente
+        for (size_t j = 0; j < selectedCards.size(); j++) {
+            if (hand[i].getRank() == selectedCards[j].getRank() &&
+                hand[i].getSuit() == selectedCards[j].getSuit()) {
+                isSelected = true;
+                break;
+            }
+        }
         cardMatrix.push_back(getCardRowsSelected(hand[i], isSelected));
     }
 
+    // 2. Grafica Deck e Joker
     std::vector<std::string> deckVisual = printDeck();
+    std::vector<std::string> jokersVisual = getCombinedJokersVisual(this->jokers); 
     
-    // 2. Calcolo altezze e offset
-    // Nota: handHeight ora sarà 11 (9 + 2 di padding)
-    int handHeight = (!cardMatrix.empty() && !cardMatrix[0].empty()) ? cardMatrix[0].size() : 0;
-    int deckHeight = deckVisual.size();
+    // 3. Altezze
+    int handHeight = (!cardMatrix.empty() && !cardMatrix[0].empty()) ? (int)cardMatrix[0].size() : 0;
+    int deckHeight = (int)deckVisual.size();
+    int jokerHeight = (int)jokersVisual.size();
 
     int bottomBase = totalRows - 3; 
     int handStartRow = bottomBase - handHeight;
     int deckStartRow = bottomBase - deckHeight;
+    int jokerStartRow = 2; // Posizione Joker
 
     std::string msg = "";
 
-    // 3. Header pulizia e bordi
+    // Header
     for(int i=0; i<10; i++) msg += prefix + " \r\n";
     msg += prefix + "═══════════════════════════════" + "╦" + "═════════════════════════════════════════════════════════════════";
     msg += prefix + "═════════════════════════════════════════════════════════════════════════════════════════════════════\r\n";
     
-    // 4. Ciclo principale di rendering righe
     for (int row = 0; row < totalRows; ++row) {
         
-        // A. Ottieni pannello sinistro
         std::string leftRaw, leftColor;
         getLeftPanelContent(row, leftRaw, leftColor);
+        int spacesNeeded = leftColWidth - (int)leftRaw.length();
+        if (spacesNeeded < 0) spacesNeeded = 0;
+        std::string leftPanel = leftColor + std::string(spacesNeeded, ' ');
 
-        // B. Calcola padding per allineamento verticale
-        std::string padding = getSpaces(leftColWidth - leftRaw.length());
-        std::string leftPanel = leftColor + padding;
-
-        // C. Ottieni pannello destro
         std::string rightPanel = getRightPanelContent(row, handStartRow, handHeight, deckStartRow, deckHeight, cardMatrix, deckVisual);
         
-        msg += prefix + " " + leftPanel + " ║ " + "                             " + rightPanel + "\r\n";
+        // --- INIEZIONE JOKER ---
+        if (row >= jokerStartRow && row < jokerStartRow + jokerHeight) {
+            std::string jLine = jokersVisual[row - jokerStartRow];
+            int centerPos = 42; 
+            int startPos = centerPos - (getVisualLength(jLine) / 2);
+            if (startPos < 2) startPos = 2;
+
+            int visualLen = getVisualLength(jLine);
+            if (startPos + visualLen < (int)rightPanel.length()) {
+                rightPanel.replace(startPos, visualLen, jLine);
+            }
+        }
+        
+        msg += prefix + " " + leftPanel + " ║ " + rightPanel + "\r\n";
     }
 
-    // 5. Chiusura bordi
     msg += prefix + "═══════════════════════════════" + "╩" + "═════════════════════════════════════════════════════════════════";
     msg += prefix + "═════════════════════════════════════════════════════════════════════════════════════════════════════\r\n";
 

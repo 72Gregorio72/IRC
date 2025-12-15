@@ -9,7 +9,7 @@ std::string repeat_string(int count, const std::string& pattern) {
 }
 
 
-int getVisualLength(const std::string& s) {
+int Balatro::getVisualLength(const std::string& s) {
     int visualLen = 0;
     //bool inColor = false; // Flag per tracking stato colore (opzionale, qui gestiamo per char)
 
@@ -48,29 +48,40 @@ int getVisualLength(const std::string& s) {
 }
 
 void Balatro::generateShopJokers() {
-    // 1. Pulisce il negozio precedente (rimuove solo i puntatori, non fa delete sugli oggetti!)
-    shopJokers.clear(); 
-    
-    // 2. Assicura che il database dei joker sia inizializzato
-    initAllJokers(); 
+    shopJokers.clear();
+    initAllJokers();
 
     if (allJokers.empty()) return;
 
-    // 3. Crea un vettore di indici [0, 1, 2, ... size-1]
-    std::vector<int> indices;
+    // 1. Creiamo una lista di candidati escludendo quelli già posseduti
+    std::vector<IJoker*> candidates;
     for (size_t i = 0; i < allJokers.size(); ++i) {
-        indices.push_back(i);
+        bool isOwned = false;
+        
+        // Controllo se è già nella mano del giocatore
+        for (size_t j = 0; j < jokers.size(); ++j) {
+            // Confrontiamo i puntatori o gli ID/Nomi se i puntatori vengono ricreati
+            if (allJokers[i] == jokers[j]) { 
+                isOwned = true;
+                break;
+            }
+        }
+        
+        if (!isOwned) {
+            candidates.push_back(allJokers[i]);
+        }
     }
 
-    // 4. Mescola gli indici casualmente
-    std::random_shuffle(indices.begin(), indices.end());
+    // 2. Mescola i candidati disponibili
+    // Nota: std::random_shuffle è deprecato in C++14 ma ok per C++98
+    std::random_shuffle(candidates.begin(), candidates.end());
 
-    // 5. Seleziona i primi 4 (o meno se allJokers ne ha meno di 4)
+    // 3. Seleziona fino a 4 joker
     int maxShopItems = 4;
-    int count = (allJokers.size() < (size_t)maxShopItems) ? allJokers.size() : maxShopItems;
+    int count = (candidates.size() < (size_t)maxShopItems) ? candidates.size() : maxShopItems;
     
     for (int i = 0; i < count; ++i) {
-        shopJokers.push_back(allJokers[indices[i]]);
+        shopJokers.push_back(candidates[i]);
     }
 }
 
@@ -295,84 +306,121 @@ std::vector<std::string> Balatro::createMsgBox(std::string text, std::string col
     return box;
 }
 
-// --- FUNZIONE PRINCIPALE ---
 void Balatro::printShopUI() {
     isShopUI = true;
-    coins = 1000; // O recupera coins reali
     std::string prefix = ":BalatroBot PRIVMSG " + player->getNickName() + " :";
     
     int totalRows = 58;
     int leftColWidth = 29;
-    int rightColWidth = 65; 
+    
+    // Aumentiamo la larghezza del canvas destro per gestire comodamente il layout
+    int rightColWidth = 85; 
     
     std::string ORANGE = "\x03" "07";
     std::string BLUE = "\x03" "12";
+    std::string GREY = "\x03" "14";
+    std::string RESET = "\x0f";
     
-    // 1. Canvas destro vuoto
-    std::vector<std::string> rightCanvas(totalRows, repeat_char(rightColWidth, ' '));
+    // 1. Inizializza Canvas destro vuoto
+    std::vector<std::string> rightCanvas(totalRows, std::string(rightColWidth, ' '));
 
-    // 2. LOGICA JOKER SHOP
+    // --- SEZIONE 1: JOKER POSSEDUTI (In Alto) ---
+    // Simile a printUI: visualizziamo i joker che il giocatore ha già
+    if (!this->jokers.empty()) {
+        std::vector<std::string> ownedVisual = getCombinedJokersVisual(this->jokers);
+        if (!ownedVisual.empty()) {
+            // Centriamo orizzontalmente
+            int visualW = getVisualLength(ownedVisual[0]);
+            int startCol = (rightColWidth - visualW) / 2;
+            if (startCol < 0) startCol = 0;
+
+            // Incolliamo alla riga 2 (subito sotto il bordo superiore)
+            pasteObject(rightCanvas, ownedVisual, 2, startCol);
+        }
+    } else {
+        // Opzionale: Messaggio "No Jokers Owned" se vuoto
+        std::vector<std::string> emptyMsg = createMsgBox("NO JOKERS OWNED", GREY);
+        int startCol = (rightColWidth - getVisualLength(emptyMsg[0])) / 2;
+        pasteObject(rightCanvas, emptyMsg, 4, startCol);
+    }
+
+    // --- SEZIONE 2: SEPARATORE E JOKER DEL NEGOZIO (Al Centro) ---
+    
+    // Genera i joker se non esistono
     if (shopJokers.empty()) {
         generateShopJokers();
     }
 
+    // Calcoliamo dove posizionare il blocco centrale
+    int shopContentStartRow = 0;
+    int shopContentHeight = 0;
+
     if (!shopJokers.empty()) {
-        std::vector< std::vector<std::string> > jokerImages;
-        for (size_t i = 0; i < shopJokers.size(); ++i) {
-            jokerImages.push_back(createJokerItem(shopJokers[i]));
-        }
+        std::vector<std::string> shopVisual = getCombinedJokersVisual(shopJokers);
+        shopContentHeight = (int)shopVisual.size();
+        
+        // Centratura Verticale: (Totale - Altezza) / 2
+        shopContentStartRow = (totalRows - shopContentHeight) / 2;
+        
+        // Centratura Orizzontale
+        int visualW = getVisualLength(shopVisual[0]);
+        int startCol = (rightColWidth - visualW) / 2;
+        if (startCol < 0) startCol = 0;
 
-        // --- POSIZIONAMENTO CARTE ---
-        int startY = 4;   // Iniziamo alla riga 4
-        int startX = 1;   // Margine sinistro minimo
-        int gapSize = 1;  // Gap ridotto a 1 spazio per far stare 4 carte larghe
-        std::string spacer = repeat_char(gapSize, ' ');
-
-        int itemsHeight = (int)jokerImages[0].size(); 
-        std::vector<std::string> mergedRow(itemsHeight, "");
-
-        // Unione orizzontale
-        for (int r = 0; r < itemsHeight; ++r) {
-            for (size_t i = 0; i < jokerImages.size(); ++i) {
-                mergedRow[r] += jokerImages[i][r];
-                if (i < jokerImages.size() - 1) {
-                    mergedRow[r] += spacer;
-                }
-            }
-        }
-        // Incolla sul canvas
-        pasteObject(rightCanvas, mergedRow, startY, startX);
+        // Incolla i Joker dello Shop
+        pasteObject(rightCanvas, shopVisual, shopContentStartRow, startCol);
+        
     } else {
+        // Caso SOLD OUT
         std::vector<std::string> msg = createMsgBox("SOLD OUT", ORANGE);
-        pasteObject(rightCanvas, msg, 5, 4);
+        shopContentHeight = (int)msg.size();
+        shopContentStartRow = (totalRows - shopContentHeight) / 2;
+        
+        int startCol = (rightColWidth - getVisualLength(msg[0])) / 2;
+        pasteObject(rightCanvas, msg, shopContentStartRow, startCol);
     }
 
-    // 3. Comandi (Spostati più in basso per non sovrapporsi alle carte lunghe)
-    // Le carte occupano circa 9-10 righe, finendo verso riga 14.
-    
+    // --- SEZIONE 3: COMANDI (Sotto i Joker dello Shop) ---
+    // Posizioniamo i bottoni un po' sotto i joker dello shop
+    int buttonsRow = shopContentStartRow + shopContentHeight + 2;
+
+    // Bottone NEXT
     std::vector<std::string> nextBox = createMsgBox("!next to continue", ORANGE);
-    pasteObject(rightCanvas, nextBox, 16, 22); // Spostato a riga 16
+    int nextW = getVisualLength(nextBox[0]);
+    
+    // Bottone BUY
+    std::string buyTxt = "!shop <1-" + to_string_98(shopJokers.size()) + "> to buy";
+    if (shopJokers.empty()) buyTxt = "Check back later";
+    std::vector<std::string> buyBox = createMsgBox(buyTxt, BLUE);
+    int buyW = getVisualLength(buyBox[0]);
 
-    std::vector<std::string> buyBox = createMsgBox("!shop <1-" + to_string_98(shopJokers.size()) + "> to buy", BLUE);
-    pasteObject(rightCanvas, buyBox, 20, 15); // Spostato a riga 20
+    // Posizioniamo i bottoni affiancati o uno sopra l'altro? Facciamo uno sopra l'altro per pulizia
+    // Centriamo i bottoni
+    int nextCol = (rightColWidth - nextW) / 2;
+    int buyCol = (rightColWidth - buyW) / 2;
 
-    // 4. Stampa Finale (Identica a prima)
+    pasteObject(rightCanvas, buyBox, buttonsRow, buyCol);
+    pasteObject(rightCanvas, nextBox, buttonsRow + 4, nextCol); // 4 righe sotto il buy
+
+    // --- STAMPA FINALE (OUTPUT) ---
     std::string msg = "";
     // Header
+    for(int i=0; i<10; i++) msg += prefix + " \r\n";
     msg += prefix + "═══════════════════════════════" + "╦" + "═════════════════════════════════════════════════════════════════";
     msg += prefix + "═════════════════════════════════════════════════════════════════════════════════════════════════════\r\n";
     
     for (int row = 0; row < totalRows; ++row) {
+        // Pannello Sinistro (Stats)
         std::string leftRaw, leftColor;
         getLeftPanelContent(row, leftRaw, leftColor);
         
-        int vLen = getVisualLength(leftRaw);
+        int vLen = (int)leftRaw.length(); // Nota: qui assumiamo raw length per il padding spazi, getVisualLength se leftRaw ha colori
         int paddingNeeded = leftColWidth - vLen;
         if (paddingNeeded < 0) paddingNeeded = 0;
 
-        std::string paddingL = repeat_char(paddingNeeded, ' ');
-        std::string leftPanel = leftColor + paddingL;
+        std::string leftPanel = leftColor + std::string(paddingNeeded, ' ');
         
+        // Pannello Destro (Canvas)
         std::string rightPanel = rightCanvas[row];
         
         msg += prefix + " " + leftPanel + " ║ " + rightPanel + "\r\n";

@@ -96,13 +96,16 @@ class Balatro {
 		std::string centerText(std::string text, int width);
 		void getLeftPanelContent(int row, std::string& raw, std::string& colored);
 		std::string getRightPanelContent(int row, int handStart, int handH, int deckStart, int deckH, 
-										const std::vector<std::vector<std::string> > & cardMatrix, 
-										const std::vector<std::string>& deckVisual);
-		std::string getRightPanelContentSelected(int row, int handStart, int handH, int deckStart, int deckH, 
-										const std::vector<std::vector<std::string> > & cardMatrix, 
-										const std::vector<std::string>& deckVisual);
+                                 const std::vector<std::vector<std::string> >& cardMatrix, 
+                                 const std::vector<std::string>& deckVisual);
+
+		std::vector<std::string> getCombinedJokersVisual(const std::vector<IJoker*>& targetJokers);
+
 		std::string getSpaces(int count);
 		
+		
+		int getVisualLength(const std::string& s);
+
 		int getSd();
 		void getMessagePrompt(std::string msg);
 		bool	isGameOver();
@@ -113,7 +116,7 @@ class Balatro {
 		void initAllJokers();
 		void generateShopJokers();
 		std::vector<std::string> createJokerItem(IJoker* joker);
-		std::vector<Card> getSelectedCards();
+		const std::vector<Card>& getSelectedCards() const;
 	private:
 
 		bool	gameOver;
@@ -139,6 +142,7 @@ class Balatro {
         std::vector<IJoker*> allJokers; 
         std::vector<IJoker*> shopJokers;
 		std::string bestHandName;
+		int pendingShopIndex;
 };
 
 #endif
