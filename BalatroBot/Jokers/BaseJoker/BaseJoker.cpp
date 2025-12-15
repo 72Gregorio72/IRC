@@ -1,10 +1,10 @@
 #include "BaseJoker.hpp"
 
-BaseJoker::BaseJoker() : bot(), cost(2), effect("+4 Mult"), name("Base Joker") {}
+BaseJoker::BaseJoker() : bot(), cost(2), effect("+4 Mult"), name("Base Joker"), rarity("Common") {}
 
 BaseJoker::~BaseJoker() {}
 
-BaseJoker::BaseJoker(const BaseJoker &other) : bot(other.bot), cost(other.cost), effect(other.effect), name(other.name) {}
+BaseJoker::BaseJoker(const BaseJoker &other) : bot(other.bot), cost(other.cost), effect(other.effect), name(other.name), rarity(other.rarity) {}
 
 void BaseJoker::printJoker(){
     // Implementazione UI se necessaria
@@ -26,4 +26,8 @@ std::string BaseJoker::getName(){
 
 std::string BaseJoker::getEffect(){
 	return effect;
+}
+
+std::string BaseJoker::getRarity(){
+	return rarity;
 }

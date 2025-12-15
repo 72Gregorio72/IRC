@@ -1,10 +1,10 @@
 #include "JollyJoker.hpp"
 
-JollyJoker::JollyJoker() :bot(), cost(3), effect("+8 mult if a Pair is present"), name("Jolly Joker") {}
+JollyJoker::JollyJoker() :bot(), cost(3), effect("+8 mult if a Pair is present"), name("Jolly Joker"), rarity("Common") {}
 
 JollyJoker::~JollyJoker() {}
 
-JollyJoker::JollyJoker(const JollyJoker &other) :bot(other.bot), cost(other.cost), effect(other.effect), name(other.name) {}
+JollyJoker::JollyJoker(const JollyJoker &other) :bot(other.bot), cost(other.cost), effect(other.effect), name(other.name), rarity(other.rarity) {}
 
 void JollyJoker::printJoker(){
     // Implementazione UI se necessaria
@@ -28,4 +28,8 @@ std::string JollyJoker::getName() {
 
 std::string JollyJoker::getEffect() {
 	return effect;
+}
+
+std::string JollyJoker::getRarity() {
+	return rarity;
 }

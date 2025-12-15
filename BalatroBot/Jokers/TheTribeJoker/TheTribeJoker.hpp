@@ -1,17 +1,17 @@
-#ifndef SLY_JOKER_HPP
-#define SLY_JOKER_HPP
+#ifndef THE_TRIBE_JOKER_HPP
+#define THE_TRIBE_JOKER_HPP
 
 #include "../IJoker.hpp"
 #include "Server.hpp"
 
 class Server;
 
-class SlyJoker : public IJoker {
+class TheTribeJoker : public IJoker {
 
 	public:
-		SlyJoker();
-		SlyJoker(const SlyJoker& other);
-		~SlyJoker();
+		TheTribeJoker();
+		TheTribeJoker(const TheTribeJoker& other);
+		~TheTribeJoker();
 
         void printJoker();
         void playJoker(int& chips, int& mult, Balatro *bot);

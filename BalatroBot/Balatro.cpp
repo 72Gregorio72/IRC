@@ -14,6 +14,11 @@
 #include "Jokers/CleverJoker/CleverJoker.hpp"
 #include "Jokers/DeviousJoker/DeviousJoker.hpp"
 #include "Jokers/CraftyJoker/CraftyJoker.hpp"
+#include "Jokers/TheDuoJoker/TheDuoJoker.hpp"
+#include "Jokers/TheTrioJoker/TheTrioJoker.hpp"
+#include "Jokers/TheFamilyJoker/TheFamilyJoker.hpp"
+#include "Jokers/TheOrderJoker/TheOrderJoker.hpp"
+#include "Jokers/TheTribeJoker/TheTribeJoker.hpp"
 
 Balatro::Balatro() : gameOver(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(0), player(), pokerHands(), isSuitSorting(false), isCashingOut(false), isShopUI(false), jokers(), allJokers(), bestHandName(""), pendingShopIndex(-1) {
     std::srand(static_cast<unsigned int>(std::time(NULL)));
@@ -126,6 +131,11 @@ void Balatro::initAllJokers() {
 	allJokers.push_back(new CleverJoker());
 	allJokers.push_back(new DeviousJoker());
 	allJokers.push_back(new CraftyJoker());
+	allJokers.push_back(new TheDuoJoker());
+	allJokers.push_back(new TheTrioJoker());
+	allJokers.push_back(new TheFamilyJoker());
+	allJokers.push_back(new TheOrderJoker());
+	allJokers.push_back(new TheTribeJoker());
 }
 
 void Balatro::startNewRound() {

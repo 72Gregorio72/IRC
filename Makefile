@@ -28,6 +28,11 @@ SRCS		=   main.cpp Server.cpp \
 				BalatroBot/Jokers/WilyJoker/WilyJoker.cpp \
 				BalatroBot/Jokers/WrathfulJoker/WrathfulJoker.cpp \
 				BalatroBot/Jokers/ZanyJoker/ZanyJoker.cpp \
+				BalatroBot/Jokers/TheDuoJoker/TheDuoJoker.cpp \
+				BalatroBot/Jokers/TheTrioJoker/TheTrioJoker.cpp \
+				BalatroBot/Jokers/TheFamilyJoker/TheFamilyJoker.cpp \
+				BalatroBot/Jokers/TheOrderJoker/TheOrderJoker.cpp \
+				BalatroBot/Jokers/TheTribeJoker/TheTribeJoker.cpp \
 
 OBJS		= $(SRCS:.cpp=.o)
 

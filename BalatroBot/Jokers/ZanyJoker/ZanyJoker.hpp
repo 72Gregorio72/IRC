@@ -19,12 +19,14 @@ class ZanyJoker : public IJoker {
 		int getCost();
 		std::string getName();
 		std::string getEffect();
+		std::string getRarity();
 
 	private:
 		Balatro *bot;
 		int cost;
 		std::string effect;
 		std::string name;
+		std::string rarity;
 };
 
 #endif
