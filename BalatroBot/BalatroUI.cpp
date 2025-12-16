@@ -338,10 +338,16 @@ std::string Balatro::getRightPanelContent(int row, int handStart, int handH, int
 
     // --- COLORI ---
     std::string C_ORANGE  = "\x03" "07";
-    std::string C_GREEN   = "\x03" "03";
-    std::string C_RED     = "\x03" "04";
-    std::string C_BLUE    = "\x03" "12";
-    std::string C_YELLOW  = "\x03" "08";
+    // Scala da Blu (Freddo) a Rosso (Caldo)
+    std::string C_SCALE_1 = "\x03" "02"; // Navy Blue
+    std::string C_SCALE_2 = "\x03" "12"; // Blue
+    std::string C_SCALE_3 = "\x03" "11"; // Cyan
+    std::string C_SCALE_4 = "\x03" "10"; // Teal
+    std::string C_SCALE_5 = "\x03" "09"; // Light Green
+    std::string C_SCALE_6 = "\x03" "08"; // Yellow
+    std::string C_SCALE_7 = "\x03" "07"; // Orange
+    std::string C_SCALE_8 = "\x03" "04"; // Red
+    std::string C_SCALE_9 = "\x03" "05"; // Maroon (Dark Red)
     std::string C_GREY    = "\x03" "14";
     std::string BOLD      = "\x02";
     std::string RESET     = "\x0f";
@@ -395,10 +401,16 @@ std::string Balatro::getRightPanelContent(int row, int handStart, int handH, int
             std::string text = "";
             if (r == 1)      text = BOLD + centerText("COMMANDS", boxWidth - 2) + RESET;
             else if (r == 2) text = C_ORANGE + "├──────────────────────────────────────────┤" + RESET;
-            else if (r == 3) text = " " + C_GREEN + "!select" + RESET + " <id> " + C_GREY + "(es: !select 1 3)" + RESET;
-            else if (r == 5) text = " " + C_RED + "!discard" + C_GREY + " (Discard selected)" + RESET;
-            else if (r == 7) text = " " + C_BLUE + "!play" + C_GREY + "    (Play selected)" + RESET;
-            else if (r == 9) text = " " + C_YELLOW + "!sort suit/rank" + C_GREY + " (Sort Hand)" + RESET;
+            else if (r == 3) text = " " + C_SCALE_1 + "!select" + RESET + " <id> " + C_GREY + "(es: !select 1 3)" + RESET;
+            else if (r == 5) text = " " + C_SCALE_2 + "!discard" + C_GREY + " (Discard selected)" + RESET;
+            else if (r == 7) text = " " + C_SCALE_3 + "!play" + C_GREY + "    (Play selected)" + RESET;
+            else if (r == 9) text = " " + C_SCALE_4 + "!sort suit/rank" + C_GREY + " (Sort Hand)" + RESET;
+            else if (r == 11) text = " " + C_SCALE_5 + "!cash out" + C_GREY + " (Cash Out)" + RESET;
+            else if (r == 13) text = " " + C_SCALE_6 + "!shop"  + RESET + " <id> " + C_GREY + "(es: !shop 1 3)" + RESET;
+            else if (r == 15) text = " " + C_SCALE_7 + "!next" + C_GREY + " (Start New Round)" + RESET;
+            else if (r == 17) text = " " + C_SCALE_8 + "!replace"  + RESET + " <id> " + C_GREY + "(es: !replace 1 3)" + RESET;
+            else if (r == 19) text = " " + C_SCALE_9 + "!reroll" + C_GREY + " (Reroll The Shop)" + RESET;
+
             else {
                 text = std::string(boxWidth - 2, ' '); 
             }
@@ -434,6 +446,7 @@ std::string Balatro::getRightPanelContent(int row, int handStart, int handH, int
 
     return leftPart + spacer + rightPart;
 }
+
 void Balatro::printUI() {
     std::string prefix = ":BalatroBot PRIVMSG " + player->getNickName() + " :";
     

@@ -146,9 +146,7 @@ void Balatro::initAllJokers() {
 void Balatro::startNewRound() {
 	blind++;
 	if (blind > 2)
-		blind = -1;
-	if (blind == 2)
-		ante++;
+		blind = 0;
 	anteScore = calculateAnteScore();
 	hand.clear();
 	deck.clear();
@@ -472,6 +470,8 @@ void Balatro::getMessagePrompt(std::string msg) {
 				send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
 				return;
 			}
+			if (blind == 2)
+				ante++;
 			startNewRound();
 			printSelectedCardsUI();
 			isShopUI = false;

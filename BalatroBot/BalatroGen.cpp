@@ -38,7 +38,7 @@ std::string Balatro::getBestHandName() const {
 int Balatro::calculateAnteScore() {
 	std::cout << "Calculating ante score for ante level: " << ante << " and blind level: " << blind << std::endl;
     long long baseScores[] = {
-        300, 800, 2000, 5000, 11000, 20000, 35000, 50000
+        300, 800, 2800, 6000, 11000, 20000, 35000, 50000
     };
 
 	if (blind == 0) {
