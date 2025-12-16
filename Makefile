@@ -36,6 +36,7 @@ SRCS		=   main.cpp Server.cpp \
 				BalatroBot/Jokers/TheTribeJoker/TheTribeJoker.cpp \
 
 
+
 OBJS		= $(SRCS:.cpp=.o)
 
 RM			= rm -f
