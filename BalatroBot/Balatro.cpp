@@ -20,11 +20,11 @@
 #include "Jokers/TheOrderJoker/TheOrderJoker.hpp"
 #include "Jokers/TheTribeJoker/TheTribeJoker.hpp"
 
-Balatro::Balatro() : gameOver(false), gameWon(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(0), player(), pokerHands(), isSuitSorting(false), isCashingOut(false), isShopUI(false), jokers(), allJokers(), bestHandName(""), pendingShopIndex(-1) {
+Balatro::Balatro() : gameOver(false), gameWon(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(0), player(), pokerHands(), isSuitSorting(false), isCashingOut(false), isShopUI(false), jokers(), allJokers(), bestHandName(""), pendingShopIndex(-1), blind(-1) {
     std::srand(static_cast<unsigned int>(std::time(NULL)));
 }
 
-Balatro::Balatro(int sd, User *player) : gameOver(false), gameWon(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(sd), player(player), pokerHands(), isRankSorting(false), isCashingOut(false), isShopUI(false), jokers(), allJokers(), bestHandName(""), pendingShopIndex(-1) {
+Balatro::Balatro(int sd, User *player) : gameOver(false), gameWon(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(sd), player(player), pokerHands(), isRankSorting(false), isCashingOut(false), isShopUI(false), jokers(), allJokers(), bestHandName(""), pendingShopIndex(-1), blind(-1) {
     std::srand(static_cast<unsigned int>(std::time(NULL)));
 }
 
@@ -61,7 +61,9 @@ Balatro::Balatro(const Balatro &other)
 	  isCashingOut(other.isCashingOut),
 	  isShopUI(other.isShopUI),
 	  jokers(other.jokers),
-	  bestHandName(other.bestHandName), pendingShopIndex(other.pendingShopIndex) {}
+	  bestHandName(other.bestHandName), 
+	  pendingShopIndex(other.pendingShopIndex),
+	  blind(other.blind) {}
 
 Balatro &Balatro::operator=(const Balatro &other) {
 	if (this != &other) {
@@ -87,6 +89,7 @@ Balatro &Balatro::operator=(const Balatro &other) {
 		jokers = other.jokers;
 		bestHandName = other.bestHandName;
 		pendingShopIndex = other.pendingShopIndex;
+		blind = other.blind;
 	}
 	return *this;
 }
@@ -141,9 +144,11 @@ void Balatro::initAllJokers() {
 }
 
 void Balatro::startNewRound() {
-    ante++;
-    // if (ante > 8)
-    //     gameWon = true;
+	blind++;
+	if (blind > 2)
+		blind = -1;
+	if (blind == 2)
+		ante++;
 	anteScore = calculateAnteScore();
 	hand.clear();
 	deck.clear();
@@ -217,9 +222,7 @@ int Balatro::calculateHand() {
         Card currentCard = selectedCards[i];
         
         int rVal = getRankValue(currentCard.getRank());
-        int rChips = getRankChips(currentCard.getRank()); // Assumiamo che getRankChips sia accessibile o definito prima
-        
-        // ... (Logica di print invariata)
+        int rChips = getRankChips(currentCard.getRank());
 
         if (currentCard.getSuit() != firstSuit) {
             isFlush = false;
@@ -230,7 +233,6 @@ int Balatro::calculateHand() {
         values.push_back(rVal);
     }
 
-    // ... (Logica di controllo Straight invariata) ...
     bool isStraight = false;
     if (selectedCards.size() == 5) {
         std::sort(values.begin(), values.end());
@@ -246,7 +248,6 @@ int Balatro::calculateHand() {
         }
         isStraight = sequential;
     }
-    // ...
 
     bool hasFiveOfAKind = false;
     bool hasFourOfAKind = false;
@@ -254,7 +255,6 @@ int Balatro::calculateHand() {
     bool hasPair = false;
     int pairCount = 0;
 
-    // ... (Logica conteggio rank invariata) ...
     for (std::map<std::string, int>::iterator it = rankCounts.begin(); it != rankCounts.end(); ++it) {
         int count = it->second;
         if (count == 5) hasFiveOfAKind = true;

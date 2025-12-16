@@ -213,6 +213,18 @@ void Balatro::printEndRoundUI() {
     
     int interest = 0; 
     int bossBonus = 0;
+
+	if (blind == 0)
+		blindReward = 3;
+	else if (blind == 1)
+		blindReward = 4;
+	else if (blind == 2)
+		blindReward = 5;
+
+	interest = coins % 5;
+
+	if (interest > 5)
+		interest = 5;
     
     int totalCashOut = blindReward + handsReward + interest + bossBonus;
 
