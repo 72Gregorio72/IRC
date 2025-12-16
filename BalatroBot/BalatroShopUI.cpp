@@ -322,109 +322,166 @@ void Balatro::printShopUI() {
     
     int totalRows = 58;
     int leftColWidth = 29;
-    
-    // Aumentiamo la larghezza del canvas destro per gestire comodamente il layout
     int rightColWidth = 85; 
     
-    std::string ORANGE = "\x03" "07";
-    std::string BLUE = "\x03" "12";
-    std::string GREY = "\x03" "14";
-    std::string RESET = "\x0f";
+    // --- DEFINIZIONE COLORI E SCALA ---
+    std::string C_ORANGE  = "\x03" "07";
+    std::string C_GREY    = "\x03" "14";
+    std::string BOLD      = "\x02";
+    std::string RESET     = "\x0f";
     
-    // 1. Inizializza Canvas destro vuoto
+    // Scala colori (Freddo -> Caldo)
+    std::string C_SCALE_1 = "\x03" "11"; // Light Cyan
+    std::string C_SCALE_2 = "\x03" "10"; // Teal
+    std::string C_SCALE_3 = "\x03" "12"; // Blue
+    std::string C_SCALE_4 = "\x03" "09"; // Light Green
+    std::string C_SCALE_5 = "\x03" "08"; // Yellow
+    std::string C_SCALE_6 = "\x03" "07"; // Orange
+    std::string C_SCALE_7 = "\x03" "04"; // Red
+    std::string C_SCALE_8 = "\x03" "05"; // Maroon
+    
+    // Inizializza Canvas destro vuoto
     std::vector<std::string> rightCanvas(totalRows, std::string(rightColWidth, ' '));
 
-    // --- SEZIONE 1: JOKER POSSEDUTI (In Alto) ---
-    // Simile a printUI: visualizziamo i joker che il giocatore ha già
+    // =================================================================================
+    // 1. JOKER POSSEDUTI (In Alto)
+    // =================================================================================
     if (!this->jokers.empty()) {
         std::vector<std::string> ownedVisual = getCombinedJokersVisual(this->jokers);
         if (!ownedVisual.empty()) {
-            // Centriamo orizzontalmente
             int visualW = getVisualLength(ownedVisual[0]);
             int startCol = (rightColWidth - visualW) / 2;
             if (startCol < 0) startCol = 0;
-
-            // Incolliamo alla riga 2 (subito sotto il bordo superiore)
             pasteObject(rightCanvas, ownedVisual, 2, startCol);
         }
     } else {
-        // Opzionale: Messaggio "No Jokers Owned" se vuoto
-        std::vector<std::string> emptyMsg = createMsgBox("NO JOKERS OWNED", GREY);
+        std::vector<std::string> emptyMsg = createMsgBox("NO JOKERS OWNED", C_GREY);
         int startCol = (rightColWidth - getVisualLength(emptyMsg[0])) / 2;
         pasteObject(rightCanvas, emptyMsg, 4, startCol);
     }
 
-    // --- SEZIONE 2: SEPARATORE E JOKER DEL NEGOZIO (Al Centro) ---
-    
-    // Genera i joker se non esistono
+    // =================================================================================
+    // 2. JOKER DEL NEGOZIO (Al Centro)
+    // =================================================================================
     if (shopJokers.empty()) {
         generateShopJokers();
     }
 
-    // Calcoliamo dove posizionare il blocco centrale
     int shopContentStartRow = 0;
     int shopContentHeight = 0;
 
     if (!shopJokers.empty()) {
         std::vector<std::string> shopVisual = getCombinedJokersVisual(shopJokers);
         shopContentHeight = (int)shopVisual.size();
+        shopContentStartRow = (totalRows - shopContentHeight) / 2 - 5; 
         
-        // Centratura Verticale: (Totale - Altezza) / 2
-        shopContentStartRow = (totalRows - shopContentHeight) / 2;
-        
-        // Centratura Orizzontale
         int visualW = getVisualLength(shopVisual[0]);
         int startCol = (rightColWidth - visualW) / 2;
         if (startCol < 0) startCol = 0;
 
-        // Incolla i Joker dello Shop
         pasteObject(rightCanvas, shopVisual, shopContentStartRow, startCol);
-        
     } else {
-        // Caso SOLD OUT
-        std::vector<std::string> msg = createMsgBox("SOLD OUT", ORANGE);
+        std::vector<std::string> msg = createMsgBox("SOLD OUT", C_ORANGE);
         shopContentHeight = (int)msg.size();
-        shopContentStartRow = (totalRows - shopContentHeight) / 2;
+        shopContentStartRow = (totalRows - shopContentHeight) / 2 - 5;
         
         int startCol = (rightColWidth - getVisualLength(msg[0])) / 2;
         pasteObject(rightCanvas, msg, shopContentStartRow, startCol);
     }
 
-    // --- SEZIONE 3: COMANDI (Sotto i Joker dello Shop) ---
-    // Posizioniamo i bottoni un po' sotto i joker dello shop
-    int buttonsRow = shopContentStartRow + shopContentHeight + 2;
-
-    // Bottone NEXT
-    std::vector<std::string> nextBox = createMsgBox("!next to continue", ORANGE);
-    int nextW = getVisualLength(nextBox[0]);
+    // =================================================================================
+    // 3. BOX COMANDI (SHOP EDITION) - C++98 Compatible
+    // =================================================================================
     
-    // Bottone BUY
-    std::string buyTxt = "!shop <1-" + to_string_98(shopJokers.size()) + "> to buy";
-    if (shopJokers.empty()) buyTxt = "Check back later";
-    std::vector<std::string> buyBox = createMsgBox(buyTxt, BLUE);
-    int buyW = getVisualLength(buyBox[0]);
+    std::vector<std::string> cmdBox;
+    int boxWidth = 44;
+    std::string vBorder = C_ORANGE + "│" + RESET;
+    std::string spacerLine = vBorder + std::string(boxWidth - 2, ' ') + vBorder;
 
-    // Posizioniamo i bottoni affiancati o uno sopra l'altro? Facciamo uno sopra l'altro per pulizia
-    // Centriamo i bottoni
-    int nextCol = (rightColWidth - nextW) / 2;
-    int buyCol = (rightColWidth - buyW) / 2;
+    // A. Header Box
+    cmdBox.push_back(C_ORANGE + "┌──────────────────────────────────────────┐" + RESET);
+    
+    std::string titleTxt = BOLD + centerText("SHOP COMMANDS", boxWidth - 2) + RESET;
+    // Se centerText non aggiunge padding colorato, potremmo doverlo gestire qui, 
+    // ma assumiamo che centerText restituisca la stringa formattata corretta o stringa semplice.
+    // Per sicurezza ricalcoliamo il visual length per il padding:
+    int titleLen = getVisualLength(titleTxt);
+    int titlePad = (boxWidth - 2) - titleLen;
+    if (titlePad < 0) titlePad = 0; // centerText dovrebbe averlo già fatto
+    // Nota: se centerText riempie già di spazi, ok. Altrimenti aggiungi spazi.
+    // Qui assumiamo che centerText ritorni la stringa già centrata e pad-ata.
+    // Se centerText ritorna SOLO il testo centrato senza spazi laterali:
+    // cmdBox.push_back(vBorder + titleTxt + std::string(titlePad, ' ') + vBorder); 
+    // Ma nel tuo codice precedente sembri usarlo direttamente.
+    cmdBox.push_back(vBorder + titleTxt + vBorder); 
+    
+    cmdBox.push_back(C_ORANGE + "├──────────────────────────────────────────┤" + RESET);
 
-    pasteObject(rightCanvas, buyBox, buttonsRow, buyCol);
-    pasteObject(rightCanvas, nextBox, buttonsRow + 4, nextCol); // 4 righe sotto il buy
+    // B. Lista Comandi (Ridotta a 3)
+    const int CMD_COUNT = 3;
+    std::string cmdColors[CMD_COUNT]; 
+    cmdColors[0] = C_SCALE_1; cmdColors[1] = C_SCALE_3; cmdColors[2] = C_SCALE_7; // Ciano, Blu, Rosso
+    
+    std::string cmdNames[CMD_COUNT];
+    cmdNames[0] = "!shop"; cmdNames[1] = "!reroll"; cmdNames[2] = "!next";
 
-    // --- STAMPA FINALE (OUTPUT) ---
+    std::string cmdArgs[CMD_COUNT];
+    cmdArgs[0] = "<id>"; cmdArgs[1] = ""; cmdArgs[2] = "";
+
+    std::string cmdDescs[CMD_COUNT];
+    cmdDescs[0] = "(es: !shop 1 3)"; cmdDescs[1] = "(Reroll Shop - $5)"; cmdDescs[2] = "(Start Next Round)";
+
+    for(int i = 0; i < CMD_COUNT; ++i) {
+        // Costruiamo la stringa: " <COLOR>!cmd<RESET> <ARGS> <GREY>(DESC)<RESET>"
+        std::string rawLine = " " + cmdColors[i] + cmdNames[i] + RESET;
+        
+        if (cmdArgs[i] != "") {
+            rawLine += " " + cmdArgs[i];
+        }
+        
+        rawLine += C_GREY + " " + cmdDescs[i] + RESET;
+
+        // Calcolo padding
+        int visLen = getVisualLength(rawLine);
+        int pad = (boxWidth - 2) - visLen;
+        if (pad < 0) pad = 0;
+
+        cmdBox.push_back(vBorder + rawLine + std::string(pad, ' ') + vBorder);
+        
+        // Aggiungi riga vuota tra i comandi per leggibilità (tranne dopo l'ultimo)
+        if (i < CMD_COUNT - 1) {
+             cmdBox.push_back(spacerLine);
+        }
+    }
+
+    // C. Footer Box
+    cmdBox.push_back(C_ORANGE + "└──────────────────────────────────────────┘" + RESET);
+
+    // Posizionamento: Centrato in basso
+    int cmdBoxHeight = (int)cmdBox.size();
+    int cmdBoxRow = totalRows - cmdBoxHeight - 2; 
+    int cmdBoxCol = (rightColWidth - boxWidth) / 2; 
+
+    // Incolla il box nel canvas
+    pasteObject(rightCanvas, cmdBox, cmdBoxRow, cmdBoxCol);
+
+
+    // =================================================================================
+    // 4. STAMPA FINALE SU SOCKET
+    // =================================================================================
     std::string msg = "";
+    
     // Header
-    for(int i=0; i<10; i++) msg += prefix + " \r\n";
+    for(int i=0; i<5; i++) msg += prefix + " \r\n";
     msg += prefix + "═══════════════════════════════" + "╦" + "═════════════════════════════════════════════════════════════════";
     msg += prefix + "═════════════════════════════════════════════════════════════════════════════════════════════════════\r\n";
     
     for (int row = 0; row < totalRows; ++row) {
         // Pannello Sinistro (Stats)
         std::string leftRaw, leftColor;
-        getLeftPanelContent(row, leftRaw, leftColor);
+        getLeftPanelContent(row, leftRaw, leftColor); 
         
-        int vLen = (int)leftRaw.length(); // Nota: qui assumiamo raw length per il padding spazi, getVisualLength se leftRaw ha colori
+        int vLen = (int)leftRaw.length(); 
         int paddingNeeded = leftColWidth - vLen;
         if (paddingNeeded < 0) paddingNeeded = 0;
 
