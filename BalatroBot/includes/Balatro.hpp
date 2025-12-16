@@ -75,12 +75,12 @@ class Balatro {
 
         int calculateAnteScore();
 
-        std::vector<std::string> createMsgBox(std::string text, std::string colorCode);
-        std::vector<std::string> createSimpleItem(int id, int cost);
-        void pasteObject(std::vector<std::string>& canvas, const std::vector<std::string>& object, int startRow, int startCol);
-        void initPokerHands();
-        void printShopUI();
-        std::vector<std::string> createButton(std::string text, std::string subtext, std::string bgColorCode);
+        // std::vector<std::string> createMsgBox(std::string text, std::string colorCode);
+        // std::vector<std::string> createSimpleItem(int id, int cost);
+        // void pasteObject(std::vector<std::string>& canvas, const std::vector<std::string>& object, int startRow, int startCol);
+        // void initPokerHands();
+        // void printShopUI();
+        // std::vector<std::string> createButton(std::string text, std::string subtext, std::string bgColorCode);
         
         // String helpers
         std::string repeat_char(int count, char c);
@@ -91,7 +91,7 @@ class Balatro {
 		void printShopUI();
 		void printWinUI();
 		std::vector<std::string> createButton(std::string text, std::string subtext, std::string bgColorCode);
-		std::string repeat_char(int count, char c);
+		// std::string repeat_char(int count, char c);
 
         template <typename T>
         std::string to_string_98(T value) {
@@ -166,11 +166,6 @@ class Balatro {
         
         int blind; // 0 small 1 big 2 boss
         std::vector<IJoker*> packJokers; 
-		std::string bestHandName;
-		int pendingShopIndex;
-		int rollPrice;
-		
-		int blind; // 0 small 1 big 2 boss
 };
 
 #endif
