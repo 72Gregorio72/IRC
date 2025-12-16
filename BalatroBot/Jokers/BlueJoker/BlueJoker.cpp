@@ -13,7 +13,7 @@ void BlueJoker::printJoker(){
 
 void BlueJoker::playJoker(int& chips, int& mult, Balatro *bot){
 	(void)mult;
-	int remainingCards = bot->getDeckSize();
+	int remainingCards = bot->getDeck().size();
 	chips += remainingCards * 2;
 }
 
