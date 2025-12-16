@@ -130,62 +130,75 @@ std::vector<std::string> Balatro::printDeck() {
     std::vector<std::string> rows;
     
     std::string DARK_BLUE = "\x03" "02";
+	std::string RED = "\x03" "04";
     std::string LIGHT_BLUE = "\x03" "12";
     std::string BLACK = "\x03" "01";
-    std::string LINE_BG = "\x03" "01,02"; 
+	std::string LINE_BG = "\x03" "01,04";
+	std::string WHITE_ON_RED = "\x03" "00,04";
+    std::string TEXTURE = "╬";
     std::string RESET = "\x0f";
     std::string BLOCK = "█";
 
     int width = 18; 
     int height = 12;
 
-    double cx = (width - 1) / 2.0;
-    double cy = (height - 1) / 2.0;
+    // double cx = (width - 1) / 2.0;
+    // double cy = (height - 1) / 2.0;
     
-    double rx = 5.0; 
-    double ry = 3.5; 
+    // double rx = 5.0; 
+    // double ry = 3.5; 
 
     rows.push_back(BLACK + "▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄" + RESET);
 
-    for (int y = 0; y < height; ++y) {
+    // for (int y = 0; y < height; ++y) {
+    //     std::string line = "";
+    //     for (int x = 0; x < width; ++x) {
+    //         double dx = x - cx;
+    //         double dy = y - cy;
+    //         double dist = (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry);
+
+    //         if (x == 2 && y == 1) {
+    //             line += LINE_BG + "╠";
+    //         }
+    //         else if (x == width - 3 && y == 1) {
+    //             line += LINE_BG + "╦";
+    //         }
+    //         else if (x == 2 && y == height - 2) {
+    //             line += LINE_BG + "╩";
+    //         }
+    //         else if (x == width - 3 && y == height - 2) {
+    //             line += LINE_BG + "╣";
+    //         }
+    //         else if (x == 2 && y <= height - 2) {
+    //             line += LINE_BG + "║";
+    //         }
+    //         else if (x == width - 3 && y >= 1) {
+    //             line += LINE_BG + "║";
+    //         }
+    //         else if (y == 1 && x >= 2) {
+    //             line += LINE_BG + "═";
+    //         }
+    //         else if (y == height - 2 && x <= width - 3) {
+    //             line += LINE_BG + "═";
+    //         }
+    //         else {
+    //             if (dist <= 1.0) {
+    //                 line += RESET + BLACK + BLOCK;
+    //             } else {
+    //                 line += RESET + RED + BLOCK;
+    //             }
+    //         }
+    //     }
+    //     rows.push_back(BLACK + "█" + line + BLACK + "█" + RESET);
+    // }
+
+	for (int y = 0; y < height; ++y) {
         std::string line = "";
         for (int x = 0; x < width; ++x) {
-            double dx = x - cx;
-            double dy = y - cy;
-            double dist = (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry);
-
-            if (x == 2 && y == 1) {
-                line += LINE_BG + "╠";
-            }
-            else if (x == width - 3 && y == 1) {
-                line += LINE_BG + "╦";
-            }
-            else if (x == 2 && y == height - 2) {
-                line += LINE_BG + "╩";
-            }
-            else if (x == width - 3 && y == height - 2) {
-                line += LINE_BG + "╣";
-            }
-            else if (x == 2 && y <= height - 2) {
-                line += LINE_BG + "║";
-            }
-            else if (x == width - 3 && y >= 1) {
-                line += LINE_BG + "║";
-            }
-            else if (y == 1 && x >= 2) {
-                line += LINE_BG + "═";
-            }
-            else if (y == height - 2 && x <= width - 3) {
-                line += LINE_BG + "═";
-            }
-            else {
-                if (dist <= 1.0) {
-                    line += RESET + BLACK + BLOCK;
-                } else {
-                    line += RESET + DARK_BLUE + BLOCK;
-                }
-            }
+            // Applica il carattere ╬ con linee bianche e sfondo rosso su ogni cella
+            line += WHITE_ON_RED + TEXTURE;
         }
+        // Aggiunge i bordi laterali neri attorno alla linea generata
         rows.push_back(BLACK + "█" + line + BLACK + "█" + RESET);
     }
 
