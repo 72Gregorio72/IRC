@@ -80,6 +80,7 @@ class Balatro {
 		void pasteObject(std::vector<std::string>& canvas, const std::vector<std::string>& object, int startRow, int startCol);
 		void initPokerHands();
 		void printShopUI();
+		void printWinUI();
 		std::vector<std::string> createButton(std::string text, std::string subtext, std::string bgColorCode);
 		std::string repeat_char(int count, char c);
 

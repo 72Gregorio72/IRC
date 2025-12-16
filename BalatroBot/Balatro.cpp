@@ -63,9 +63,7 @@ Balatro::Balatro(const Balatro &other)
 	  isCashingOut(other.isCashingOut),
 	  isShopUI(other.isShopUI),
 	  jokers(other.jokers),
-	  bestHandName(other.bestHandName), pendingShopIndex(other.pendingShopIndex) , rollPrice(other.rollPrice){}
-	  bestHandName(other.bestHandName), 
-	  pendingShopIndex(other.pendingShopIndex),
+	  bestHandName(other.bestHandName), pendingShopIndex(other.pendingShopIndex) , rollPrice(other.rollPrice), 
 	  blind(other.blind) {}
 
 Balatro &Balatro::operator=(const Balatro &other) {
@@ -147,7 +145,134 @@ void Balatro::initAllJokers() {
 	allJokers.push_back(new TheTribeJoker());
 }
 
+// Helper per ripetere una stringa N volte (es: "───")
+std::string repeat(int n, const char* s) {
+    std::string res = "";
+    for (int i = 0; i < n; ++i) {
+        res += s;
+    }
+    return res;
+}
+
+void Balatro::printWinUI() {
+    std::string prefix = ":BalatroBot PRIVMSG " + player->getNickName() + " :";
+    
+    int totalRows = 58;
+    int leftColWidth = 29;
+    int rightColWidth = 85; 
+
+    // --- COLORI ---
+    std::string C_L_GREEN = "\x03" "09"; // Light Green
+    std::string C_ORANGE  = "\x03" "07";
+    std::string C_GREY    = "\x03" "14";
+    std::string BOLD      = "\x02";
+    std::string RESET     = "\x0f";
+
+    // --- CANVAS ---
+    std::vector<std::string> rightCanvas(totalRows, std::string(rightColWidth, ' '));
+
+    // =======================================================================
+    // 1. ASCII ART "YOU WON"
+    // =======================================================================
+    std::vector<std::string> bigWin;
+    std::string c = C_L_GREEN + BOLD;
+    
+    bigWin.push_back(c + "Y   Y  OOO  U   U     W   W  OOO  N   N  !!!" + RESET);
+    bigWin.push_back(c + " Y Y  O   O U   U     W   W O   O NN  N  !!!" + RESET);
+    bigWin.push_back(c + "  Y   O   O U   U     W W W O   O N N N  !!!" + RESET);
+    bigWin.push_back(c + "  Y   O   O U   U     WW WW O   O N  NN     " + RESET);
+    bigWin.push_back(c + "  Y    OOO   UUU      W   W  OOO  N   N  !!!" + RESET);
+
+    // =======================================================================
+    // 2. BOX ISTRUZIONI
+    // =======================================================================
+    std::vector<std::string> infoBox;
+    int boxWidth = 50; 
+    
+    // *** CORREZIONE QUI SOTTO ***
+    // Usiamo repeat() invece del costruttore, e "─" tra doppi apici
+    std::string hBorder = repeat(boxWidth - 2, "─"); 
+    std::string vBorder = C_GREY + "│" + RESET;
+
+    infoBox.push_back(C_GREY + "┌" + hBorder + "┐" + RESET);
+    
+    // Riga vuota
+    infoBox.push_back(vBorder + std::string(boxWidth - 2, ' ') + vBorder);
+    
+    // Testo Centrale
+    std::string txtPart1 = "Type ";
+    std::string txtCmd   = "/balatro";
+    std::string txtPart2 = " to play again";
+    
+    int txtLen = txtPart1.length() + txtCmd.length() + txtPart2.length();
+    int padLeft = (boxWidth - 2 - txtLen) / 2;
+    int padRight = (boxWidth - 2) - txtLen - padLeft;
+    if (padLeft < 0) padLeft = 0; // Sicurezza
+    if (padRight < 0) padRight = 0;
+    
+    std::string lineContent = std::string(padLeft, ' ') 
+                            + txtPart1 + C_ORANGE + BOLD + txtCmd + RESET 
+                            + txtPart2 + std::string(padRight, ' ');
+
+    infoBox.push_back(vBorder + lineContent + vBorder);
+    
+    // Riga vuota
+    infoBox.push_back(vBorder + std::string(boxWidth - 2, ' ') + vBorder);
+    
+    infoBox.push_back(C_GREY + "└" + hBorder + "┘" + RESET);
+
+    // =======================================================================
+    // 3. POSIZIONAMENTO
+    // =======================================================================
+    
+    int centerY = totalRows / 2;
+    
+    int winH = (int)bigWin.size();
+    int winRow = centerY - winH - 2;
+    int winCol = (rightColWidth - 37) / 2; 
+    if (winCol < 0) winCol = 0;
+    
+    pasteObject(rightCanvas, bigWin, winRow, winCol);
+
+    // int infoH = (int)infoBox.size();
+    int infoRow = centerY + 2; 
+    int infoCol = (rightColWidth - boxWidth) / 2;
+
+    pasteObject(rightCanvas, infoBox, infoRow, infoCol);
+
+    // =======================================================================
+    // 4. INVIO AL CLIENT
+    // =======================================================================
+    std::string msg = "";
+    
+    msg += prefix + " \r\n";
+    msg += prefix + "═══════════════════════════════" + "╦" + "═════════════════════════════════════════════════════════════════";
+    msg += prefix + "═════════════════════════════════════════════════════════════════════════════════════════════════════\r\n";
+    
+    for (int row = 0; row < totalRows; ++row) {
+        std::string leftRaw, leftColor;
+        getLeftPanelContent(row, leftRaw, leftColor);
+        
+        int padLeft = leftColWidth - (int)leftRaw.length();
+        if(padLeft < 0) padLeft = 0;
+
+        std::string leftPanel = leftColor + std::string(padLeft, ' ');
+        std::string rightPanel = rightCanvas[row];
+
+        msg += prefix + " " + leftPanel + " ║ " + rightPanel + "\r\n";
+    }
+
+    msg += prefix + "═══════════════════════════════" + "╩" + "═════════════════════════════════════════════════════════════════";
+    msg += prefix + "═════════════════════════════════════════════════════════════════════════════════════════════════════\r\n";
+    
+    send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+}
+
 void Balatro::startNewRound() {
+    if (gameWon) {
+        printWinUI();
+        return ;
+    }
 	blind++;
 	if (blind > 2)
 		blind = 0;
@@ -328,7 +453,7 @@ int Balatro::calculateHand() {
 
 void Balatro::getMessagePrompt(std::string msg) {
 
-	if (gameOver) {
+	if (gameOver || gameWon) {
 		std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :Send /balatro to start a new round\r\n";
 		send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
 		return ;
@@ -486,10 +611,15 @@ void Balatro::getMessagePrompt(std::string msg) {
 				send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
 				return;
 			}
-			if (blind == 2)
+			if (blind == 2) {
 				ante++;
+                if (ante == 9) {
+                    gameWon = true;
+                }
+            }
 			startNewRound();
-			printSelectedCardsUI();
+            if (!gameWon)
+			    printSelectedCardsUI();
 			isShopUI = false;
         } else if (msg.find("shopUI") == 0) {
             generateShopJokers();
