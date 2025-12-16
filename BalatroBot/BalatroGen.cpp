@@ -36,14 +36,20 @@ std::string Balatro::getBestHandName() const {
 }
 
 int Balatro::calculateAnteScore() {
-    int currentAnte = (ante < 1) ? 1 : ante;
-    
-    double baseChips = 300.0;
-    double growthFactor = 1.5; 
-    
-    double target = baseChips * std::pow(growthFactor, currentAnte - 1);
-    
-    return static_cast<int>(target);
+	std::cout << "Calculating ante score for ante level: " << ante << " and blind level: " << blind << std::endl;
+    long long baseScores[] = {
+        300, 800, 2800, 6000, 11000, 20000, 35000, 50000
+    };
+
+	if (blind == 0) {
+		return baseScores[ante - 1];
+	} else if (blind == 1) {
+		return baseScores[ante - 1] * 1.5;
+	} else {
+		return baseScores[ante - 1] * 2;
+	}
+
+	return 0;
 }
 
 void Balatro::freeJokers() {
@@ -60,6 +66,7 @@ void Balatro::shuffleDeck(){
 
 void Balatro::startNewGame() {
     coins = 0;
+	blind = -1;
     jokers.clear();
     shopJokers.clear();
     for (size_t i = 0; i < allJokers.size(); ++i) delete allJokers[i];
@@ -67,9 +74,8 @@ void Balatro::startNewGame() {
 
     initAllJokers();
 
-    ante = 0;
+    ante = 1;
     startNewRound();
     initPokerHands();
-    anteScore = calculateAnteScore();
     printUI();
 }

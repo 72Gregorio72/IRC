@@ -171,7 +171,7 @@ void Server::startGame(int sd) {
     
     // 2. INIZIALIZZAZIONE (Opzionale ma consigliata subito)
     newGame->initAllJokers(); 
-    newGame->startNewGame(); // O startNewRound()
+    newGame->startNewGame();
 
     // 3. SALVATAGGIO DEL PUNTATORE
     balatroBots.push_back(newGame);

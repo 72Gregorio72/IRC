@@ -213,9 +213,19 @@ void Balatro::printEndRoundUI() {
     int handsReward = handsLeft * moneyPerHand;
     int interest = 0; 
     int bossBonus = 0;
-    int totalCashOut = blindReward + handsReward + interest + bossBonus;
+
+    if (blind == 0)
+        blindReward = 3;
+    else if (blind == 1)
+        blindReward = 4;
+    else if (blind == 2)
+        blindReward = 5;
+
+    interest = coins / 5; 
+    if (interest > 5)
+        interest = 5;
     
-    coins += totalCashOut;
+    int totalCashOut = blindReward + handsReward + interest + bossBonus;
 
     // --- CANVAS ---
     std::vector<std::string> rightCanvas(totalRows, std::string(rightColWidth, ' '));
@@ -224,7 +234,12 @@ void Balatro::printEndRoundUI() {
     int boxWidth = 42; 
     int boxInternalWidth = boxWidth - 2; // 40 caratteri di spazio utile dentro │...│
     std::string vBorder = C_ORANGE + "│" + RESET;
-    std::string hBorder = std::string(boxInternalWidth, '-');
+    
+    // FIX: Creazione del bordo orizzontale con un loop invece del costruttore char
+    std::string hBorder = "";
+    for (int i = 0; i < boxInternalWidth; ++i) {
+        hBorder += "─";
+    }
     
     // =======================================================================
     // 1. BOX COMANDI (Sopra)
@@ -233,7 +248,7 @@ void Balatro::printEndRoundUI() {
     cmdBox.push_back(C_ORANGE + "┌" + hBorder + "┐" + RESET);
     
     std::string cmdStr = " " + C_RED + "!cash out" + RESET + C_GREY + " (Bank & Next Round)" + RESET;
-    int visualLen = getVisualLength(cmdStr); // Assicurati di avere questa funzione o calcolala
+    int visualLen = getVisualLength(cmdStr); 
     int padLen = boxInternalWidth - visualLen;
     if (padLen < 0) padLen = 0;
     
@@ -241,7 +256,7 @@ void Balatro::printEndRoundUI() {
     cmdBox.push_back(C_ORANGE + "└" + hBorder + "┘" + RESET);
 
     // =======================================================================
-    // 2. BOX RIEPILOGO (Sotto) - ALLINEAMENTO CORRETTO
+    // 2. BOX RIEPILOGO (Sotto)
     // =======================================================================
     std::vector<std::string> summaryBox;
 
@@ -251,16 +266,16 @@ void Balatro::printEndRoundUI() {
     std::string sTotal = to_string_98(totalCashOut);
     std::string titleRaw = " Cash Out: $" + sTotal + " ";
     int titleLen = (int)titleRaw.length();
-    int padLeft = (boxInternalWidth - titleLen) / 2;
-    int padRight = boxInternalWidth - titleLen - padLeft;
+    int padLeftHeader = (boxInternalWidth - titleLen) / 2;
+    int padRightHeader = boxInternalWidth - titleLen - padLeftHeader;
     
-    std::string btn = "\x03" "00,07" + std::string(padLeft, ' ') + titleRaw + std::string(padRight, ' ') + RESET;
+    std::string btn = "\x03" "00,07" + std::string(padLeftHeader, ' ') + titleRaw + std::string(padRightHeader, ' ') + RESET;
     summaryBox.push_back(C_GREY + "│" + RESET + btn + C_GREY + "│" + RESET);
     summaryBox.push_back(C_GREY + "├" + hBorder + "┤" + RESET);
 
     // B. Dati
     std::vector<RowData> dataRows;
-    // ... riempimento dati come prima ...
+    
     RowData r1; r1.label = "Score at least " + C_RED + to_string_98(blindScoreReq) + RESET; 
     r1.val = blindReward; r1.color = C_GREEN; r1.hiddenColorLen = C_RED.length() + RESET.length();
     dataRows.push_back(r1);
@@ -279,22 +294,20 @@ void Balatro::printEndRoundUI() {
         dataRows.push_back(r4);
     }
 
-    // --- LOGICA DI ALLINEAMENTO CORRETTA ---
+    // --- LOGICA DI ALLINEAMENTO ---
     for(size_t i=0; i<dataRows.size(); ++i) {
         std::string sVal = "$" + to_string_98(dataRows[i].val);
         
         int labelVisLen = (int)dataRows[i].label.length() - dataRows[i].hiddenColorLen;
         int valVisLen = (int)sVal.length();
 
-        // Struttura riga: " LABEL ........... VAL "
-        // Spazi fissi: 1 iniziale + 1 dopo label + 1 prima valore + 1 finale = 4 spazi
-        int fixedSpacing = 4; 
+        int fixedSpacing = 4; // spaziatura minima
         
-        int dots = boxInternalWidth - (labelVisLen + valVisLen + fixedSpacing);
-        if (dots < 0) dots = 0;
+        int dotsCount = boxInternalWidth - (labelVisLen + valVisLen + fixedSpacing);
+        if (dotsCount < 0) dotsCount = 0;
 
-        // Costruiamo la riga interna
-        std::string innerLine = " " + dataRows[i].label + " " + C_GREY + std::string(dots, '.') + RESET + " " + dataRows[i].color + sVal + RESET + " ";
+        // Qui 'dotsCount' è int e '.' è char, quindi std::string(int, char) funziona
+        std::string innerLine = " " + dataRows[i].label + " " + C_GREY + std::string(dotsCount, '.') + RESET + " " + dataRows[i].color + sVal + RESET + " ";
         
         summaryBox.push_back(C_GREY + "│" + RESET + innerLine + C_GREY + "│" + RESET);
     }
@@ -310,7 +323,7 @@ void Balatro::printEndRoundUI() {
     int boxCol = (rightColWidth - boxWidth) / 2;
     
     int cmdHeight = (int)cmdBox.size();
-    int cmdRow = summaryRow - cmdHeight; // Attaccato sopra
+    int cmdRow = summaryRow - cmdHeight; 
 
     pasteObject(rightCanvas, cmdBox, cmdRow, boxCol);
     pasteObject(rightCanvas, summaryBox, summaryRow, boxCol);
@@ -341,5 +354,7 @@ void Balatro::printEndRoundUI() {
     msg += prefix + "═════════════════════════════════════════════════════════════════════════════════════════════════════\r\n";
     
     send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+    
+    // Aggiornamento effettivo delle monete
+    coins += totalCashOut;
 }
-
