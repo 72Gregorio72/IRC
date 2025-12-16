@@ -664,12 +664,6 @@ void Balatro::getMessagePrompt(std::string msg) {
 				send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
 				return;
 			}
-			if (coins < 6){
-				std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :Not enough coins to pick a joker\r\n";
-				send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
-				return;
-			}
-			coins -= 6;
 			pickJokerFromPack(pick - 1);
 			isInJokerPackUI = 0;
 			printShopUI();

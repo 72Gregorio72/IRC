@@ -158,7 +158,7 @@ class Balatro {
         int rollPrice;
         
         int blind; // 0 small 1 big 2 boss
-        std::vector<IJoker*> packJokers; 
+        std::vector<IJoker*> packJokers;
 		int isInJokerPackUI;
 };
 
