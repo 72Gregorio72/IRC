@@ -19,13 +19,16 @@
 #include "Jokers/TheFamilyJoker/TheFamilyJoker.hpp"
 #include "Jokers/TheOrderJoker/TheOrderJoker.hpp"
 #include "Jokers/TheTribeJoker/TheTribeJoker.hpp"
+#include "Jokers/HalfJoker/HalfJoker.hpp"
+#include "Jokers/Banner/Banner.hpp"
+#include "Jokers/MysticSummit/MysticSummit.hpp"
 
-Balatro::Balatro() : gameOver(false), gameWon(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(0), player(), pokerHands(), isSuitSorting(false), isCashingOut(false), isShopUI(false), jokers(), allJokers(), bestHandName(""), pendingShopIndex(-1), packJokers() {
+Balatro::Balatro() : gameOver(false), gameWon(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(0), player(), pokerHands(), isSuitSorting(false), isCashingOut(false), isShopUI(false), jokers(), allJokers(), bestHandName(""), pendingShopIndex(-1), packJokers(), isInJokerPackUI(0) {
     std::srand(static_cast<unsigned int>(std::time(0)));
     this->rollPrice = 5;
 }
 
-Balatro::Balatro(int sd, User *player) : gameOver(false), gameWon(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(sd), player(player), pokerHands(), isRankSorting(false), isCashingOut(false), isShopUI(false), jokers(), allJokers(), bestHandName(""), pendingShopIndex(-1), packJokers() {
+Balatro::Balatro(int sd, User *player) : gameOver(false), gameWon(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(sd), player(player), pokerHands(), isRankSorting(false), isCashingOut(false), isShopUI(false), jokers(), allJokers(), bestHandName(""), pendingShopIndex(-1), packJokers(), isInJokerPackUI(0) {
     std::srand(static_cast<unsigned int>(std::time(0)));
     this->rollPrice = 5;
 }
@@ -67,7 +70,8 @@ Balatro::Balatro(const Balatro &other)
 	  pendingShopIndex(other.pendingShopIndex), 
 	  rollPrice(other.rollPrice),
 	  blind(other.blind),
-	  packJokers(other.packJokers) {}
+	  packJokers(other.packJokers),
+	  isInJokerPackUI(other.isInJokerPackUI) {}
 
 Balatro &Balatro::operator=(const Balatro &other) {
 	if (this != &other) {
@@ -96,6 +100,7 @@ Balatro &Balatro::operator=(const Balatro &other) {
         rollPrice = other.rollPrice;
 		blind = other.blind;
 		packJokers = other.packJokers;
+		isInJokerPackUI = other.isInJokerPackUI;
 	}
 	return *this;
 }
@@ -147,6 +152,9 @@ void Balatro::initAllJokers() {
 	allJokers.push_back(new TheFamilyJoker());
 	allJokers.push_back(new TheOrderJoker());
 	allJokers.push_back(new TheTribeJoker());
+	allJokers.push_back(new HalfJoker());
+	allJokers.push_back(new Banner());
+	allJokers.push_back(new MysticSummit());
 }
 
 void Balatro::startNewRound() {
@@ -327,6 +335,16 @@ int Balatro::calculateHand() {
     return currentChips * currentMult;
 }
 
+void Balatro::pickJokerFromPack(int index) {
+	if (index < 0 || index >= static_cast<int>(packJokers.size())) {
+		std::cout << "DEBUG: Indice joker non valido." << std::endl;
+		return;
+	}
+	IJoker* selectedJoker = packJokers[index];
+	jokers.push_back(selectedJoker);
+	packJokers.erase(packJokers.begin() + index);
+	std::cout << "DEBUG: Joker " << selectedJoker->getName() << " aggiunto alla collezione." << std::endl;
+}
 
 void Balatro::getMessagePrompt(std::string msg) {
 
@@ -628,6 +646,36 @@ void Balatro::getMessagePrompt(std::string msg) {
 				send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
 				return;
 			}
+		} else if (msg.find("pick") == 0) {
+			if (!isInJokerPackUI){
+				std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :You are not in the joker pack screen\r\n";
+				send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+				return;
+			}
+			int pick = std::atoi(msg.substr(5).c_str());
+			if (pick < 1 || pick > (int)packJokers.size()){
+				std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :Invalid pick number\r\n";
+				send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+				return;
+			}
+			if (coins < 6){
+				std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :Not enough coins to pick a joker\r\n";
+				send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+				return;
+			}
+			coins -= 6;
+			pickJokerFromPack(pick - 1);
+			isInJokerPackUI = 0;
+			printShopUI();
+		} else if (msg.find("skip") == 0) {
+			if (!isInJokerPackUI){
+				std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :You are not in the joker pack screen\r\n";
+				send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+				return;
+			}
+			packJokers.clear();
+			isInJokerPackUI = 0;
+			printShopUI();
 		}
 	}
 }
