@@ -21,11 +21,13 @@
 #include "Jokers/TheTribeJoker/TheTribeJoker.hpp"
 
 Balatro::Balatro() : gameOver(false), gameWon(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(0), player(), pokerHands(), isSuitSorting(false), isCashingOut(false), isShopUI(false), jokers(), allJokers(), bestHandName(""), pendingShopIndex(-1) {
-    std::srand(static_cast<unsigned int>(std::time(NULL)));
+    std::srand(static_cast<unsigned int>(std::time(0)));
+    this->rollPrice = 5;
 }
 
 Balatro::Balatro(int sd, User *player) : gameOver(false), gameWon(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(sd), player(player), pokerHands(), isRankSorting(false), isCashingOut(false), isShopUI(false), jokers(), allJokers(), bestHandName(""), pendingShopIndex(-1) {
-    std::srand(static_cast<unsigned int>(std::time(NULL)));
+    std::srand(static_cast<unsigned int>(std::time(0)));
+    this->rollPrice = 5;
 }
 
 Balatro::~Balatro() {
@@ -61,7 +63,7 @@ Balatro::Balatro(const Balatro &other)
 	  isCashingOut(other.isCashingOut),
 	  isShopUI(other.isShopUI),
 	  jokers(other.jokers),
-	  bestHandName(other.bestHandName), pendingShopIndex(other.pendingShopIndex) {}
+	  bestHandName(other.bestHandName), pendingShopIndex(other.pendingShopIndex) , rollPrice(other.rollPrice){}
 
 Balatro &Balatro::operator=(const Balatro &other) {
 	if (this != &other) {
@@ -87,6 +89,7 @@ Balatro &Balatro::operator=(const Balatro &other) {
 		jokers = other.jokers;
 		bestHandName = other.bestHandName;
 		pendingShopIndex = other.pendingShopIndex;
+        rollPrice = other.rollPrice;
 	}
 	return *this;
 }
@@ -150,6 +153,7 @@ void Balatro::startNewRound() {
 	selectedCards.clear();
 	gameOver = false;
 	currentBet = 0;
+    rollPrice = 5;
 	totalBet = 0;
 	discards = 4;
 	hands = 4;
@@ -330,7 +334,6 @@ void Balatro::getMessagePrompt(std::string msg) {
 		send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
 		return ;
 	}
-
 	std::cout << "BalatroBot message: " << msg << std::endl;
 	if (msg.find("!") == 0) {
 		msg.erase(0, 1);
@@ -466,6 +469,18 @@ void Balatro::getMessagePrompt(std::string msg) {
 			}
 			printShopUI();
 			isCashingOut = false;
+        } if (msg.find("reroll") == 0) {
+            if (isShopUI){
+                if (coins < rollPrice) {
+                    std::string err = ":BalatroBot PRIVMSG " + player->getNickName() + " :Not enough coins to roll the shop\r\n";
+                    send(sd, err.c_str(), err.length(), MSG_NOSIGNAL);
+                    return;
+                }
+                coins -= rollPrice;
+                rollPrice = rollPrice * 1.50f;
+                generateShopJokers();
+                printShopUI();
+            }
         } else if (msg.find("next") == 0) {
 			if (!isShopUI){
 				std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :You are not in the shop screen\r\n";
@@ -476,6 +491,7 @@ void Balatro::getMessagePrompt(std::string msg) {
 			printSelectedCardsUI();
 			isShopUI = false;
         } else if (msg.find("shopUI") == 0) {
+            generateShopJokers();
 			printShopUI();
         } else if (msg.find("shop") == 0) {
             if (!isShopUI) {

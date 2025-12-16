@@ -59,7 +59,7 @@ void Balatro::shuffleDeck(){
 }
 
 void Balatro::startNewGame() {
-    coins = 0;
+    coins = 100000;
     jokers.clear();
     shopJokers.clear();
     for (size_t i = 0; i < allJokers.size(); ++i) delete allJokers[i];
