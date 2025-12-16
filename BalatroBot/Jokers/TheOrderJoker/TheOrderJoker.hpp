@@ -1,17 +1,17 @@
-#ifndef ZANY_JOKER_HPP
-#define ZANY_JOKER_HPP
+#ifndef THE_ORDER_JOKER_HPP
+#define THE_ORDER_JOKER_HPP
 
 #include "../IJoker.hpp"
 #include "Server.hpp"
 
 class Server;
 
-class ZanyJoker : public IJoker {
+class TheOrderJoker : public IJoker {
 
 	public:
-		ZanyJoker();
-		ZanyJoker(const ZanyJoker& other);
-		~ZanyJoker();
+		TheOrderJoker();
+		TheOrderJoker(const TheOrderJoker& other);
+		~TheOrderJoker();
 
         void printJoker();
         void playJoker(int& chips, int& mult, Balatro *bot);
@@ -22,7 +22,7 @@ class ZanyJoker : public IJoker {
 		std::string getRarity();
 
 	private:
-		// Balatro *bot;
+		Balatro *bot;
 		int cost;
 		std::string effect;
 		std::string name;

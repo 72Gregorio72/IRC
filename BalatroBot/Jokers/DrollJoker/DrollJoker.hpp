@@ -19,6 +19,7 @@ class DrollJoker : public IJoker {
 		int getCost();
 		std::string getName();
 		std::string getEffect();
+		std::string getRarity();
 
 
 	private:
@@ -26,6 +27,7 @@ class DrollJoker : public IJoker {
 		int cost;
 		std::string effect;
 		std::string name;
+		std::string rarity;
 };
 
 #endif
