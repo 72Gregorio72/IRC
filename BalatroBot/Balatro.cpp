@@ -22,6 +22,7 @@
 #include "Jokers/HalfJoker/HalfJoker.hpp"
 #include "Jokers/Banner/Banner.hpp"
 #include "Jokers/MysticSummit/MysticSummit.hpp"
+#include "Jokers/Misprint/Misprint.hpp"
 
 Balatro::Balatro() : gameOver(false), gameWon(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(0), player(), pokerHands(), isSuitSorting(false), isCashingOut(false), isShopUI(false), jokers(), allJokers(), bestHandName(""), pendingShopIndex(-1), packJokers(), isInJokerPackUI(0) {
     std::srand(static_cast<unsigned int>(std::time(0)));
@@ -125,6 +126,10 @@ const std::vector<Card>& Balatro::getSelectedCards() const {
     return selectedCards;
 }
 
+int Balatro::getDiscards(){
+	return discards;
+}
+
 void Balatro::initAllJokers() {
 	if (!allJokers.empty()) {
         return; 
@@ -155,6 +160,7 @@ void Balatro::initAllJokers() {
 	allJokers.push_back(new HalfJoker());
 	allJokers.push_back(new Banner());
 	allJokers.push_back(new MysticSummit());
+	allJokers.push_back(new Misprint());
 }
 
 // Helper per ripetere una stringa N volte (es: "───")

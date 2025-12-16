@@ -34,6 +34,10 @@ SRCS		=   main.cpp Server.cpp \
 				BalatroBot/Jokers/TheFamilyJoker/TheFamilyJoker.cpp \
 				BalatroBot/Jokers/TheOrderJoker/TheOrderJoker.cpp \
 				BalatroBot/Jokers/TheTribeJoker/TheTribeJoker.cpp \
+				BalatroBot/Jokers/HalfJoker/HalfJoker.cpp \
+				BalatroBot/Jokers/Banner/Banner.cpp \
+				BalatroBot/Jokers/Misprint/Misprint.cpp \
+				BalatroBot/Jokers/MysticSummit/MysticSummit.cpp \
 
 
 

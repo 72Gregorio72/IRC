@@ -1,6 +1,6 @@
 #include "MysticSummit.hpp"
 
-MysticSummit::MysticSummit() :bot(), cost(4), effect("+15 Mult when 0 discards remaining"), name("MysticSummit"), rarity("Common") {}
+MysticSummit::MysticSummit() :bot(), cost(5), effect("+15 Mult when 0 discards remaining"), name("MysticSummit"), rarity("Common") {}
 
 MysticSummit::~MysticSummit() {}
 

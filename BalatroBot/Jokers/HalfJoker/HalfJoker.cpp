@@ -1,6 +1,6 @@
 #include "HalfJoker.hpp"
 
-HalfJoker::HalfJoker() :bot(), cost(4), effect("+20 Mult if played hand contains 3 or fewer cards"), name("Half Joker"), rarity("Common") {}
+HalfJoker::HalfJoker() :bot(), cost(5), effect("+20 Mult if played hand contains 3 or fewer cards"), name("Half Joker"), rarity("Common") {}
 
 HalfJoker::~HalfJoker() {}
 
