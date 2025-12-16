@@ -1,10 +1,10 @@
 #include "SlyJoker.hpp"
 
-SlyJoker::SlyJoker() :bot(), cost(3), effect("+50 chips if a Pair is present"), name("Sly Joker") {}
+SlyJoker::SlyJoker() :bot(), cost(3), effect("+50 chips if a Pair is present"), name("Sly Joker"), rarity("Common") {}
 
 SlyJoker::~SlyJoker() {}
 
-SlyJoker::SlyJoker(const SlyJoker &other) :bot(other.bot), cost(other.cost), effect(other.effect), name(other.name) {}
+SlyJoker::SlyJoker(const SlyJoker &other) :bot(other.bot), cost(other.cost), effect(other.effect), name(other.name), rarity(other.rarity) {}
 
 void SlyJoker::printJoker(){
     // Implementazione UI se necessaria
@@ -29,4 +29,8 @@ std::string SlyJoker::getName() {
 
 std::string SlyJoker::getEffect() {
 	return effect;
+}
+
+std::string SlyJoker::getRarity() {
+	return rarity;
 }

@@ -1,10 +1,10 @@
 #include "WilyJoker.hpp"
 
-WilyJoker::WilyJoker() :bot(), cost(4), effect("+100 chips if a Three of a Kind is present"), name("Wily Joker") {}
+WilyJoker::WilyJoker() :bot(), cost(4), effect("+100 chips if a Three of a Kind is present"), name("Wily Joker"), rarity("Common") {}
 
 WilyJoker::~WilyJoker() {}
 
-WilyJoker::WilyJoker(const WilyJoker &other) :bot(other.bot), cost(other.cost), effect(other.effect), name(other.name) {}
+WilyJoker::WilyJoker(const WilyJoker &other) :bot(other.bot), cost(other.cost), effect(other.effect), name(other.name), rarity(other.rarity) {}
 
 void WilyJoker::printJoker(){
     // Implementazione UI se necessaria
@@ -29,4 +29,8 @@ std::string WilyJoker::getName() {
 
 std::string WilyJoker::getEffect() {
 	return effect;
+}
+
+std::string WilyJoker::getRarity() {
+	return rarity;
 }

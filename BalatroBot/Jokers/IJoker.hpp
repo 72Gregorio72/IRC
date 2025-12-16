@@ -20,6 +20,7 @@ class IJoker
 		virtual int getCost() = 0;
 		virtual std::string getName() = 0;
 		virtual std::string getEffect() = 0;
+        virtual std::string getRarity() = 0;
 };
 
 #endif

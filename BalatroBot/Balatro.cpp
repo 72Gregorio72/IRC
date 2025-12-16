@@ -14,12 +14,17 @@
 #include "Jokers/CleverJoker/CleverJoker.hpp"
 #include "Jokers/DeviousJoker/DeviousJoker.hpp"
 #include "Jokers/CraftyJoker/CraftyJoker.hpp"
+#include "Jokers/TheDuoJoker/TheDuoJoker.hpp"
+#include "Jokers/TheTrioJoker/TheTrioJoker.hpp"
+#include "Jokers/TheFamilyJoker/TheFamilyJoker.hpp"
+#include "Jokers/TheOrderJoker/TheOrderJoker.hpp"
+#include "Jokers/TheTribeJoker/TheTribeJoker.hpp"
 
-Balatro::Balatro() : gameOver(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(0), player(), pokerHands(), isSuitSorting(false), isCashingOut(false), isShopUI(false), jokers(), allJokers(), bestHandName(""), pendingShopIndex(-1) {
+Balatro::Balatro() : gameOver(false), gameWon(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(0), player(), pokerHands(), isSuitSorting(false), isCashingOut(false), isShopUI(false), jokers(), allJokers(), bestHandName(""), pendingShopIndex(-1) {
     std::srand(static_cast<unsigned int>(std::time(NULL)));
 }
 
-Balatro::Balatro(int sd, User *player) : gameOver(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(sd), player(player), pokerHands(), isRankSorting(false), isCashingOut(false), isShopUI(false), jokers(), allJokers(), bestHandName(""), pendingShopIndex(-1) {
+Balatro::Balatro(int sd, User *player) : gameOver(false), gameWon(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(sd), player(player), pokerHands(), isRankSorting(false), isCashingOut(false), isShopUI(false), jokers(), allJokers(), bestHandName(""), pendingShopIndex(-1) {
     std::srand(static_cast<unsigned int>(std::time(NULL)));
 }
 
@@ -37,6 +42,7 @@ Balatro::~Balatro() {
 
 Balatro::Balatro(const Balatro &other)
 	: gameOver(other.gameOver),
+      gameWon(other.gameWon),
 	  ante(other.ante),
 	  anteScore(other.anteScore),
 	  discards(other.discards),
@@ -60,6 +66,7 @@ Balatro::Balatro(const Balatro &other)
 Balatro &Balatro::operator=(const Balatro &other) {
 	if (this != &other) {
 		gameOver = other.gameOver;
+        gameWon = other.gameWon;
 		ante = other.ante;
 		anteScore = other.anteScore;
 		discards = other.discards;
@@ -126,11 +133,18 @@ void Balatro::initAllJokers() {
 	allJokers.push_back(new CleverJoker());
 	allJokers.push_back(new DeviousJoker());
 	allJokers.push_back(new CraftyJoker());
+	allJokers.push_back(new TheDuoJoker());
+	allJokers.push_back(new TheTrioJoker());
+	allJokers.push_back(new TheFamilyJoker());
+	allJokers.push_back(new TheOrderJoker());
+	allJokers.push_back(new TheTribeJoker());
 }
 
 void Balatro::startNewRound() {
+    ante++;
+    if (ante > 8)
+        gameWon = true;
 	anteScore = calculateAnteScore();
-    coins = 1000;
 	hand.clear();
 	deck.clear();
 	selectedCards.clear();
@@ -322,6 +336,11 @@ void Balatro::getMessagePrompt(std::string msg) {
 		msg.erase(0, 1);
 		std::cout << "Received command: " << msg << std::endl;
 		if (msg.find("select ") == 0) {
+            if (isCashingOut || isShopUI) {
+                std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :!select not possible\r\n";
+                send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+                return;
+            }
 			msg.erase(0, 7);
 			selectedCards.clear();
 			std::vector<std::string> tokens;
@@ -353,8 +372,9 @@ void Balatro::getMessagePrompt(std::string msg) {
 				}
 			}
 			if (cardIndices.size() > 5) {
-				std::cout << "Too many cards selected." << std::endl;
-				return;
+                std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :Too many cards selected\r\n";
+                send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+                return ;
 			}
 			for(size_t i = 0; i < cardIndices.size(); ++i) {
 				std::cout << "Selected card: " << hand[cardIndices[i]].getRank() << " of " << hand[cardIndices[i]].getSuit() << std::endl;
@@ -364,6 +384,11 @@ void Balatro::getMessagePrompt(std::string msg) {
 			}
 			printSelectedCardsUI();
 		} else if (msg.find("discard") == 0) {
+            if (isCashingOut || isShopUI) {
+                std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :!discard not possible\r\n";
+                send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+                return;
+            }
 			msg.erase(0, 7);
 			if (selectedCards.empty()) {
 				std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :No cards selected to discard.\r\n";
@@ -396,6 +421,11 @@ void Balatro::getMessagePrompt(std::string msg) {
             	std::sort(hand.begin(), hand.end(), compareCardsByRank);
 			printSelectedCardsUI();
 		} else if (msg.find("play") == 0) {
+            if (isCashingOut || isShopUI) {
+                std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :!play not possible\r\n";
+                send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+                return;
+            }
 			if (selectedCards.empty()) {
 				std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :No cards selected to play.\r\n";
 				send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
@@ -409,11 +439,21 @@ void Balatro::getMessagePrompt(std::string msg) {
 			if (isRankSorting)
             	std::sort(hand.begin(), hand.end(), compareCardsByRank);
 		} else if (msg.find("sort suit") == 0) {
+            if (isCashingOut || isShopUI) {
+                std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :!sort not possible\r\n";
+                send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+                return;
+            }
             std::sort(hand.begin(), hand.end(), compareCardsBySuit);
             printSelectedCardsUI();
             isSuitSorting = true;
 			isRankSorting = false;
         } else if (msg.find("sort rank") == 0) {
+            if (isCashingOut || isShopUI) {
+                std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :!sort not possible\r\n";
+                send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+                return;
+            }
             std::sort(hand.begin(), hand.end(), compareCardsByRank);
             printSelectedCardsUI();
 			isSuitSorting = false;
@@ -584,7 +624,7 @@ void Balatro::playHand() {
 	printSelectedCardsUI();
 	if (hands == 0)
 	{
-		std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :Game Over MF\r\n";
+		std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :Game Over\r\n";
 		send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
 		setGameOver(true);
 		printUI();

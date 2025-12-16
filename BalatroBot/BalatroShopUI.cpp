@@ -118,6 +118,21 @@ std::vector<std::string> Balatro::createJokerItem(IJoker* joker) {
     std::string RED   = "\x03" "04"; 
     std::string BLUE  = "\x03" "12";
 
+    // --- PUNTO DI CAMBIO COLORE ---
+    // Determina il colore del bordo in base alla rarità del Joker
+    std::string BORDER_COLOR = BLUE; // Default: Common (Blu)
+    
+    // Assumiamo che esista un metodo getRarity() che restituisce "Uncommon", "Rare", etc.
+    std::string rarity = joker->getRarity(); 
+    
+    if (rarity == "Uncommon") {
+        BORDER_COLOR = GREEN; // Non-comune (Verde chiaro)
+    } else if (rarity == "Rare") {
+        BORDER_COLOR = RED;   // Raro (Rosso)
+    } else if (rarity == "Legendary") {
+        BORDER_COLOR = "\x03" "06"; // Leggendario (Opzionale: Viola/Magenta)
+    }
+    
     // Bordi UTF-8
     std::string TL = "\xE2\x95\xAD"; std::string TR = "\xE2\x95\xAE"; // ╭ ╮
     std::string BL = "\xE2\x95\xB0"; std::string BR = "\xE2\x95\xAF"; // ╰ ╯
@@ -128,67 +143,62 @@ std::vector<std::string> Balatro::createJokerItem(IJoker* joker) {
     std::string T_R = "\xE2\x94\xA4"; 
 
     // --- DATI JOKER ---
-    // Assumo tu abbia un metodo getDescription() o getEffect(). 
-    // Se non lo hai, sostituisci con una stringa fissa o costruiscila qui.
     std::string name = joker->getName();
-    std::string effect = joker->getEffect(); // <--- Assicurati che questo metodo esista in IJoker
+    std::string effect = joker->getEffect(); 
     std::string cost = "$" + to_string_98(joker->getCost());
 
     // --- DIMENSIONI ---
     int width = 16;         // Larghezza totale interna
-    int fixedHeight = 8;    // Altezza FISSA del contenuto (esclusi bordi sopra/sotto)
-                            // Totale righe = fixedHeight + 2 (bordi)
+    int fixedHeight = 8;    // Altezza FISSA del contenuto
 
-    // 1. BORDO SUPERIORE
-    box.push_back(GREY + TL + repeat_string(width, H) + TR + RESET);
+    // 1. BORDO SUPERIORE (Uso BORDER_COLOR)
+    box.push_back(BORDER_COLOR + TL + repeat_string(width, H) + TR + RESET);
 
     // 2. NOME (Centrato)
     if (name.length() > (size_t)width) name = name.substr(0, width);
     int padN = (width - getVisualLength(name)) / 2;
     if (padN < 0) padN = 0;
     
-    box.push_back(GREY + V + RESET + 
+    // Nota: I bordi laterali (V) sono colorati con BORDER_COLOR
+    // Il nome resta RED, ma puoi cambiarlo in WHITE se vuoi contrasto col bordo rosso
+    box.push_back(BORDER_COLOR + V + RESET + 
                   repeat_char(padN, ' ') + RED + name + RESET + 
                   repeat_char(width - padN - getVisualLength(name), ' ') + 
-                  GREY + V + RESET);
+                  BORDER_COLOR + V + RESET);
 
-    // 3. DIVISORE (├──────────────┤)
-    box.push_back(GREY + T_L + repeat_string(width, H) + T_R + RESET);
+    // 3. DIVISORE (├──────────────┤) (Uso BORDER_COLOR)
+    box.push_back(BORDER_COLOR + T_L + repeat_string(width, H) + T_R + RESET);
 
     // 4. EFFETTO (Word Wrapped) e COSTO
-    // Calcoliamo quanto spazio abbiamo
-    // Abbiamo 'fixedHeight' righe totali. 
-    // Abbiamo già usato 1 riga per il Nome e 1 per il Divisore.
-    // Rimangono (fixedHeight - 2) righe per Effetto + Costo.
-    
     std::vector<std::string> effectLines = wrapText(effect, width);
     
     int linesUsed = 0;
-    int linesAvailable = fixedHeight - 2; // -2 perché ho usato nome e divisore
+    int linesAvailable = fixedHeight - 2; 
 
     // Stampiamo le righe dell'effetto
     for (size_t i = 0; i < effectLines.size(); ++i) {
-        if (linesUsed >= linesAvailable - 1) break; // Lascia sempre 1 riga per il costo
+        if (linesUsed >= linesAvailable - 1) break; 
         
         std::string line = effectLines[i];
         int pad = width - getVisualLength(line);
-        box.push_back(GREY + V + RESET + BLUE + line + RESET + repeat_char(pad, ' ') + GREY + V + RESET);
+        // Bordi laterali colorati con BORDER_COLOR
+        box.push_back(BORDER_COLOR + V + RESET + BLUE + line + RESET + repeat_char(pad, ' ') + BORDER_COLOR + V + RESET);
         linesUsed++;
     }
 
     // Riempiamo con righe vuote se l'effetto è corto
     while (linesUsed < linesAvailable - 1) {
-        box.push_back(GREY + V + repeat_char(width, ' ') + GREY + V + RESET);
+        box.push_back(BORDER_COLOR + V + repeat_char(width, ' ') + BORDER_COLOR + V + RESET);
         linesUsed++;
     }
 
-    // 5. COSTO (Ultima riga interna, allineata a destra o sinistra)
-    int padC = width - getVisualLength(cost) - 1; // -1 per un po' di margine
+    // 5. COSTO 
+    int padC = width - getVisualLength(cost) - 1; 
     if (padC < 0) padC = 0;
-    box.push_back(GREY + V + RESET + " " + GREEN + cost + RESET + repeat_char(padC, ' ') + GREY + V + RESET);
+    box.push_back(BORDER_COLOR + V + RESET + " " + GREEN + cost + RESET + repeat_char(padC, ' ') + BORDER_COLOR + V + RESET);
 
-    // 6. BORDO INFERIORE
-    box.push_back(GREY + BL + repeat_string(width, H) + BR + RESET);
+    // 6. BORDO INFERIORE (Uso BORDER_COLOR)
+    box.push_back(BORDER_COLOR + BL + repeat_string(width, H) + BR + RESET);
 
     return box;
 }

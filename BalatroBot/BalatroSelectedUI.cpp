@@ -331,6 +331,6 @@ void Balatro::printEndRoundUI() {
     msg += prefix + "═════════════════════════════════════════════════════════════════════════════════════════════════════\r\n";
     
     send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
-	coins = totalCashOut;
+	coins += totalCashOut;
 }
 
