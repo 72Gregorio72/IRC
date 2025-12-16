@@ -20,13 +20,13 @@
 #include "Jokers/TheOrderJoker/TheOrderJoker.hpp"
 #include "Jokers/TheTribeJoker/TheTribeJoker.hpp"
 
-Balatro::Balatro() : gameOver(false), gameWon(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(0), player(), pokerHands(), isSuitSorting(false), isCashingOut(false), isShopUI(false), jokers(), allJokers(), bestHandName(""), pendingShopIndex(-1), blind(-1) {
-    std::srand(static_cast<unsigned int>(std::time(NULL)));
+Balatro::Balatro() : gameOver(false), gameWon(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(0), player(), pokerHands(), isSuitSorting(false), isCashingOut(false), isShopUI(false), jokers(), allJokers(), bestHandName(""), pendingShopIndex(-1), packJokers() {
+    std::srand(static_cast<unsigned int>(std::time(0)));
     this->rollPrice = 5;
 }
 
-Balatro::Balatro(int sd, User *player) : gameOver(false), gameWon(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(sd), player(player), pokerHands(), isRankSorting(false), isCashingOut(false), isShopUI(false), jokers(), allJokers(), bestHandName(""), pendingShopIndex(-1), blind(-1) {
-    std::srand(static_cast<unsigned int>(std::time(NULL)));
+Balatro::Balatro(int sd, User *player) : gameOver(false), gameWon(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(sd), player(player), pokerHands(), isRankSorting(false), isCashingOut(false), isShopUI(false), jokers(), allJokers(), bestHandName(""), pendingShopIndex(-1), packJokers() {
+    std::srand(static_cast<unsigned int>(std::time(0)));
     this->rollPrice = 5;
 }
 
@@ -63,8 +63,11 @@ Balatro::Balatro(const Balatro &other)
 	  isCashingOut(other.isCashingOut),
 	  isShopUI(other.isShopUI),
 	  jokers(other.jokers),
-	  bestHandName(other.bestHandName), pendingShopIndex(other.pendingShopIndex) , rollPrice(other.rollPrice), 
-	  blind(other.blind) {}
+	  bestHandName(other.bestHandName), 
+	  pendingShopIndex(other.pendingShopIndex), 
+	  rollPrice(other.rollPrice),
+	  blind(other.blind),
+	  packJokers(other.packJokers) {}
 
 Balatro &Balatro::operator=(const Balatro &other) {
 	if (this != &other) {
@@ -92,6 +95,7 @@ Balatro &Balatro::operator=(const Balatro &other) {
 		pendingShopIndex = other.pendingShopIndex;
         rollPrice = other.rollPrice;
 		blind = other.blind;
+		packJokers = other.packJokers;
 	}
 	return *this;
 }
@@ -739,7 +743,24 @@ void Balatro::getMessagePrompt(std::string msg) {
             send(sd, success.c_str(), success.length(), MSG_NOSIGNAL);
             
             printShopUI();
-        }
+        } else if (msg.find("pack") == 0) {
+			if (!isShopUI){
+				std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :You are not in the shop screen\r\n";
+				send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+				return;
+			}
+			int pack = std::atoi(msg.substr(5).c_str());
+			if (pack == 1)
+				jokerPackUI();
+			else if (pack == 2){
+				//planetPackUI();
+			}
+			else {
+				std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :Invalid pack number\r\n";
+				send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+				return;
+			}
+		}
 	}
 }
 

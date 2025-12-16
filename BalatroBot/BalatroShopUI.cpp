@@ -1,6 +1,6 @@
 #include "includes/Balatro.hpp"
 
-std::string repeat_string(int count, const std::string& pattern) {
+std::string Balatro::repeat_string(int count, const std::string& pattern) {
     std::string result = "";
     for (int i = 0; i < count; ++i) {
         result += pattern;
