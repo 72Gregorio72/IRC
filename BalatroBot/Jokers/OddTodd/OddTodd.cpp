@@ -12,7 +12,7 @@ void OddTodd::printJoker(){
 
 
 void OddTodd::playJoker(int& chips, int& mult, Balatro *bot){
-	(void)chips;
+	(void)mult;
 	std::vector<Card> selectedCards = bot->getSelectedCards();
 	for (size_t i = 0; i < selectedCards.size(); ++i) {
 		std::string rank = selectedCards[i].getRank();
