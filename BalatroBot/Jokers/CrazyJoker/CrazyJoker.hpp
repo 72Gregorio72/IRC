@@ -21,7 +21,7 @@ class CrazyJoker : public IJoker {
 		std::string getEffect();
 
 	private:
-		Balatro *bot;
+		// Balatro *bot;
 		int cost;
 		std::string effect;
 		std::string name;

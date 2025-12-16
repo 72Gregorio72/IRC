@@ -385,7 +385,7 @@ std::string Balatro::getRightPanelContent(int row, int handStart, int handH, int
             else if (r == 3) text = " " + C_GREEN + "!select" + RESET + " <id> " + C_GREY + "(es: !select 1 3)" + RESET;
             else if (r == 5) text = " " + C_RED + "!discard" + C_GREY + " (Discard selected)" + RESET;
             else if (r == 7) text = " " + C_BLUE + "!play" + C_GREY + "    (Play selected)" + RESET;
-            else if (r == 9) text = " " + C_YELLOW + "!sort rank" + C_GREY + " (Sort Hand)" + RESET;
+            else if (r == 9) text = " " + C_YELLOW + "!sort suit/rank" + C_GREY + " (Sort Hand)" + RESET;
             else {
                 text = std::string(boxWidth - 2, ' '); 
             }

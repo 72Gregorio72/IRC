@@ -59,6 +59,7 @@ void Balatro::shuffleDeck(){
 }
 
 void Balatro::startNewGame() {
+    coins = 0;
     jokers.clear();
     shopJokers.clear();
     for (size_t i = 0; i < allJokers.size(); ++i) delete allJokers[i];
@@ -66,9 +67,9 @@ void Balatro::startNewGame() {
 
     initAllJokers();
 
+    ante = 0;
     startNewRound();
     initPokerHands();
-    ante = 1;
     anteScore = calculateAnteScore();
     printUI();
 }

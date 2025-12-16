@@ -120,6 +120,7 @@ class Balatro {
 	private:
 
 		bool	gameOver;
+		bool	gameWon;
 			
 		int ante;
 		int anteScore;
