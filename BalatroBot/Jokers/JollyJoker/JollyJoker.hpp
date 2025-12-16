@@ -23,7 +23,7 @@ class JollyJoker : public IJoker {
 
 
 	private:
-		Balatro *bot;
+		// Balatro *bot;bot
 		int cost;
 		std::string effect;
 		std::string name;
