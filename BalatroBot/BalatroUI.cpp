@@ -348,6 +348,7 @@ std::string Balatro::getRightPanelContent(int row, int handStart, int handH, int
     std::string C_SCALE_7 = "\x03" "07"; // Orange
     std::string C_SCALE_8 = "\x03" "04"; // Red
     std::string C_SCALE_9 = "\x03" "05"; // Maroon (Dark Red)
+    std::string C_SCALE_10 = "\x03" "06";
     std::string C_GREY    = "\x03" "14";
     std::string BOLD      = "\x02";
     std::string RESET     = "\x0f";
@@ -410,7 +411,7 @@ std::string Balatro::getRightPanelContent(int row, int handStart, int handH, int
             else if (r == 15) text = " " + C_SCALE_7 + "!next" + C_GREY + " (Start New Round)" + RESET;
             else if (r == 17) text = " " + C_SCALE_8 + "!replace"  + RESET + " <id> " + C_GREY + "(es: !replace 1 3)" + RESET;
             else if (r == 19) text = " " + C_SCALE_9 + "!reroll" + C_GREY + " (Reroll The Shop)" + RESET;
-
+            else if (r == 21) text = " " + C_SCALE_10 + "!sell"  + RESET + " <id> " + C_GREY + "(es: !sell 1 3)" + RESET;
             else {
                 text = std::string(boxWidth - 2, ' '); 
             }

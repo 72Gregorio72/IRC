@@ -774,6 +774,12 @@ void Balatro::getMessagePrompt(std::string msg) {
 				return;
 			}
 			int pack = std::atoi(msg.substr(5).c_str());
+			if (coins < 6){
+				std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :Not enough coins to pick a joker\r\n";
+				send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+				return;
+			}
+			coins -= 6;
 			if (pack == 1)
 				jokerPackUI();
 			else if (pack == 2){
@@ -796,12 +802,6 @@ void Balatro::getMessagePrompt(std::string msg) {
 				send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
 				return;
 			}
-			if (coins < 6){
-				std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :Not enough coins to pick a joker\r\n";
-				send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
-				return;
-			}
-			coins -= 6;
 			pickJokerFromPack(pick - 1);
 			isInJokerPackUI = 0;
 			printShopUI();
@@ -814,7 +814,68 @@ void Balatro::getMessagePrompt(std::string msg) {
 			packJokers.clear();
 			isInJokerPackUI = 0;
 			printShopUI();
-		}
+		} else if (msg.find("sell") == 0) {
+            if (jokers.empty()) {
+                std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :You don't have any jokers\r\n";
+				send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+				return;
+            }
+            std::string params = "";
+            if (msg.length() > 5) params = msg.substr(5);
+            
+            std::stringstream ss(params);
+            int tempIndex;
+            std::vector<int> indicesToSell;
+
+            while (ss >> tempIndex) {
+                // Convertiamo da 1-based (utente) a 0-based (vector)
+                indicesToSell.push_back(tempIndex - 1);
+            }
+
+            if (indicesToSell.empty()) {
+                std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :Usage: !sell <id> (e.g. !sell 1 3)\r\n";
+                send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+                return;
+            }
+
+            std::sort(indicesToSell.begin(), indicesToSell.end(), std::greater<int>());
+            
+            std::vector<int>::iterator it = std::unique(indicesToSell.begin(), indicesToSell.end());
+            indicesToSell.resize(std::distance(indicesToSell.begin(), it));
+            bool updateUI = false;
+
+            for (size_t i = 0; i < indicesToSell.size(); ++i) {
+                int idx = indicesToSell[i];
+
+                if (idx < 0 || idx >= (int)shopJokers.size()) {
+                    continue;
+                }
+                size_t x = 0;
+                bool found = false;
+                for (std::vector<IJoker *>::iterator it = jokers.begin(); it != jokers.end() && x < jokers.size(); ++it) {
+                    if ((int)x == idx) {
+                        coins += jokers[idx]->getCost();
+                        std::string success = ":BalatroBot PRIVMSG " + player->getNickName() + " :Sold " + jokers[idx]->getName() + "\r\n";
+                        send(sd, success.c_str(), success.length(), MSG_NOSIGNAL);
+                        jokers.erase(it);
+                        found = true;
+                    }
+                    x++;
+                }
+                if (!found) {
+                    std::string err = ":BalatroBot PRIVMSG " + player->getNickName() + " :Invalid index\r\n";
+                    send(sd, err.c_str(), err.length(), MSG_NOSIGNAL);
+                    continue;
+                }
+                
+                updateUI = true;
+            }
+            if (updateUI) {
+                if (isShopUI)
+                    printShopUI();
+                printSelectedCardsUI();
+            }
+        }
 	}
 }
 
