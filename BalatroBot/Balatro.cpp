@@ -142,8 +142,9 @@ void Balatro::initAllJokers() {
 
 void Balatro::startNewRound() {
     ante++;
-    if (ante > 8)
-        gameWon = true;
+    // if (ante > 8) {
+    //     gameWon = true;
+    // }
 	anteScore = calculateAnteScore();
 	hand.clear();
 	deck.clear();
