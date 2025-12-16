@@ -33,6 +33,7 @@ void Balatro::generatePackJokers() {
 }
 
 void Balatro::jokerPackUI() {
+	isInJokerPackUI = 1;
     std::string prefix = ":BalatroBot PRIVMSG " + player->getNickName() + " :";
 
     int totalRows = 58;
