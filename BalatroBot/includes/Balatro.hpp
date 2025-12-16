@@ -45,7 +45,7 @@ class Balatro {
         Balatro(int sd, User *player);
 
         int getAnte() const;
-        int getDiscards() const;
+        int getDiscards();
         std::vector<Card> getHand() const;
         std::vector<Card> getDeck() const;
         int getHands() const;

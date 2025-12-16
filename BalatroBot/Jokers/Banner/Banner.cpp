@@ -1,6 +1,6 @@
 #include "Banner.hpp"
 
-Banner::Banner() :bot(), cost(4), effect("+30 Chips for each remaining discard"), name("Banner"), rarity("Common") {}
+Banner::Banner() :bot(), cost(5), effect("+30 Chips for each remaining discard"), name("Banner"), rarity("Common") {}
 
 Banner::~Banner() {}
 
