@@ -48,6 +48,7 @@ int Balatro::getVisualLength(const std::string& s) {
 }
 
 void Balatro::generateShopJokers() {
+    std::srand(static_cast<unsigned int>(std::time(0)) + std::clock());
     shopJokers.clear();
     initAllJokers();
 

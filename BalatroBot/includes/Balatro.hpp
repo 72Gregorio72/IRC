@@ -121,7 +121,7 @@ class Balatro {
 
 		bool	gameOver;
 		bool	gameWon;
-			
+
 		int ante;
 		int anteScore;
 		int discards;
@@ -144,6 +144,7 @@ class Balatro {
         std::vector<IJoker*> shopJokers;
 		std::string bestHandName;
 		int pendingShopIndex;
+		int rollPrice;
 		
 		int blind; // 0 small 1 big 2 boss
 };
