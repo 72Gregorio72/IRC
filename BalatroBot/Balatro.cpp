@@ -23,6 +23,25 @@
 #include "Jokers/Banner/Banner.hpp"
 #include "Jokers/MysticSummit/MysticSummit.hpp"
 #include "Jokers/Misprint/Misprint.hpp"
+#include "Jokers/BlackBoard/BlackBoard.hpp"
+#include "Jokers/BlueJoker/BlueJoker.hpp"
+#include "Jokers/BusinessCard/BusinessCard.hpp"
+#include "Jokers/EvenSteven/EvenSteven.hpp"
+#include "Jokers/Fibonacci/Fibonacci.hpp"
+#include "Jokers/OddTodd/OddTodd.hpp"
+#include "Jokers/ScaryFace/ScaryFace.hpp"
+#include "Jokers/Scholar/Scholar.hpp"
+#include "Jokers/Acrobat/Acrobat.hpp"
+#include "Jokers/BaseballCard/BaseballCard.hpp"
+#include "Jokers/BloodStone/BloodStone.hpp"
+#include "Jokers/BootStraps/BootStraps.hpp"
+#include "Jokers/Bull/Bull.hpp"
+#include "Jokers/OnixAgate/OnixAgate.hpp"
+#include "Jokers/Photograph/Photograph.hpp"
+#include "Jokers/RoughGem/RoughGem.hpp"
+#include "Jokers/ShootTheMoon/ShootTheMoon.hpp"
+#include "Jokers/SmileyFace/SmileyFace.hpp"
+#include "Jokers/WalkieTalkie/WalkieTalkie.hpp"
 
 Balatro::Balatro() : gameOver(false), gameWon(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(0), player(), pokerHands(), isSuitSorting(false), isCashingOut(false), isShopUI(false), jokers(), allJokers(), bestHandName(""), pendingShopIndex(-1), packJokers(), isInJokerPackUI(0) {
     std::srand(static_cast<unsigned int>(std::time(0)));
@@ -126,6 +145,18 @@ const std::vector<Card>& Balatro::getSelectedCards() const {
     return selectedCards;
 }
 
+std::vector<Card> Balatro::getHandCards() {
+	return hand;
+}
+
+int Balatro::getCoins() {
+	return coins;
+}
+
+std::vector<IJoker*> Balatro::getAllJokers() const {
+	return allJokers;
+}
+
 int Balatro::getDiscards(){
 	return discards;
 }
@@ -161,6 +192,26 @@ void Balatro::initAllJokers() {
 	allJokers.push_back(new Banner());
 	allJokers.push_back(new MysticSummit());
 	allJokers.push_back(new Misprint());
+	allJokers.push_back(new BlackBoard());
+	allJokers.push_back(new BlueJoker());
+	allJokers.push_back(new BusinessCard());
+	allJokers.push_back(new EvenSteven());
+	allJokers.push_back(new Fibonacci());
+	allJokers.push_back(new OddTodd());
+	allJokers.push_back(new ScaryFace());
+	allJokers.push_back(new Scholar());
+	allJokers.push_back(new Acrobat());
+	allJokers.push_back(new BaseballCard());
+	allJokers.push_back(new BloodStone());
+	allJokers.push_back(new BootStraps());
+	allJokers.push_back(new Bull());
+	allJokers.push_back(new OnixAgate());
+	allJokers.push_back(new Photograph());
+	allJokers.push_back(new RoughGem());
+	allJokers.push_back(new ShootTheMoon());
+	allJokers.push_back(new SmileyFace());
+	allJokers.push_back(new WalkieTalkie());
+	std::cout << "DEBUG: Inizializzati " << allJokers.size() << " jolly." << std::endl;
 }
 
 // Helper per ripetere una stringa N volte (es: "───")
@@ -477,6 +528,18 @@ void Balatro::pickJokerFromPack(int index) {
 	jokers.push_back(selectedJoker);
 	packJokers.erase(packJokers.begin() + index);
 	std::cout << "DEBUG: Joker " << selectedJoker->getName() << " aggiunto alla collezione." << std::endl;
+}
+
+std::vector<Card> Balatro::getDeck() {
+	return deck;
+}
+
+int Balatro::getHands() {
+	return hands;
+}
+
+void Balatro::setCoins(int newCoins) {
+	coins = newCoins;
 }
 
 void Balatro::getMessagePrompt(std::string msg) {

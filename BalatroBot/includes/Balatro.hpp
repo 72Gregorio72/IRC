@@ -47,9 +47,11 @@ class Balatro {
         int getAnte() const;
         int getDiscards();
         std::vector<Card> getHand() const;
-        std::vector<Card> getDeck() const;
-        int getHands() const;
-        int getCoins() const;
+        std::vector<Card> getDeck();
+        int getHands();
+        int getCoins();
+		int getChips();
+		void setCoins(int newCoins);
         int getCurrentBet() const;
         int getTotalBet() const;
         std::string getBestHandName() const;
@@ -59,7 +61,6 @@ class Balatro {
         void setHand(const std::vector<Card> &newHand);
         void setDeck(const std::vector<Card> &newDeck);
         void setHands(int newHands);
-        void setCoins(int newCoins);
         void setCurrentBet(int newCurrentBet);
         void setTotalBet(int newTotalBet);
 
@@ -135,6 +136,11 @@ class Balatro {
         void jokerPackUI(); // Renamed from jokerPackUI to match definition in JokerPackUI.cpp
 		std::string repeat_string(int count, const std::string& pattern);
 		void pickJokerFromPack(int index);
+
+		std::vector<IJoker*> getAllJokers() const;
+
+		std::vector<Card> getHandCards();
+
         std::vector<std::string> createPackItem(std::string type, int cost, std::string color);
     
     private:
@@ -167,7 +173,7 @@ class Balatro {
         int rollPrice;
         
         int blind; // 0 small 1 big 2 boss
-        std::vector<IJoker*> packJokers; 
+        std::vector<IJoker*> packJokers;
 		int isInJokerPackUI;
 };
 

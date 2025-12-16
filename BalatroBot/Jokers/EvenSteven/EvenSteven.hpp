@@ -1,0 +1,32 @@
+#ifndef EVENSTEVEN_HPP
+#define EVENSTEVEN_HPP
+
+#include "../IJoker.hpp"
+#include "Server.hpp"
+
+class Server;
+
+class EvenSteven : public IJoker {
+
+	public:
+		EvenSteven();
+		EvenSteven(const EvenSteven& other);
+		~EvenSteven();
+
+        void printJoker();
+        void playJoker(int& chips, int& mult, Balatro *bot);
+
+		int getCost();
+		std::string getName();
+		std::string getEffect();
+		std::string getRarity();
+
+	private:
+		Balatro *bot;
+		int cost;
+		std::string effect;
+		std::string name;
+		std::string rarity;
+};
+
+#endif

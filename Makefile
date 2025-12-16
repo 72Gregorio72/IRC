@@ -38,6 +38,25 @@ SRCS		=   main.cpp Server.cpp \
 				BalatroBot/Jokers/Banner/Banner.cpp \
 				BalatroBot/Jokers/Misprint/Misprint.cpp \
 				BalatroBot/Jokers/MysticSummit/MysticSummit.cpp \
+				BalatroBot/Jokers/BlackBoard/BlackBoard.cpp \
+				BalatroBot/Jokers/BlueJoker/BlueJoker.cpp \
+				BalatroBot/Jokers/BusinessCard/BusinessCard.cpp \
+				BalatroBot/Jokers/EvenSteven/EvenSteven.cpp \
+				BalatroBot/Jokers/Fibonacci/Fibonacci.cpp \
+				BalatroBot/Jokers/OddTodd/OddTodd.cpp \
+				BalatroBot/Jokers/ScaryFace/ScaryFace.cpp \
+				BalatroBot/Jokers/Scholar/Scholar.cpp \
+				BalatroBot/Jokers/Acrobat/Acrobat.cpp \
+				BalatroBot/Jokers/BaseballCard/BaseballCard.cpp \
+				BalatroBot/Jokers/BloodStone/BloodStone.cpp \
+				BalatroBot/Jokers/BootStraps/BootStraps.cpp \
+				BalatroBot/Jokers/Bull/Bull.cpp \
+				BalatroBot/Jokers/OnixAgate/OnixAgate.cpp \
+				BalatroBot/Jokers/Photograph/Photograph.cpp \
+				BalatroBot/Jokers/ShootTheMoon/ShootTheMoon.cpp \
+				BalatroBot/Jokers/SmileyFace/SmileyFace.cpp \
+				BalatroBot/Jokers/WalkieTalkie/WalkieTalkie.cpp \
+				BalatroBot/Jokers/RoughGem/RoughGem.cpp \
 
 
 
