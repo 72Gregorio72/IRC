@@ -142,6 +142,7 @@ class Balatro {
         void jokerPackUI(); // Renamed from jokerPackUI to match definition in JokerPackUI.cpp
 		std::string repeat_string(int count, const std::string& pattern);
 		void pickJokerFromPack(int index);
+        void pickPlanetFromPack(int index);
         void planetPackUI();
 		std::vector<IJoker*> getAllJokers() const;
 

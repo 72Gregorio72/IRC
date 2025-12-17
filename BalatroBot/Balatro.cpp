@@ -467,6 +467,17 @@ void Balatro::pickJokerFromPack(int index) {
 	std::cout << "DEBUG: Joker " << selectedJoker->getName() << " aggiunto alla collezione." << std::endl;
 }
 
+void Balatro::pickPlanetFromPack(int index) {
+	if (index < 0 || index >= static_cast<int>(packPlanets.size())) {
+		std::cout << "DEBUG: Indice joker non valido." << std::endl;
+		return;
+	}
+	IPlanet* selectedPlanet = packPlanets[index];
+	selectedPlanet->playPlanet(this);
+	packPlanets.erase(packPlanets.begin() + index);
+	std::cout << "DEBUG: Planet " << selectedPlanet->getName() << " giocato." << std::endl;
+}
+
 void Balatro::getMessagePrompt(std::string msg) {
 
 	if (gameOver || gameWon) {
@@ -772,22 +783,37 @@ void Balatro::getMessagePrompt(std::string msg) {
 				return;
 			}
 			int pick = std::atoi(msg.substr(5).c_str());
-			if (pick < 1 || pick > (int)packJokers.size()){
-				std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :Invalid pick number\r\n";
-				send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
-				return;
+			if (isInJokerPackUI){
+				if (pick < 1 || pick > (int)packJokers.size()) {
+					std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :Invalid pick number\r\n";
+					send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+					return;
+				}
+				pickJokerFromPack(pick - 1);
+				isInJokerPackUI = 0;
+			} else if (isInPlanetPackUI) {
+				if (pick < 1 || pick > (int)packPlanets.size()) {
+					std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :Invalid pick number\r\n";
+					send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+					return;
+				}
+				pickPlanetFromPack(pick - 1);
+				isInPlanetPackUI = 0;
 			}
-			pickJokerFromPack(pick - 1);
-			isInJokerPackUI = 0;
 			printShopUI();
 		} else if (msg.find("skip") == 0) {
-			if (!isInJokerPackUI){
-				std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :You are not in the joker pack screen\r\n";
+			if (!isInJokerPackUI || !isInPlanetPackUI){
+				std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :You are not in the pack screen\r\n";
 				send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
 				return;
 			}
-			packJokers.clear();
-			isInJokerPackUI = 0;
+			if (isInJokerPackUI) {
+				packJokers.clear();
+				isInJokerPackUI = 0;
+			} else if (isInPlanetPackUI) {
+				packPlanets.clear();
+				isInPlanetPackUI = 0;
+			}
 			printShopUI();
 		} else if (msg.find("sell") == 0) {
             if (jokers.empty()) {

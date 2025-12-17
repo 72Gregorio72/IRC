@@ -46,7 +46,7 @@ void Balatro::planetPackUI() {
     std::string vLine = "\xE2\x94\x82"; // │
 
     headerBox.push_back(GREY + hTop + RESET);
-    headerBox.push_back(GREY + vLine + RESET + centerText("\x02" "CELESTIAL PACK", 40) + GREY + vLine + RESET);
+    headerBox.push_back(GREY + vLine + RESET + centerText("\x02" "CELESTIAL PACK", 40) + GREY +  " " + vLine + RESET);
     headerBox.push_back(GREY + vLine + RESET + centerText("Choose 1 Planet to level up your hands", 40) + GREY + vLine + RESET);
     headerBox.push_back(GREY + hBot + RESET);
 
@@ -70,7 +70,7 @@ void Balatro::planetPackUI() {
 
         // 4. Disegna BOTTONI [ !pick N ] sotto ogni pianeta
         int planetFullWidth = 18; 
-        int gap = 1;
+        int gap = 5;
 
         for (size_t i = 0; i < packPlanets.size(); ++i) {
             std::string btnText = "[ !pick " + to_string_98(i + 1) + " ]";
@@ -78,7 +78,7 @@ void Balatro::planetPackUI() {
             
             int btnLen = getVisualLength(btnText);
             // Centra il bottone rispetto alla larghezza del pianeta (18)
-            int btnPad = (planetFullWidth - btnLen) / 2;
+            int btnPad = (planetFullWidth - btnLen + 1) / 2;
             
             // Calcola la X assoluta
             int btnCol = startCol + (i * (planetFullWidth + gap)) + btnPad;
