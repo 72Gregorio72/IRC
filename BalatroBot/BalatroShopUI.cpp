@@ -577,6 +577,9 @@ void Balatro::printShopUI() {
     pasteObject(rightCanvas, packsRowVisual, packStartRow, packStartCol);
 
     // =================================================================================
+    // Ranks box spostato nel pannello sinistro sotto ANTE
+
+    // =================================================================================
     // 4. BOX COMANDI
     // =================================================================================
     

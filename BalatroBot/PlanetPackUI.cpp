@@ -20,6 +20,7 @@ void Balatro::generatePackPlanets() {
 
 void Balatro::planetPackUI() {
     isInPlanetPackUI = 1;
+    isShopUI = false;
     std::string prefix = ":BalatroBot PRIVMSG " + player->getNickName() + " :";
 
     int totalRows = 58;
@@ -51,7 +52,9 @@ void Balatro::planetPackUI() {
     int headerCol = (rightColWidth - 42) / 2;
     pasteObject(rightCanvas, headerBox, 15, headerCol);
 
-    // 3. Disegna PIANETI
+    // Ranks box spostato nel pannello sinistro sotto ANTE
+
+    // 4. Disegna PIANETI
     int cardsStartRow = 22;
     
     if (!packPlanets.empty()) {
@@ -66,7 +69,7 @@ void Balatro::planetPackUI() {
         // C. Incolla la striscia combinata
         pasteObject(rightCanvas, combinedVisual, cardsStartRow, startCol);
 
-        // 4. Disegna BOTTONI [ !pick N ] sotto ogni pianeta
+        // 5. Disegna BOTTONI [ !pick N ] sotto ogni pianeta
         int planetFullWidth = 18; 
         int gap = 5;
 
@@ -95,7 +98,7 @@ void Balatro::planetPackUI() {
         }
     }
 
-    // 5. Disegna Bottone SKIP
+    // 6. Disegna Bottone SKIP
     std::vector<std::string> skipBox;
     std::string sTop = "\xE2\x95\xAD" + repeat_string(10, "\xE2\x94\x80") + "\xE2\x95\xAE";
     std::string sBot = "\xE2\x95\xB0" + repeat_string(10, "\xE2\x94\x80") + "\xE2\x95\xAF";

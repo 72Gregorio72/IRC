@@ -14,7 +14,7 @@ void Uranus::playPlanet(Balatro *bot){
 	PokerHand& highCardHand = bot->getPokerHands("Two Pair");
 	highCardHand.setChips(highCardHand.getChips() + 20);
 	highCardHand.setMult(highCardHand.getMult() + 1);
-	highCardHand.setRank(highCardHand.getRank() + 1);
+	highCardHand.setLevel(highCardHand.getLevel() + 1);
 }
 
 std::string Uranus::getEffect(){

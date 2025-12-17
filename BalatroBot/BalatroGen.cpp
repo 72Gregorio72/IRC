@@ -55,6 +55,10 @@ void Balatro::freeJokers() {
     jokers.clear();
 }
 
+void Balatro::freePlanets() {
+    packPlanets.clear();
+}
+
 int Balatro::getSd() {
 	return sd;
 }
@@ -76,8 +80,11 @@ void Balatro::startNewGame() {
 	blind = -1;
     jokers.clear();
     shopJokers.clear();
+    packPlanets.clear();
     for (size_t i = 0; i < allJokers.size(); ++i) delete allJokers[i];
     allJokers.clear();
+    for (size_t i = 0; i < allPlanets.size(); ++i) delete allPlanets[i];
+    allPlanets.clear();
 
     initAllJokers();
 

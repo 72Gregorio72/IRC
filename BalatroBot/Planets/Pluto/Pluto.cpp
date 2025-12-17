@@ -14,7 +14,7 @@ void Pluto::playPlanet(Balatro *bot){
 	PokerHand& highCardHand = bot->getPokerHands("High Card");
 	highCardHand.setChips(highCardHand.getChips() + 10);
 	highCardHand.setMult(highCardHand.getMult() + 1);
-	highCardHand.setRank(highCardHand.getRank() + 1);
+	highCardHand.setLevel(highCardHand.getLevel() + 1);
 }
 
 std::string Pluto::getEffect(){
