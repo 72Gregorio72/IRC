@@ -895,8 +895,6 @@ void Balatro::getMessagePrompt(std::string msg) {
                     return;
                 }
 
-            // orderVectorIndices(indicesToSwap);
-
             std::swap(jokers[indicesToSwap[0]], jokers[indicesToSwap[1]]);
             if (isShopUI) {
                 printShopUI();
