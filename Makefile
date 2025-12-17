@@ -1,6 +1,63 @@
 NAME		= ircserv
 
-SRCS		=   main.cpp
+SRCS		=   main.cpp Server.cpp \
+				User.cpp Channel.cpp \
+				ServerErrorMessage.cpp \
+				ServerLoop.cpp \
+				ServerParsing.cpp \
+				ServerReplyMessage.cpp \
+				BalatroBot/Balatro.cpp \
+				BalatroBot/BalatroGen.cpp \
+				BalatroBot/Card.cpp \
+				BalatroBot/BalatroUI.cpp \
+				BalatroBot/BalatroSelectedUI.cpp \
+				BalatroBot/PokerHand.cpp \
+				BalatroBot/BalatroShopUI.cpp \
+				BalatroBot/JokerPackUI.cpp \
+				BalatroBot/Jokers/BaseJoker/BaseJoker.cpp \
+				BalatroBot/Jokers/CleverJoker/CleverJoker.cpp \
+				BalatroBot/Jokers/CraftyJoker/CraftyJoker.cpp \
+				BalatroBot/Jokers/CrazyJoker/CrazyJoker.cpp \
+				BalatroBot/Jokers/DeviousJoker/DeviousJoker.cpp \
+				BalatroBot/Jokers/DrollJoker/DrollJoker.cpp \
+				BalatroBot/Jokers/GluttonousJoker/GluttonousJoker.cpp \
+				BalatroBot/Jokers/GreedyJoker/GreedyJoker.cpp \
+				BalatroBot/Jokers/JollyJoker/JollyJoker.cpp \
+				BalatroBot/Jokers/LustyJoker/LustyJoker.cpp \
+				BalatroBot/Jokers/MadJoker/MadJoker.cpp \
+				BalatroBot/Jokers/SlyJoker/SlyJoker.cpp \
+				BalatroBot/Jokers/WilyJoker/WilyJoker.cpp \
+				BalatroBot/Jokers/WrathfulJoker/WrathfulJoker.cpp \
+				BalatroBot/Jokers/ZanyJoker/ZanyJoker.cpp \
+				BalatroBot/Jokers/TheDuoJoker/TheDuoJoker.cpp \
+				BalatroBot/Jokers/TheTrioJoker/TheTrioJoker.cpp \
+				BalatroBot/Jokers/TheFamilyJoker/TheFamilyJoker.cpp \
+				BalatroBot/Jokers/TheOrderJoker/TheOrderJoker.cpp \
+				BalatroBot/Jokers/TheTribeJoker/TheTribeJoker.cpp \
+				BalatroBot/Jokers/HalfJoker/HalfJoker.cpp \
+				BalatroBot/Jokers/Banner/Banner.cpp \
+				BalatroBot/Jokers/Misprint/Misprint.cpp \
+				BalatroBot/Jokers/MysticSummit/MysticSummit.cpp \
+				BalatroBot/Jokers/BlackBoard/BlackBoard.cpp \
+				BalatroBot/Jokers/BlueJoker/BlueJoker.cpp \
+				BalatroBot/Jokers/BusinessCard/BusinessCard.cpp \
+				BalatroBot/Jokers/EvenSteven/EvenSteven.cpp \
+				BalatroBot/Jokers/Fibonacci/Fibonacci.cpp \
+				BalatroBot/Jokers/OddTodd/OddTodd.cpp \
+				BalatroBot/Jokers/ScaryFace/ScaryFace.cpp \
+				BalatroBot/Jokers/Scholar/Scholar.cpp \
+				BalatroBot/Jokers/Acrobat/Acrobat.cpp \
+				BalatroBot/Jokers/BaseballCard/BaseballCard.cpp \
+				BalatroBot/Jokers/BloodStone/BloodStone.cpp \
+				BalatroBot/Jokers/BootStraps/BootStraps.cpp \
+				BalatroBot/Jokers/Bull/Bull.cpp \
+				BalatroBot/Jokers/OnixAgate/OnixAgate.cpp \
+				BalatroBot/Jokers/Photograph/Photograph.cpp \
+				BalatroBot/Jokers/ShootTheMoon/ShootTheMoon.cpp \
+				BalatroBot/Jokers/SmileyFace/SmileyFace.cpp \
+				BalatroBot/Jokers/WalkieTalkie/WalkieTalkie.cpp \
+				BalatroBot/Jokers/RoughGem/RoughGem.cpp \
+
 
 OBJS		= $(SRCS:.cpp=.o)
 
@@ -8,38 +65,49 @@ RM			= rm -f
 FLAGS		= -Wall -Wextra -Werror -std=c++98
 COMPILER	= c++
 
+INCLUDES = -Iincludes
+
 .cpp.o:
-	${COMPILER} ${FLAGS} -c $< -o ${<:.cpp=.o}
+	$(COMPILER) $(FLAGS) $(INCLUDES) -c $< -o $@
 
 all: $(NAME)
 
-$(NAME): ${OBJS}
-	${COMPILER} ${FLAGS} $(OBJS) -o $(NAME)
+# 2. Linker (crea l'eseguibile)
+$(NAME): $(OBJS)
+	$(COMPILER) $(FLAGS) $(OBJS) -o $(NAME)
 	@echo "$(GREEN)[$(NAME)]:\t PROJECT COMPILED$(RESET)"
 
+# --- Cleanup Rules ---
+
 clean:
-	$(RM) -f $(OBJS)
+	$(RM) $(OBJS)
 	@echo "$(RED)[$(NAME)]:\t CLEAN$(RESET)"
 
 fclean: clean
-	rm -f $(NAME)
+	$(RM) $(NAME)
 	@echo "$(RED)[$(NAME)]:\t FCLEAN$(RESET)"
 
 re: fclean all
 
+# --- Custom/Utility Rules ---
+
 vale: re
 	make clean
 	@clear
-	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --track-fds=yes ./$(NAME)
+	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --track-fds=yes ./$(NAME) 7272 1234
 
 push: fclean
-	rm -r .vscode
+	if [ -d .vscode ]; then \
+		rm -rf .vscode; \
+	fi
 	bash -i -c "push"
 
 testosterone: re
 	make clean
 	@clear
-	@./$(NAME)
+	./$(NAME) 7272 1234
+
+.PHONY: all clean fclean re vale push testosterone
 
 #COLORS
 
