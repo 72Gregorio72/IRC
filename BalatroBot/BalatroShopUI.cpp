@@ -214,6 +214,7 @@ std::vector<std::string> Balatro::createPlanetItem(IPlanet* planet) {
     std::string PURPLE = "\x03" "06"; 
     std::string BLUE  = "\x03" "12";
     std::string CYAN  = "\x03" "11";
+    std::string YELLOW = "\x03" "08";
 
     // --- BORDO VIOLA PER I PIANETI ---
     std::string BORDER_COLOR = PURPLE;
@@ -244,7 +245,7 @@ std::vector<std::string> Balatro::createPlanetItem(IPlanet* planet) {
     if (padN < 0) padN = 0;
     
     box.push_back(BORDER_COLOR + V + RESET + 
-                  repeat_char(padN, ' ') + CYAN + name + RESET + 
+                  repeat_char(padN, ' ') + YELLOW + name + RESET + 
                   repeat_char(width - padN - getVisualLength(name), ' ') + 
                   BORDER_COLOR + V + RESET);
 
@@ -263,7 +264,7 @@ std::vector<std::string> Balatro::createPlanetItem(IPlanet* planet) {
         
         std::string line = effectLines[i];
         int pad = width - getVisualLength(line);
-        box.push_back(BORDER_COLOR + V + RESET + WHITE + line + RESET + repeat_char(pad, ' ') + BORDER_COLOR + V + RESET);
+        box.push_back(BORDER_COLOR + V + RESET + CYAN + line + RESET + repeat_char(pad, ' ') + BORDER_COLOR + V + RESET);
         linesUsed++;
     }
 

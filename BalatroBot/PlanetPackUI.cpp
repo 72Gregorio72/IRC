@@ -34,10 +34,8 @@ void Balatro::planetPackUI() {
     // Inizializza Canvas destro vuoto
     std::vector<std::string> rightCanvas(totalRows, std::string(rightColWidth, ' '));
 
-    // 1. Genera Pianeti se necessario
-    if (this->packPlanets.empty()) {
-        generatePackPlanets();
-    }
+    // 1. Genera nuovi Pianeti casuali ogni volta
+    generatePackPlanets();
 
     // 2. Disegna HEADER (Celestial Pack)
     std::vector<std::string> headerBox;

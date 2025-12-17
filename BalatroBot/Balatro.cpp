@@ -762,7 +762,7 @@ void Balatro::getMessagePrompt(std::string msg) {
 				return;
 			}
 		} else if (msg.find("pick") == 0) {
-			if (!isInJokerPackUI && !isInPlanetPackUI){
+			if (!isInJokerPackUI){
 				std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :You are not in the joker pack screen\r\n";
 				send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
 				return;
