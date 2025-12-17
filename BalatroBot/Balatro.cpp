@@ -141,26 +141,6 @@ void Balatro::initPokerHands() {
     pokerHands.FlushFive.setPokerHand("Flush Five", 13, 160, 16);
 }
 
-const std::vector<Card>& Balatro::getSelectedCards() const {
-    return selectedCards;
-}
-
-std::vector<Card> Balatro::getHandCards() {
-	return hand;
-}
-
-int Balatro::getCoins() {
-	return coins;
-}
-
-std::vector<IJoker*> Balatro::getAllJokers() const {
-	return allJokers;
-}
-
-int Balatro::getDiscards(){
-	return discards;
-}
-
 void Balatro::initAllJokers() {
 	if (!allJokers.empty()) {
         return; 
@@ -214,127 +194,50 @@ void Balatro::initAllJokers() {
 	std::cout << "DEBUG: Inizializzati " << allJokers.size() << " jolly." << std::endl;
 }
 
-// Helper per ripetere una stringa N volte (es: "───")
-std::string repeat(int n, const char* s) {
-    std::string res = "";
-    for (int i = 0; i < n; ++i) {
-        res += s;
-    }
-    return res;
+const std::vector<Card>& Balatro::getSelectedCards() const {
+    return selectedCards;
 }
 
-void Balatro::printWinUI() {
-    std::string prefix = ":BalatroBot PRIVMSG " + player->getNickName() + " :";
-    
-    int totalRows = 58;
-    int leftColWidth = 29;
-    int rightColWidth = 85; 
+std::vector<Card> Balatro::getHandCards() {
+	return hand;
+}
 
-    // --- COLORI ---
-    std::string C_L_GREEN = "\x03" "09"; // Light Green
-    std::string C_ORANGE  = "\x03" "07";
-    std::string C_GREY    = "\x03" "14";
-    std::string BOLD      = "\x02";
-    std::string RESET     = "\x0f";
+int Balatro::getCoins() {
+	return coins;
+}
 
-    // --- CANVAS ---
-    std::vector<std::string> rightCanvas(totalRows, std::string(rightColWidth, ' '));
+std::vector<IJoker*> Balatro::getAllJokers() const {
+	return allJokers;
+}
 
-    // =======================================================================
-    // 1. ASCII ART "YOU WON"
-    // =======================================================================
-    std::vector<std::string> bigWin;
-    std::string c = C_L_GREEN + BOLD;
-    
-    bigWin.push_back(c + "Y   Y  OOO  U   U     W   W  OOO  N   N  !!!" + RESET);
-    bigWin.push_back(c + " Y Y  O   O U   U     W   W O   O NN  N  !!!" + RESET);
-    bigWin.push_back(c + "  Y   O   O U   U     W W W O   O N N N  !!!" + RESET);
-    bigWin.push_back(c + "  Y   O   O U   U     WW WW O   O N  NN     " + RESET);
-    bigWin.push_back(c + "  Y    OOO   UUU      W   W  OOO  N   N  !!!" + RESET);
+int Balatro::getDiscards(){
+	return discards;
+}
 
-    // =======================================================================
-    // 2. BOX ISTRUZIONI
-    // =======================================================================
-    std::vector<std::string> infoBox;
-    int boxWidth = 50; 
-    
-    // *** CORREZIONE QUI SOTTO ***
-    // Usiamo repeat() invece del costruttore, e "─" tra doppi apici
-    std::string hBorder = repeat(boxWidth - 2, "─"); 
-    std::string vBorder = C_GREY + "│" + RESET;
+std::vector<Card> Balatro::getDeck() {
+	return deck;
+}
 
-    infoBox.push_back(C_GREY + "┌" + hBorder + "┐" + RESET);
-    
-    // Riga vuota
-    infoBox.push_back(vBorder + std::string(boxWidth - 2, ' ') + vBorder);
-    
-    // Testo Centrale
-    std::string txtPart1 = "Type ";
-    std::string txtCmd   = "/balatro";
-    std::string txtPart2 = " to play again";
-    
-    int txtLen = txtPart1.length() + txtCmd.length() + txtPart2.length();
-    int padLeft = (boxWidth - 2 - txtLen) / 2;
-    int padRight = (boxWidth - 2) - txtLen - padLeft;
-    if (padLeft < 0) padLeft = 0; // Sicurezza
-    if (padRight < 0) padRight = 0;
-    
-    std::string lineContent = std::string(padLeft, ' ') 
-                            + txtPart1 + C_ORANGE + BOLD + txtCmd + RESET 
-                            + txtPart2 + std::string(padRight, ' ');
+int Balatro::getHands() {
+	return hands;
+}
 
-    infoBox.push_back(vBorder + lineContent + vBorder);
-    
-    // Riga vuota
-    infoBox.push_back(vBorder + std::string(boxWidth - 2, ' ') + vBorder);
-    
-    infoBox.push_back(C_GREY + "└" + hBorder + "┘" + RESET);
+void Balatro::setCoins(int newCoins) {
+	coins = newCoins;
+}
 
-    // =======================================================================
-    // 3. POSIZIONAMENTO
-    // =======================================================================
-    
-    int centerY = totalRows / 2;
-    
-    int winH = (int)bigWin.size();
-    int winRow = centerY - winH - 2;
-    int winCol = (rightColWidth - 37) / 2; 
-    if (winCol < 0) winCol = 0;
-    
-    pasteObject(rightCanvas, bigWin, winRow, winCol);
+int getRankValue(std::string rank) {
+    if (rank == "J") return 11;
+    if (rank == "Q") return 12;
+    if (rank == "K") return 13;
+    if (rank == "A") return 14;
+    return std::atol(rank.c_str());
+}
 
-    // int infoH = (int)infoBox.size();
-    int infoRow = centerY + 2; 
-    int infoCol = (rightColWidth - boxWidth) / 2;
-
-    pasteObject(rightCanvas, infoBox, infoRow, infoCol);
-
-    // =======================================================================
-    // 4. INVIO AL CLIENT
-    // =======================================================================
-    std::string msg = "";
-    
-    msg += prefix + " \r\n";
-    msg += prefix + "═══════════════════════════════" + "╦" + "═════════════════════════════════════════════════════════════════";
-    msg += prefix + "═════════════════════════════════════════════════════════════════════════════════════════════════════\r\n";
-    
-    for (int row = 0; row < totalRows; ++row) {
-        std::string leftRaw, leftColor;
-        getLeftPanelContent(row, leftRaw, leftColor);
-        
-        int padLeft = leftColWidth - (int)leftRaw.length();
-        if(padLeft < 0) padLeft = 0;
-
-        std::string leftPanel = leftColor + std::string(padLeft, ' ');
-        std::string rightPanel = rightCanvas[row];
-
-        msg += prefix + " " + leftPanel + " ║ " + rightPanel + "\r\n";
-    }
-
-    msg += prefix + "═══════════════════════════════" + "╩" + "═════════════════════════════════════════════════════════════════";
-    msg += prefix + "═════════════════════════════════════════════════════════════════════════════════════════════════════\r\n";
-    
-    send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+int getRankChips(std::string rank) {
+    if (rank == "J" || rank == "Q" || rank == "K") return 10;
+    if (rank == "A") return 11;
+    return std::atol(rank.c_str());
 }
 
 void Balatro::startNewRound() {
@@ -366,14 +269,6 @@ void Balatro::startNewRound() {
 	dealInitialHand();
 }
 
-int getRankValue(std::string rank) {
-    if (rank == "J") return 11;
-    if (rank == "Q") return 12;
-    if (rank == "K") return 13;
-    if (rank == "A") return 14;
-    return std::atol(rank.c_str());
-}
-
 bool compareCardsByRank(const Card& a, const Card& b) {
     int valA = getRankValue(a.getRank());
     int valB = getRankValue(b.getRank());
@@ -391,13 +286,7 @@ bool compareCardsBySuit(const Card& a, const Card& b) {
     return getRankValue(a.getRank()) > getRankValue(b.getRank());
 }
 
-int getRankChips(std::string rank) {
-    if (rank == "J" || rank == "Q" || rank == "K") return 10;
-    if (rank == "A") return 11;
-    return std::atol(rank.c_str());
-}
 
-// ... (codice precedente invariato fino a calculateHand)
 int Balatro::calculateHand() {
     if (selectedCards.empty()) {
         std::cout << "DEBUG: Nessuna carta selezionata." << std::endl;
@@ -528,18 +417,6 @@ void Balatro::pickJokerFromPack(int index) {
 	jokers.push_back(selectedJoker);
 	packJokers.erase(packJokers.begin() + index);
 	std::cout << "DEBUG: Joker " << selectedJoker->getName() << " aggiunto alla collezione." << std::endl;
-}
-
-std::vector<Card> Balatro::getDeck() {
-	return deck;
-}
-
-int Balatro::getHands() {
-	return hands;
-}
-
-void Balatro::setCoins(int newCoins) {
-	coins = newCoins;
 }
 
 void Balatro::getMessagePrompt(std::string msg) {
@@ -721,27 +598,14 @@ void Balatro::getMessagePrompt(std::string msg) {
                 send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
                 return;
             }
-            std::string params = "";
-            if (msg.length() > 5) params = msg.substr(5);
-            
-            std::stringstream ss(params);
-            int tempIndex;
-            std::vector<int> indicesToBuy;
-
-            while (ss >> tempIndex) {
-                // Convertiamo da 1-based (utente) a 0-based (vector)
-                indicesToBuy.push_back(tempIndex - 1);
-            }
+            std::vector<int> indicesToBuy = findCommandIndices(msg);
 
             if (indicesToBuy.empty()) {
                 std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :Usage: !shop <id> (e.g. !shop 1 3)\r\n";
                 send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
                 return;
             }
-            std::sort(indicesToBuy.begin(), indicesToBuy.end(), std::greater<int>());
-            
-            std::vector<int>::iterator it = std::unique(indicesToBuy.begin(), indicesToBuy.end());
-            indicesToBuy.resize(std::distance(indicesToBuy.begin(), it));
+            orderVectorIndices(indicesToBuy);
 
             bool updateUI = false;
 
@@ -883,17 +747,8 @@ void Balatro::getMessagePrompt(std::string msg) {
 				send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
 				return;
             }
-            std::string params = "";
-            if (msg.length() > 5) params = msg.substr(5);
-            
-            std::stringstream ss(params);
-            int tempIndex;
-            std::vector<int> indicesToSell;
+            std::vector<int> indicesToSell = findCommandIndices(msg);
 
-            while (ss >> tempIndex) {
-                // Convertiamo da 1-based (utente) a 0-based (vector)
-                indicesToSell.push_back(tempIndex - 1);
-            }
 
             if (indicesToSell.empty()) {
                 std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :Usage: !sell <id> (e.g. !sell 1 3)\r\n";
@@ -901,10 +756,8 @@ void Balatro::getMessagePrompt(std::string msg) {
                 return;
             }
 
-            std::sort(indicesToSell.begin(), indicesToSell.end(), std::greater<int>());
-            
-            std::vector<int>::iterator it = std::unique(indicesToSell.begin(), indicesToSell.end());
-            indicesToSell.resize(std::distance(indicesToSell.begin(), it));
+            orderVectorIndices(indicesToSell);
+        
             bool updateUI = false;
 
             for (size_t i = 0; i < indicesToSell.size(); ++i) {
@@ -934,10 +787,49 @@ void Balatro::getMessagePrompt(std::string msg) {
                 updateUI = true;
             }
             if (updateUI) {
-                if (isShopUI)
+                if (isShopUI) {
                     printShopUI();
+                    return ;
+                }
                 printSelectedCardsUI();
+                isShopUI = false;
             }
+        } else if (msg.find("swap") == 0) {
+            if (jokers.empty()) {
+                std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :You don't have any jokers\r\n";
+				send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+				return;
+            }
+            std::vector<int> indicesToSwap = findCommandIndices(msg);
+
+            if (indicesToSwap.empty()) {
+                std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :Usage: !swap <id> (e.g. !swap 1 3)\r\n";
+                send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+                return;
+            }
+
+            if (indicesToSwap.size() > 2) {
+                std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :Usage: !swap <id1> <id2> (e.g. !swap 1 3)\r\n";
+                send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+                return;
+            }
+
+            if (!(indicesToSwap[0] >= 0 && indicesToSwap[0] < (int)jokers.size())
+                || !(indicesToSwap[1] >= 0 && indicesToSwap[1] < (int)jokers.size())) {
+                    std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :Invalid index\r\n";
+                    send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+                    return;
+                }
+
+            // orderVectorIndices(indicesToSwap);
+
+            std::swap(jokers[indicesToSwap[0]], jokers[indicesToSwap[1]]);
+            if (isShopUI) {
+                printShopUI();
+                return ;
+            }
+            printSelectedCardsUI();
+            isShopUI = false;
         }
 	}
 }

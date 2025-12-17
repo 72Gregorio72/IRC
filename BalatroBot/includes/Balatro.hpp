@@ -143,6 +143,8 @@ class Balatro {
 
         std::vector<std::string> createPackItem(std::string type, int cost, std::string color);
     
+        std::vector<int>    findCommandIndices(std::string input);
+        void                orderVectorIndices(std::vector<int> &input);
     private:
 
         bool    gameOver;
