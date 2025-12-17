@@ -14,6 +14,7 @@ void Earth::playPlanet(Balatro *bot){
 	PokerHand& highCardHand = bot->getPokerHands("Full House");
 	highCardHand.setChips(highCardHand.getChips() + 25);
 	highCardHand.setMult(highCardHand.getMult() + 2);
+	highCardHand.setRank(highCardHand.getRank() + 1);
 }
 
 std::string Earth::getEffect(){
