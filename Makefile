@@ -73,7 +73,7 @@ SRCS		=   main.cpp Server.cpp \
 OBJS		= $(SRCS:.cpp=.o)
 
 RM			= rm -f
-FLAGS		= -Wall -Wextra -Werror -std=c++98
+FLAGS		= -Wall -Wextra -Werror -std=c++98 -g
 COMPILER	= c++
 
 INCLUDES = -Iincludes
