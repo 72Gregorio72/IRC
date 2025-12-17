@@ -57,6 +57,16 @@ SRCS		=   main.cpp Server.cpp \
 				BalatroBot/Jokers/SmileyFace/SmileyFace.cpp \
 				BalatroBot/Jokers/WalkieTalkie/WalkieTalkie.cpp \
 				BalatroBot/Jokers/RoughGem/RoughGem.cpp \
+				BalatroBot/Planets/Earth/Earth.cpp \
+				BalatroBot/Planets/Mars/Mars.cpp \
+				BalatroBot/Planets/Venus/Venus.cpp \
+				BalatroBot/Planets/Mercury/Mercury.cpp \
+				BalatroBot/Planets/Jupiter/Jupiter.cpp \
+				BalatroBot/Planets/Saturn/Saturn.cpp \
+				BalatroBot/Planets/Uranus/Uranus.cpp \
+				BalatroBot/Planets/Neptune/Neptune.cpp \
+				BalatroBot/Planets/Pluto/Pluto.cpp \
+				BalatroBot/PlanetPackUI.cpp \
 
 
 OBJS		= $(SRCS:.cpp=.o)

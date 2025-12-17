@@ -38,6 +38,37 @@ std::vector<std::string> Balatro::getCombinedJokersVisual(const std::vector<IJok
     return mergedRow;
 }
 
+std::vector<std::string> Balatro::getCombinedPlanetsVisual(const std::vector<IPlanet*>& targetPlanets) {
+    if (targetPlanets.empty()) {
+        return std::vector<std::string>();
+    }
+
+    // 1. Genera i singoli box
+    std::vector< std::vector<std::string> > planetImages;
+    for (size_t i = 0; i < targetPlanets.size(); ++i) {
+        planetImages.push_back(createPlanetItem(targetPlanets[i]));
+    }
+
+    if (planetImages.empty()) return std::vector<std::string>();
+
+    // 2. Unisci orizzontalmente
+    int itemsHeight = (int)planetImages[0].size();
+    int gapSize = 1; 
+    std::string spacer = std::string(gapSize, ' ');
+
+    std::vector<std::string> mergedRow(itemsHeight, "");
+
+    for (int r = 0; r < itemsHeight; ++r) {
+        for (size_t i = 0; i < planetImages.size(); ++i) {
+            mergedRow[r] += planetImages[i][r];
+            if (i < planetImages.size() - 1) {
+                mergedRow[r] += spacer;
+            }
+        }
+    }
+    return mergedRow;
+}
+
 std::vector<std::string> Balatro::getCardRows(const Card& c) {
     std::vector<std::string> rows;
     std::string rank = c.getRank();

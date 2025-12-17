@@ -204,6 +204,81 @@ std::vector<std::string> Balatro::createJokerItem(IJoker* joker) {
     return box;
 }
 
+std::vector<std::string> Balatro::createPlanetItem(IPlanet* planet) {
+    std::vector<std::string> box;
+    
+    // --- DEFINIZIONE COLORI E BORDI ---
+    std::string RESET = "\x0f";
+    std::string GREY  = "\x03" "14";
+    std::string WHITE = "\x03" "00";
+    std::string PURPLE = "\x03" "06"; 
+    std::string BLUE  = "\x03" "12";
+    std::string CYAN  = "\x03" "11";
+
+    // --- BORDO VIOLA PER I PIANETI ---
+    std::string BORDER_COLOR = PURPLE;
+    
+    // Bordi UTF-8
+    std::string TL = "\xE2\x95\xAD"; std::string TR = "\xE2\x95\xAE"; // ╭ ╮
+    std::string BL = "\xE2\x95\xB0"; std::string BR = "\xE2\x95\xAF"; // ╰ ╯
+    std::string H  = "\xE2\x94\x80"; std::string V  = "\xE2\x94\x82"; // ─ │
+    
+    // Connettori per la linea divisoria (├ ┤)
+    std::string T_L = "\xE2\x94\x9C"; 
+    std::string T_R = "\xE2\x94\xA4"; 
+
+    // --- DATI PIANETA ---
+    std::string name = planet->getName();
+    std::string effect = planet->getEffect();
+
+    // --- DIMENSIONI ---
+    int width = 16;         // Larghezza totale interna
+    int fixedHeight = 8;    // Altezza FISSA del contenuto
+
+    // 1. BORDO SUPERIORE
+    box.push_back(BORDER_COLOR + TL + repeat_string(width, H) + TR + RESET);
+
+    // 2. NOME (Centrato)
+    if (name.length() > (size_t)width) name = name.substr(0, width);
+    int padN = (width - getVisualLength(name)) / 2;
+    if (padN < 0) padN = 0;
+    
+    box.push_back(BORDER_COLOR + V + RESET + 
+                  repeat_char(padN, ' ') + CYAN + name + RESET + 
+                  repeat_char(width - padN - getVisualLength(name), ' ') + 
+                  BORDER_COLOR + V + RESET);
+
+    // 3. DIVISORE (├──────────────┤)
+    box.push_back(BORDER_COLOR + T_L + repeat_string(width, H) + T_R + RESET);
+
+    // 4. EFFETTO (Word Wrapped)
+    std::vector<std::string> effectLines = wrapText(effect, width);
+    
+    int linesUsed = 0;
+    int linesAvailable = fixedHeight - 1; 
+
+    // Stampiamo le righe dell'effetto
+    for (size_t i = 0; i < effectLines.size(); ++i) {
+        if (linesUsed >= linesAvailable) break; 
+        
+        std::string line = effectLines[i];
+        int pad = width - getVisualLength(line);
+        box.push_back(BORDER_COLOR + V + RESET + WHITE + line + RESET + repeat_char(pad, ' ') + BORDER_COLOR + V + RESET);
+        linesUsed++;
+    }
+
+    // Riempiamo con righe vuote se l'effetto è corto
+    while (linesUsed < linesAvailable) {
+        box.push_back(BORDER_COLOR + V + repeat_char(width, ' ') + BORDER_COLOR + V + RESET);
+        linesUsed++;
+    }
+
+    // 5. BORDO INFERIORE
+    box.push_back(BORDER_COLOR + BL + repeat_string(width, H) + BR + RESET);
+
+    return box;
+}
+
 template <typename T>
 std::string toString(const T& value) {
     std::stringstream ss;
