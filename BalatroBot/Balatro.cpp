@@ -777,7 +777,7 @@ void Balatro::getMessagePrompt(std::string msg) {
 				return;
 			}
 		} else if (msg.find("pick") == 0) {
-			if (!isInJokerPackUI){
+			if (!isInJokerPackUI && !isInPlanetPackUI){
 				std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :You are not in the joker pack screen\r\n";
 				send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
 				return;
@@ -802,7 +802,7 @@ void Balatro::getMessagePrompt(std::string msg) {
 			}
 			printShopUI();
 		} else if (msg.find("skip") == 0) {
-			if (!isInJokerPackUI || !isInPlanetPackUI){
+			if (!isInJokerPackUI && !isInPlanetPackUI){
 				std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :You are not in the pack screen\r\n";
 				send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
 				return;
