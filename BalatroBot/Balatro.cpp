@@ -156,44 +156,6 @@ void Balatro::initPokerHands() {
     pokerHands.FlushFive.setPokerHand("Flush Five", 13, 160, 16);
 }
 
-const std::vector<Card>& Balatro::getSelectedCards() const {
-    return selectedCards;
-}
-
-std::vector<Card> Balatro::getHandCards() {
-	return hand;
-}
-
-int Balatro::getCoins() {
-	return coins;
-}
-
-std::vector<IJoker*> Balatro::getAllJokers() const {
-	return allJokers;
-}
-
-int Balatro::getDiscards(){
-	return discards;
-}
-
-PokerHand& Balatro::getPokerHands(std::string handName) {
-	if (handName == "High Card") return pokerHands.HighCard;
-	if (handName == "Pair") return pokerHands.OnePair;
-	if (handName == "Two Pair") return pokerHands.TwoPair;
-	if (handName == "Three of a Kind") return pokerHands.ThreeOfAKind;
-	if (handName == "Straight") return pokerHands.Straight;
-	if (handName == "Flush") return pokerHands.Flush;
-	if (handName == "Full House") return pokerHands.FullHouse;
-	if (handName == "Four of a Kind") return pokerHands.FourOfAKind;
-	if (handName == "Straight Flush") return pokerHands.StraightFlush;
-	if (handName == "Royal Flush") return pokerHands.RoyalFlush;
-	if (handName == "Five of a Kind") return pokerHands.FiveOfAKind;
-	if (handName == "Flush House") return pokerHands.FlushHouse;
-	if (handName == "Flush Five") return pokerHands.FlushFive;
-
-	return pokerHands.HighCard;
-}
-
 void Balatro::initPlanets()
 {
 	allPlanets.push_back(new Earth());
@@ -259,6 +221,26 @@ void Balatro::initAllJokers() {
 	allJokers.push_back(new WalkieTalkie());
 	std::cout << "DEBUG: Inizializzati " << allJokers.size() << " jolly." << std::endl;
 }
+
+PokerHand& Balatro::getPokerHands(std::string handName) {
+	if (handName == "High Card") return pokerHands.HighCard;
+	if (handName == "Pair") return pokerHands.OnePair;
+	if (handName == "Two Pair") return pokerHands.TwoPair;
+	if (handName == "Three of a Kind") return pokerHands.ThreeOfAKind;
+	if (handName == "Straight") return pokerHands.Straight;
+	if (handName == "Flush") return pokerHands.Flush;
+	if (handName == "Full House") return pokerHands.FullHouse;
+	if (handName == "Four of a Kind") return pokerHands.FourOfAKind;
+	if (handName == "Straight Flush") return pokerHands.StraightFlush;
+	if (handName == "Royal Flush") return pokerHands.RoyalFlush;
+	if (handName == "Five of a Kind") return pokerHands.FiveOfAKind;
+	if (handName == "Flush House") return pokerHands.FlushHouse;
+	if (handName == "Flush Five") return pokerHands.FlushFive;
+
+	return pokerHands.HighCard;
+}
+
+
 
 const std::vector<Card>& Balatro::getSelectedCards() const {
     return selectedCards;
