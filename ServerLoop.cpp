@@ -8,7 +8,6 @@ void sighandler(int signum) {
 }
 
 void Server::server_loop() {
-    // Configurazione segnali (Corretta!)
     struct sigaction sa;
     memset(&sa, 0, sizeof(sa));
     sa.sa_handler = sighandler;

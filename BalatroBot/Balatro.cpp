@@ -158,7 +158,9 @@ void Balatro::initPokerHands() {
 
 void Balatro::initPlanets()
 {
-	allPlanets.clear();
+	if (!allPlanets.empty()) {
+		return;
+	}
 	allPlanets.push_back(new Earth());
 	allPlanets.push_back(new Mars());
 	allPlanets.push_back(new Venus());
@@ -940,6 +942,7 @@ void Balatro::playHand() {
 		setGameOver(true);
 		printUI();
 		freeJokers();
+		freePlanets();
 		return ;
 	}
 	std::cout << "current score: " << totalBet << std::endl;

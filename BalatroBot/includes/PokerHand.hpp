@@ -11,6 +11,7 @@ class PokerHand {
 	private:
 		std::string name;
 		int rank;
+		int level;
 		int baseMult;
 		int baseChips;
 
@@ -22,12 +23,13 @@ class PokerHand {
 
 		std::string getName();
 		int getRank();
+		int getLevel();
 		int getChips();
 		int getMult();
 
 		void setChips(int chips);
 		void setMult(int mult);
-		void setRank(int rank);
+		void setLevel(int rank);
 		void setPokerHand(std::string name, int rank, int baseChips, int baseMult);
 };
 

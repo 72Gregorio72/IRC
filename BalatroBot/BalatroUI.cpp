@@ -69,6 +69,75 @@ std::vector<std::string> Balatro::getCombinedPlanetsVisual(const std::vector<IPl
     return mergedRow;
 }
 
+std::vector<std::string> Balatro::createPokerHandsRankBox() {
+    std::vector<std::string> box;
+
+    std::string RESET = "\x0f";
+    std::string GREY  = "\x03" "14";
+    std::string WHITE = "\x03" "00";
+    std::string YEL   = "\x03" "08";
+
+    std::string TL = "\xE2\x95\xAD"; std::string TR = "\xE2\x95\xAE";
+    std::string BL = "\xE2\x95\xB0"; std::string BR = "\xE2\x95\xAF";
+    std::string H  = "\xE2\x94\x80"; std::string V  = "\xE2\x94\x82";
+
+    // Title (kept separate for centering)
+    std::string title = YEL + "\x02" + std::string("POKER HANDS") + RESET;
+
+    // Pairs of display name and lookup key for getPokerHands
+    std::vector< std::pair<std::string,std::string> > items;
+    items.push_back(std::make_pair("High Card", "High Card"));
+    items.push_back(std::make_pair("One Pair", "Pair"));
+    items.push_back(std::make_pair("Two Pair", "Two Pair"));
+    items.push_back(std::make_pair("Three of a Kind", "Three of a Kind"));
+    items.push_back(std::make_pair("Straight", "Straight"));
+    items.push_back(std::make_pair("Flush", "Flush"));
+    items.push_back(std::make_pair("Full House", "Full House"));
+    items.push_back(std::make_pair("Four of a Kind", "Four of a Kind"));
+    items.push_back(std::make_pair("Straight Flush", "Straight Flush"));
+    items.push_back(std::make_pair("Royal Flush", "Royal Flush"));
+    items.push_back(std::make_pair("Five of a Kind", "Five of a Kind"));
+    items.push_back(std::make_pair("Flush House", "Flush House"));
+    items.push_back(std::make_pair("Flush Five", "Flush Five"));
+
+    // Build colored content lines with levels
+    std::vector<std::string> outLines;
+    outLines.push_back(title);
+    for (size_t i = 0; i < items.size(); ++i) {
+        const std::string& disp = items[i].first;
+        const std::string& key  = items[i].second;
+        int lv = getPokerHands(key).getLevel();
+        std::string line = WHITE + disp + RESET + "  " + YEL + "Lv " + to_string_98(lv) + RESET;
+        outLines.push_back(line);
+    }
+
+    // Compute inner width (max visual length)
+    int inner = 0;
+    for (size_t i = 0; i < outLines.size(); ++i) {
+        int v = getVisualLength(outLines[i]);
+        if (v > inner) inner = v;
+    }
+    inner += 2; // one space left/right
+
+    // Top
+    box.push_back(GREY + TL + repeat_string(inner, H) + TR + RESET);
+
+    for (size_t i = 0; i < outLines.size(); ++i) {
+        std::string text = outLines[i];
+        int v = getVisualLength(text);
+        int padLeft = (inner - v) / 2;
+        int padRight = inner - v - padLeft;
+        if (padLeft < 0) padLeft = 0;
+        if (padRight < 0) padRight = 0;
+        box.push_back(GREY + V + RESET + repeat_char(padLeft, ' ') + text + repeat_char(padRight, ' ') + GREY + V + RESET);
+    }
+
+    // Bottom
+    box.push_back(GREY + BL + repeat_string(inner, H) + BR + RESET);
+
+    return box;
+}
+
 std::vector<std::string> Balatro::getCardRows(const Card& c) {
     std::vector<std::string> rows;
     std::string rank = c.getRank();
@@ -253,6 +322,7 @@ void Balatro::getLeftPanelContent(int row, std::string& rawOut, std::string& col
     std::string C_ORANGE  = "\x03" "07";
     std::string C_YELLOW  = "\x03" "08";
     std::string C_WHITE   = "\x03" "00";
+    std::string C_GREY    = "\x03" "14";
     std::string BOLD      = "\x02";
     std::string RESET     = "\x0f";
 
@@ -345,6 +415,103 @@ void Balatro::getLeftPanelContent(int row, std::string& rawOut, std::string& col
     else if (row == 25) {
         rawOut = "          +------+           ";
         colOut = "          " + C_ORANGE + "└──────┘" + RESET + "           ";
+    }
+
+    // POKER HAND LEVELS BOX (sotto ANTE, qualche riga più in basso)
+    else if (row >= 31 && row < 31 + 16) {
+        // Build box content
+        std::vector< std::pair<std::string,std::string> > items;
+        items.push_back(std::make_pair("High Card", "High Card"));
+        items.push_back(std::make_pair("One Pair", "Pair"));
+        items.push_back(std::make_pair("Two Pair", "Two Pair"));
+        items.push_back(std::make_pair("Three of a Kind", "Three of a Kind"));
+        items.push_back(std::make_pair("Straight", "Straight"));
+        items.push_back(std::make_pair("Flush", "Flush"));
+        items.push_back(std::make_pair("Full House", "Full House"));
+        items.push_back(std::make_pair("Four of a Kind", "Four of a Kind"));
+        items.push_back(std::make_pair("Straight Flush", "Straight Flush"));
+        items.push_back(std::make_pair("Royal Flush", "Royal Flush"));
+        items.push_back(std::make_pair("Five of a Kind", "Five of a Kind"));
+        items.push_back(std::make_pair("Flush House", "Flush House"));
+        items.push_back(std::make_pair("Flush Five", "Flush Five"));
+
+        // Fixed inner width 27 (fits 29 total with borders)
+        const int inner = 27;
+        std::vector<std::string> rawBox;
+        std::vector<std::string> colBox;
+
+        // Top border
+        rawBox.push_back("+---------------------------+");
+        colBox.push_back(C_GREY + "┌" + repeat_string(inner, "─") + "┐" + RESET);
+
+        // Title
+        std::string title = "POKER HANDS";
+        int tPad = (inner - (int)title.length()) / 2;
+        if (tPad < 0) tPad = 0;
+        std::string rawTitle = "|" + std::string(tPad, ' ') + title + std::string(inner - tPad - (int)title.length(), ' ') + "|";
+        std::string colTitle = C_GREY + "│" + RESET + std::string(tPad, ' ') + C_YELLOW + "\x02" + title + RESET + std::string(inner - tPad - (int)title.length(), ' ') + C_GREY + "│" + RESET;
+        rawBox.push_back(rawTitle);
+        colBox.push_back(colTitle);
+
+        // Lines with: Name (dark yellow), Lv (grey), Mult (red), Chips (blue)
+        // Allineamento: nome fisso 11 char, poi Lv M C allineati
+        for (size_t i = 0; i < items.size(); ++i) {
+            const std::string& disp = items[i].first;
+            const std::string& key  = items[i].second;
+            int lv   = getPokerHands(key).getLevel();
+            int mult = getPokerHands(key).getMult();
+            int chip = getPokerHands(key).getChips();
+
+            // Nome: max 11 caratteri, padding a destra
+            int nameWidth = 11;
+            std::string name = disp;
+            if ((int)name.length() > nameWidth) name = name.substr(0, nameWidth);
+            std::string namePadded = name + std::string(nameWidth - (int)name.length(), ' ');
+
+            // Valori: allineati a larghezza fissa (Lv:4, M:5, C:5)
+            std::stringstream ssLv, ssMult, ssChip;
+            ssLv << lv;
+            ssMult << mult;
+            ssChip << chip;
+            
+            std::string lvStr = "Lv" + ssLv.str();
+            std::string multStr = ssMult.str();
+            std::string chipStr = ssChip.str();
+            
+            // Padding per allineamento (larghezza fissa)
+            lvStr += std::string(4 - (int)lvStr.length() > 0 ? 4 - (int)lvStr.length() : 0, ' ');
+            chipStr += std::string(5 - (int)chipStr.length() > 0 ? 5 - (int)chipStr.length() : 0, ' ');
+            int multPadding = 6 - ((int)multStr.length() + 1); // mult + 'X' occupano 6 caratteri totali
+            if (multPadding < 0) multPadding = 0;
+
+            // Raw line (27 char interni: 11 nome + 1 spazio + 4 lv + 6 mult/X + 5 chip)
+            std::string rawLine = "|" + namePadded + " " + lvStr + multStr + "X" + chipStr + std::string(multPadding, ' ') + "|";
+
+            // Colored line
+            std::string colLine = C_GREY + "│" + RESET
+                                 + C_ORANGE + namePadded + RESET
+                                 + " "
+                                 + C_GREY + lvStr + RESET
+                                 + C_RED + multStr + RESET
+                                 + "X"
+                                 + C_BLUE + chipStr + RESET
+                                 + std::string(multPadding, ' ')
+                                 + C_GREY + "│" + RESET;
+
+            rawBox.push_back(rawLine);
+            colBox.push_back(colLine);
+        }
+
+        // Bottom border
+        rawBox.push_back("+---------------------------+");
+        colBox.push_back(C_GREY + "└" + repeat_string(inner, "─") + "┘" + RESET);
+
+        int base = 31;
+        int idx = row - base;
+        if (idx >= 0 && idx < (int)rawBox.size()) {
+            rawOut = rawBox[idx];
+            colOut = colBox[idx];
+        }
     }
 }
 
@@ -725,6 +892,8 @@ void Balatro::printUI() {
                 rightPanel.replace(startPos, visualLen, jLine);
             }
         }
+
+        // Ranks box moved to left panel under ANTE
 
         // Assemblaggio messaggio IRC
         msg += prefix + " " + leftPanel + " ║ " + rightPanel + "\r\n";
