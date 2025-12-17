@@ -42,6 +42,16 @@
 #include "Jokers/ShootTheMoon/ShootTheMoon.hpp"
 #include "Jokers/SmileyFace/SmileyFace.hpp"
 #include "Jokers/WalkieTalkie/WalkieTalkie.hpp"
+#include "Planets/Earth/Earth.hpp"
+#include "Planets/IPlanet.hpp"
+#include "Planets/Jupiter/Jupiter.hpp"
+#include "Planets/Mars/Mars.hpp"
+#include "Planets/Mercury/Mercury.hpp"
+#include "Planets/Neptune/Neptune.hpp"
+#include "Planets/Saturn/Saturn.hpp"
+#include "Planets/Uranus/Uranus.hpp"
+#include "Planets/Venus/Venus.hpp"
+#include "Planets/Pluto/Pluto.hpp"
 
 Balatro::Balatro() : gameOver(false), gameWon(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(0), player(), pokerHands(), isSuitSorting(false), isCashingOut(false), isShopUI(false), jokers(), allJokers(), bestHandName(""), pendingShopIndex(-1), packJokers(), isInJokerPackUI(0) {
     std::srand(static_cast<unsigned int>(std::time(0)));
@@ -57,12 +67,17 @@ Balatro::~Balatro() {
     // 1. Svuota i vettori secondari SENZA fare delete (sono solo riferimenti)
     jokers.clear();
     shopJokers.clear();
+	
 
     // 2. Cancella la memoria vera e propria dal "proprietario" (allJokers)
     for (size_t i = 0; i < allJokers.size(); ++i) {
         delete allJokers[i];
     }
     allJokers.clear();
+	for (size_t i = 0; i < allPlanets.size(); ++i) {
+        delete allPlanets[i];
+    }
+	allPlanets.clear();
 }
 
 Balatro::Balatro(const Balatro &other)
@@ -139,6 +154,57 @@ void Balatro::initPokerHands() {
     pokerHands.FiveOfAKind.setPokerHand("Five of a Kind", 11, 120, 12);
     pokerHands.FlushHouse.setPokerHand("Flush House", 12, 140, 14);
     pokerHands.FlushFive.setPokerHand("Flush Five", 13, 160, 16);
+}
+
+const std::vector<Card>& Balatro::getSelectedCards() const {
+    return selectedCards;
+}
+
+std::vector<Card> Balatro::getHandCards() {
+	return hand;
+}
+
+int Balatro::getCoins() {
+	return coins;
+}
+
+std::vector<IJoker*> Balatro::getAllJokers() const {
+	return allJokers;
+}
+
+int Balatro::getDiscards(){
+	return discards;
+}
+
+PokerHand& Balatro::getPokerHands(std::string handName) {
+	if (handName == "High Card") return pokerHands.HighCard;
+	if (handName == "Pair") return pokerHands.OnePair;
+	if (handName == "Two Pair") return pokerHands.TwoPair;
+	if (handName == "Three of a Kind") return pokerHands.ThreeOfAKind;
+	if (handName == "Straight") return pokerHands.Straight;
+	if (handName == "Flush") return pokerHands.Flush;
+	if (handName == "Full House") return pokerHands.FullHouse;
+	if (handName == "Four of a Kind") return pokerHands.FourOfAKind;
+	if (handName == "Straight Flush") return pokerHands.StraightFlush;
+	if (handName == "Royal Flush") return pokerHands.RoyalFlush;
+	if (handName == "Five of a Kind") return pokerHands.FiveOfAKind;
+	if (handName == "Flush House") return pokerHands.FlushHouse;
+	if (handName == "Flush Five") return pokerHands.FlushFive;
+
+	return pokerHands.HighCard;
+}
+
+void Balatro::initPlanets()
+{
+	allPlanets.push_back(new Earth());
+	allPlanets.push_back(new Mars());
+	allPlanets.push_back(new Venus());
+	allPlanets.push_back(new Mercury());
+	allPlanets.push_back(new Jupiter());
+	allPlanets.push_back(new Saturn());
+	allPlanets.push_back(new Uranus());
+	allPlanets.push_back(new Neptune());
+	allPlanets.push_back(new Pluto());
 }
 
 void Balatro::initAllJokers() {
@@ -710,7 +776,7 @@ void Balatro::getMessagePrompt(std::string msg) {
 			if (pack == 1)
 				jokerPackUI();
 			else if (pack == 2){
-				//planetPackUI();
+				planetPackUI();
 			}
 			else {
 				std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :Invalid pack number\r\n";
@@ -718,7 +784,7 @@ void Balatro::getMessagePrompt(std::string msg) {
 				return;
 			}
 		} else if (msg.find("pick") == 0) {
-			if (!isInJokerPackUI){
+			if (!isInJokerPackUI && !isInPlanetPackUI){
 				std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :You are not in the joker pack screen\r\n";
 				send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
 				return;

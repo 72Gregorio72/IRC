@@ -7,8 +7,10 @@
 #include "PokerHand.hpp"
 #include <algorithm>
 #include "../Jokers/IJoker.hpp"
+#include "../Planets/IPlanet.hpp"
 
 class IJoker;
+class IPlanet;
 class PokerHand;
 class Card;
 class User;
@@ -111,6 +113,7 @@ class Balatro {
                                  const std::vector<std::string>& deckVisual);
 
         std::vector<std::string> getCombinedJokersVisual(const std::vector<IJoker*>& targetJokers);
+        std::vector<std::string> getCombinedPlanetsVisual(const std::vector<IPlanet*>& targetPlanets);
 
         std::string getSpaces(int count);
         
@@ -125,21 +128,25 @@ class Balatro {
 
         void freeJokers();
         void initAllJokers();
+        void initPlanets();
         
         // Shop and Pack generation
         void generateShopJokers();
         void generatePackJokers(); // Added to match definition in JokerPackUI.cpp
-        
+        void generatePackPlanets();
+
         std::vector<std::string> createJokerItem(IJoker* joker);
+        std::vector<std::string> createPlanetItem(IPlanet* planet);
         const std::vector<Card>& getSelectedCards() const;
 
         void jokerPackUI(); // Renamed from jokerPackUI to match definition in JokerPackUI.cpp
 		std::string repeat_string(int count, const std::string& pattern);
 		void pickJokerFromPack(int index);
-
+        void planetPackUI();
 		std::vector<IJoker*> getAllJokers() const;
 
 		std::vector<Card> getHandCards();
+        PokerHand& getPokerHands(std::string handName);
 
         std::vector<std::string> createPackItem(std::string type, int cost, std::string color);
     
@@ -170,12 +177,15 @@ class Balatro {
         std::vector<IJoker*> jokers;
         std::vector<IJoker*> allJokers; 
         std::vector<IJoker*> shopJokers;
+        std::vector<IPlanet*> allPlanets;
         std::string bestHandName;
         int pendingShopIndex;
         int rollPrice;
         
         int blind; // 0 small 1 big 2 boss
         std::vector<IJoker*> packJokers;
+        std::vector<IPlanet*> packPlanets;
+        int isInPlanetPackUI;
 		int isInJokerPackUI;
 };
 

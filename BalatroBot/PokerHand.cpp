@@ -17,6 +17,14 @@ PokerHand &PokerHand::operator=(const PokerHand &other) {
 	return *this;
 }
 
+void PokerHand::setChips(int chips) {
+	baseChips = chips;
+}
+
+void PokerHand::setMult(int mult) {
+	baseMult = mult;
+}
+
 std::string PokerHand::getName() {
 	return name;
 }
