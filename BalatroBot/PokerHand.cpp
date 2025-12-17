@@ -25,6 +25,10 @@ void PokerHand::setMult(int mult) {
 	baseMult = mult;
 }
 
+void PokerHand::setRank(int rank1) {
+	rank = rank1;
+}
+
 std::string PokerHand::getName() {
 	return name;
 }

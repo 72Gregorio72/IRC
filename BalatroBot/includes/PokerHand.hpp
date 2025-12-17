@@ -27,6 +27,7 @@ class PokerHand {
 
 		void setChips(int chips);
 		void setMult(int mult);
+		void setRank(int rank);
 		void setPokerHand(std::string name, int rank, int baseChips, int baseMult);
 };
 
