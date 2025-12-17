@@ -78,6 +78,10 @@ COMPILER	= c++
 
 INCLUDES = -Iincludes
 
+PORTNUM = 7272
+
+PW_SERV = 1234
+
 .cpp.o:
 	$(COMPILER) $(FLAGS) $(INCLUDES) -c $< -o $@
 
@@ -105,8 +109,7 @@ re: fclean all
 vale: re
 	make clean
 	@clear
-	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --track-fds=yes ./$(NAME) 7272 1234
-
+	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --track-fds=yes ./$(NAME) $(PORTNUM) $(PW_SERV)
 push: fclean
 	if [ -d .vscode ]; then \
 		rm -rf .vscode; \
@@ -116,7 +119,7 @@ push: fclean
 testosterone: re
 	make clean
 	@clear
-	./$(NAME) 7272 1234
+	./$(NAME) $(PORTNUM) $(PW_SERV)
 
 .PHONY: all clean fclean re vale push testosterone
 
