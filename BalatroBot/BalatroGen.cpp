@@ -66,8 +66,12 @@ void Balatro::shuffleDeck(){
 void Balatro::startNewGame() {
     isInJokerPackUI = 0;
     isInPlanetPackUI = 0;
+    gameOver = false;
+    gameWon = false;
     isShopUI = false;
     isCashingOut = false;
+    isSuitSorting = false;
+    isRankSorting = false;
     coins = 1000;
 	blind = -1;
     jokers.clear();

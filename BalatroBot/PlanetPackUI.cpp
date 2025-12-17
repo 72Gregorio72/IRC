@@ -101,7 +101,9 @@ void Balatro::planetPackUI() {
     std::string sBot = "\xE2\x95\xB0" + repeat_string(10, "\xE2\x94\x80") + "\xE2\x95\xAF";
     
     skipBox.push_back(GREY + sTop + RESET);
-    skipBox.push_back(GREY + vLine + RESET + " SKIP PACK" + GREY + vLine + RESET);
+    std::string skipText = "SKIP PACK";
+    int skipPad = (10 - getVisualLength(skipText)) / 2;
+    skipBox.push_back(GREY + vLine + RESET + repeat_char(skipPad, ' ') + skipText + repeat_char(10 - skipPad - getVisualLength(skipText), ' ') + GREY + vLine + RESET);
     skipBox.push_back(GREY + sBot + RESET);
 
     int skipRow = cardsStartRow + 14; 
