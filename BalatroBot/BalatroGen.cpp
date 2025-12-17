@@ -64,7 +64,11 @@ void Balatro::shuffleDeck(){
 }
 
 void Balatro::startNewGame() {
-    coins = 0;
+    isInJokerPackUI = 0;
+    isInPlanetPackUI = 0;
+    isShopUI = false;
+    isCashingOut = false;
+    coins = 1000;
 	blind = -1;
     jokers.clear();
     shopJokers.clear();
@@ -77,4 +81,28 @@ void Balatro::startNewGame() {
     startNewRound();
     initPokerHands();
     printUI();
+}
+
+//shop e sell di tutti e quattro rompi il reroll
+
+std::vector<int> Balatro::findCommandIndices(std::string input) {
+    std::string params = "";
+    if (input.length() > 5) params = input.substr(5);
+    
+    std::stringstream ss(params);
+    int tempIndex;
+    std::vector<int> returnValue;
+
+    while (ss >> tempIndex) {
+        // Convertiamo da 1-based (utente) a 0-based (vector)
+        returnValue.push_back(tempIndex - 1);
+    }
+    return (returnValue);
+}
+
+void    Balatro::orderVectorIndices(std::vector<int> &input) {
+    std::sort(input.begin(), input.end(), std::greater<int>());
+    
+    std::vector<int>::iterator it = std::unique(input.begin(), input.end());
+    input.resize(std::distance(input.begin(), it));
 }

@@ -45,7 +45,6 @@ void Balatro::jokerPackUI() {
     std::string GREY  = "\x03" "14";
     std::string GREEN = "\x03" "09"; 
     
-    // Inizializza Canvas destro vuoto
     std::vector<std::string> rightCanvas(totalRows, std::string(rightColWidth, ' '));
 
     // 1. Genera Joker se necessario
@@ -53,62 +52,64 @@ void Balatro::jokerPackUI() {
         generatePackJokers();
     }
 
-    // 2. Disegna HEADER (Buffoon Pack)
+    // 2. Disegna HEADER (Buffoon Pack) - CORRETTO
+    // Allargato a 45 caratteri interni per far respirare il testo lungo
+    int boxContentWidth = 45; 
     std::vector<std::string> headerBox;
-    std::string hTop = "\xE2\x95\xAD" + repeat_string(40, "\xE2\x94\x80") + "\xE2\x95\xAE"; // ╭──╮
-    std::string hBot = "\xE2\x95\xB0" + repeat_string(40, "\xE2\x94\x80") + "\xE2\x95\xAF"; // ╰──╯
+    
+    std::string hTop = "\xE2\x95\xAD" + repeat_string(boxContentWidth, "\xE2\x94\x80") + "\xE2\x95\xAE"; // ╭──╮
+    std::string hBot = "\xE2\x95\xB0" + repeat_string(boxContentWidth, "\xE2\x94\x80") + "\xE2\x95\xAF"; // ╰──╯
     std::string vLine = "\xE2\x94\x82"; // │
 
     headerBox.push_back(GREY + hTop + RESET);
-    headerBox.push_back(GREY + vLine + RESET + centerText("\x02" "BUFFOON PACK", 40) + GREY + vLine + RESET);
-    headerBox.push_back(GREY + vLine + RESET + centerText("Choose 1 Joker to add to your collection", 40) + GREY + vLine + RESET);
+    headerBox.push_back(GREY + vLine + RESET + centerText("\x02" "BUFFOON PACK", boxContentWidth) + GREY + " " + vLine + RESET);
+    headerBox.push_back(GREY + vLine + RESET + centerText("Choose 1 Joker to add to your collection", boxContentWidth) + GREY + vLine + RESET);
     headerBox.push_back(GREY + hBot + RESET);
 
-    int headerCol = (rightColWidth - 42) / 2;
+    // Centra il box basandosi sulla larghezza totale (content + 2 bordi)
+    int headerCol = (rightColWidth - (boxContentWidth + 2)) / 2;
     pasteObject(rightCanvas, headerBox, 15, headerCol);
 
-    // 3. Disegna JOKERS (Usa getCombinedJokersVisual)
+    // 3. Disegna JOKERS
     int cardsStartRow = 22;
     
     if (!packJokers.empty()) {
-        // A. Ottieni l'unica striscia combinata di tutti i joker
         std::vector<std::string> combinedVisual = getCombinedJokersVisual(packJokers);
         
-        // B. Calcola posizione centrata
         int visualLen = getVisualLength(combinedVisual[0]);
         int startCol = (rightColWidth - visualLen) / 2;
         if (startCol < 0) startCol = 0;
 
-        // C. Incolla la striscia combinata
         pasteObject(rightCanvas, combinedVisual, cardsStartRow, startCol);
 
-        // 4. Disegna BOTTONI [ !pick N ] sotto ogni carta
-        // Nota: createJokerItem produce carte larghe 18 (16 interni + 2 bordi).
-        // getCombinedJokersVisual usa un gap di 1 spazio.
+        // 4. Disegna BOTTONI [ !pick N ] - CORRETTO
         int cardFullWidth = 18; 
-        int gap = 1;
+        int gap = 5;
 
         for (size_t i = 0; i < packJokers.size(); ++i) {
             std::string btnText = "[ !pick " + to_string_98(i + 1) + " ]";
             std::string coloredBtn = GREEN + "[ !pick " + to_string_98(i + 1) + " ]" + RESET;
             
             int btnLen = getVisualLength(btnText);
-            // Centra il bottone rispetto alla larghezza della carta (18)
-            int btnPad = (cardFullWidth - btnLen) / 2;
             
-            // Calcola la X assoluta: InizioStriscia + (Indice * (LarghezzaCarta + Gap)) + PaddingBottone
+            // CORREZIONE CENTRATURA:
+            // Aggiungiamo +1 prima di dividere per 2. 
+            // Esempio: 18 (carta) - 11 (btn) = 7 spazio vuoto.
+            // 7/2 = 3 (sposta a sinistra). (7+1)/2 = 4 (sposta leggermente a destra/centro).
+            int btnPad = (cardFullWidth - btnLen + 1) / 2;
+            
             int btnCol = startCol + (i * (cardFullWidth + gap)) + btnPad;
-            
             int btnRow = cardsStartRow + (int)combinedVisual.size() + 1;
 
             if (btnRow < totalRows && btnCol < (int)rightCanvas[btnRow].length()) {
                 std::string& line = rightCanvas[btnRow];
-                std::string before = line.substr(0, btnCol);
-                std::string after = "";
-                if (btnCol + btnLen < (int)line.length()) {
-                    after = line.substr(btnCol + btnLen);
+                
+                // Assicuriamoci di non scrivere fuori dai bordi
+                if (btnCol + btnLen <= (int)line.length()) {
+                    std::string before = line.substr(0, btnCol);
+                    std::string after = line.substr(btnCol + btnLen);
+                    line = before + coloredBtn + after;
                 }
-                line = before + coloredBtn + after;
             }
         }
     }
@@ -132,13 +133,14 @@ void Balatro::jokerPackUI() {
     
     if (skipRow + 4 < totalRows) {
          std::string& line = rightCanvas[skipRow + 4];
-         line = line.substr(0, descCol) + GREY + skipDesc + RESET + line.substr(descCol + descLen);
+         // Safe replace centrato
+         if (descCol + descLen <= (int)line.length()) {
+             line = line.substr(0, descCol) + GREY + skipDesc + RESET + line.substr(descCol + descLen);
+         }
     }
 
-    // 6. Invia Messaggio Finale (Merge Left + Right)
+    // 6. Invia Messaggio Finale
     std::string msg = "";
-    
-    // Top
     for(int i=0; i<5; i++) msg += prefix + " \r\n";
     msg += prefix + "═══════════════════════════════" + "╦" + "═════════════════════════════════════════════════════════════════════════════════════════════════════\r\n";
     
@@ -155,8 +157,6 @@ void Balatro::jokerPackUI() {
         
         msg += prefix + " " + leftPanel + " ║ " + rightPanel + "\r\n";
     }
-    
-    // Bottom
     msg += prefix + "═══════════════════════════════" + "╩" + "═════════════════════════════════════════════════════════════════════════════════════════════════════\r\n";
     
     send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);

@@ -393,6 +393,95 @@ std::vector<std::string> Balatro::createMsgBox(std::string text, std::string col
     return box;
 }
 
+// Crea un box per i Booster Pack (Pianeti/Joker)
+// Crea un box per i Booster Pack con ASCII ART
+// Crea un box per i Booster Pack con ASCII ART migliorata
+// Crea un box per i Booster Pack con ASCII ART più grande e bella
+// Crea un box per i Booster Pack con ASCII ART più grande e bella
+std::vector<std::string> Balatro::createPackItem(std::string type, int cost, std::string color) {
+    std::vector<std::string> box;
+    
+    // --- COLORI ---
+    std::string RESET  = "\x0f";
+    std::string WHITE  = "\x03" "00";
+    std::string GREY   = "\x03" "14";
+    std::string GREEN  = "\x03" "09"; 
+    std::string YELLOW = "\x03" "08"; 
+
+    // Bordi
+    std::string TL = "\xE2\x95\xAD"; std::string TR = "\xE2\x95\xAE";
+    std::string BL = "\xE2\x95\xB0"; std::string BR = "\xE2\x95\xAF";
+    std::string H  = "\xE2\x94\x80"; std::string V  = "\xE2\x94\x82";
+    
+    // Aumentiamo la larghezza per un look più "premium" (20 caratteri)
+    int width = 20; 
+
+    // --- ASCII ART AGGIORNATA ---
+    std::vector<std::string> art;
+    
+    if (type == "BUFFOON") {
+        // Cappello da Giullare grande con sonagli
+        art.push_back("  " + color + "/\\   /\\" + RESET + "  ");
+        art.push_back(" " + color + "/  \\ /  \\" + RESET + " ");
+        art.push_back(YELLOW + "o" + RESET + color + "    v    " + RESET + YELLOW + "o" + RESET);
+    } else {
+        // Pianeta grande con anello e luna
+        //      . '    
+        //   _/( )\_   
+        //  (   o   )  
+        //   ~\( )/~   
+        //    ' .      
+        art.push_back("   " + GREY + "_/" + color + "( )" + GREY + "\\_" + RESET + "   ");
+        art.push_back("  " + GREY + "(   " + WHITE + "o" + GREY + "   )" + RESET + "  ");
+        art.push_back("   " + GREY + "~\\" + color + "( )" + GREY + "/~" + RESET + "   ");
+    }
+
+    // --- COSTRUZIONE BOX ---
+
+    // 1. Top Border
+    box.push_back(color + TL + repeat_string(width, H) + TR + RESET);
+
+    // 2. Nome Tipo
+    std::string label = type;
+    int padL = (width - getVisualLength(label)) / 2;
+    if (padL < 0) padL = 0;
+    box.push_back(color + V + RESET + repeat_char(padL, ' ') + color + label + RESET + 
+                  repeat_char(width - padL - getVisualLength(label), ' ') + color + V + RESET);
+
+    // 3. Spazio extra
+    box.push_back(color + V + repeat_char(width, ' ') + color + V + RESET);
+
+    // 4. ASCII ART Centrata
+    for (size_t i = 0; i < art.size(); ++i) {
+        std::string line = art[i];
+        int vLen = getVisualLength(line);
+        int pad = (width - vLen) / 2;
+        if (pad < 0) pad = 0;
+        box.push_back(color + V + RESET + repeat_char(pad, ' ') + line + repeat_char(width - pad - vLen, ' ') + color + V + RESET);
+    }
+
+    // 5. Spazio extra
+    box.push_back(color + V + repeat_char(width, ' ') + color + V + RESET);
+    
+    // 6. Label "PACK"
+    std::string sub = "PACK";
+    int padS = (width - 4) / 2;
+    box.push_back(color + V + RESET + repeat_char(padS, ' ') + GREY + sub + RESET + 
+                  repeat_char(width - padS - 4, ' ') + color + V + RESET);
+
+    // 7. Costo
+    std::string sCost = "$" + toString(cost);
+    int padC = (width - getVisualLength(sCost)) / 2;
+    if (padC < 0) padC = 0;
+    box.push_back(color + V + RESET + repeat_char(padC, ' ') + GREEN + sCost + RESET + 
+                  repeat_char(width - padC - getVisualLength(sCost), ' ') + color + V + RESET);
+
+    // 8. Bottom Border
+    box.push_back(color + BL + repeat_string(width, H) + BR + RESET);
+
+    return box;
+}
+
 void Balatro::printShopUI() {
     isShopUI = true;
     std::string prefix = ":BalatroBot PRIVMSG " + player->getNickName() + " :";
@@ -401,27 +490,23 @@ void Balatro::printShopUI() {
     int leftColWidth = 29;
     int rightColWidth = 85; 
     
-    // --- DEFINIZIONE COLORI E SCALA ---
+    // --- DEFINIZIONE COLORI ---
     std::string C_ORANGE  = "\x03" "07";
     std::string C_GREY    = "\x03" "14";
     std::string BOLD      = "\x02";
     std::string RESET     = "\x0f";
+    std::string C_BLUE    = "\x03" "12"; 
+    std::string C_RED     = "\x03" "04"; 
     
-    // Scala colori (Freddo -> Caldo)
-    std::string C_SCALE_1 = "\x03" "11"; // Light Cyan
-    std::string C_SCALE_2 = "\x03" "10"; // Teal
-    std::string C_SCALE_3 = "\x03" "12"; // Blue
-    std::string C_SCALE_4 = "\x03" "09"; // Light Green
-    std::string C_SCALE_5 = "\x03" "08"; // Yellow
-    std::string C_SCALE_6 = "\x03" "07"; // Orange
-    std::string C_SCALE_7 = "\x03" "04"; // Red
-    std::string C_SCALE_8 = "\x03" "05"; // Maroon
+    // Scala colori comandi
+    std::string C_SCALE_1 = "\x03" "11"; 
+    std::string C_SCALE_3 = "\x03" "12"; 
+    std::string C_SCALE_7 = "\x03" "04"; 
     
-    // Inizializza Canvas destro vuoto
     std::vector<std::string> rightCanvas(totalRows, std::string(rightColWidth, ' '));
 
     // =================================================================================
-    // 1. JOKER POSSEDUTI (In Alto)
+    // 1. JOKER POSSEDUTI (Riga 2)
     // =================================================================================
     if (!this->jokers.empty()) {
         std::vector<std::string> ownedVisual = getCombinedJokersVisual(this->jokers);
@@ -438,19 +523,18 @@ void Balatro::printShopUI() {
     }
 
     // =================================================================================
-    // 2. JOKER DEL NEGOZIO (Al Centro)
+    // 2. JOKER DEL NEGOZIO
     // =================================================================================
     if (shopJokers.empty()) {
         generateShopJokers();
     }
 
-    int shopContentStartRow = 0;
+    int shopContentStartRow = 13; // Leggermente più in alto per fare spazio ai pacchetti
     int shopContentHeight = 0;
 
     if (!shopJokers.empty()) {
         std::vector<std::string> shopVisual = getCombinedJokersVisual(shopJokers);
         shopContentHeight = (int)shopVisual.size();
-        shopContentStartRow = (totalRows - shopContentHeight) / 2 - 5; 
         
         int visualW = getVisualLength(shopVisual[0]);
         int startCol = (rightColWidth - visualW) / 2;
@@ -460,14 +544,40 @@ void Balatro::printShopUI() {
     } else {
         std::vector<std::string> msg = createMsgBox("SOLD OUT", C_ORANGE);
         shopContentHeight = (int)msg.size();
-        shopContentStartRow = (totalRows - shopContentHeight) / 2 - 5;
-        
         int startCol = (rightColWidth - getVisualLength(msg[0])) / 2;
-        pasteObject(rightCanvas, msg, shopContentStartRow, startCol);
+        pasteObject(rightCanvas, msg, shopContentStartRow + 2, startCol);
     }
 
     // =================================================================================
-    // 3. BOX COMANDI (SHOP EDITION) - C++98 Compatible
+    // 3. BOOSTER PACKS (CON ASCII ART)
+    // =================================================================================
+    
+    std::vector<std::string> packBuffoon   = createPackItem("BUFFOON", 6, C_RED);
+    std::vector<std::string> packCelestial = createPackItem("CELESTIAL", 6, C_BLUE);
+    
+    std::vector<std::string> packsRowVisual;
+    // Assumiamo che abbiano la stessa altezza, usiamo quella di uno dei due
+    int packHeight = (int)packBuffoon.size(); 
+    
+    // Uniamo i due pacchetti con spaziatura: [Buffoon] ...spazio... [Celestial]
+    for(int i = 0; i < packHeight; ++i) {
+        // 4 spazi tra i pacchetti per distanziarli bene
+        std::string line = packBuffoon[i] + "    " + packCelestial[i];
+        packsRowVisual.push_back(line);
+    }
+    
+    // Posizione: Sotto i Joker shop
+    // Dato che i pacchetti sono più alti (nuova art), abbassiamo leggermente lo startRow
+    int packStartRow = shopContentStartRow + shopContentHeight + 2; 
+    
+    int packVisualW = getVisualLength(packsRowVisual[0]);
+    int packStartCol = (rightColWidth - packVisualW) / 2;
+    if (packStartCol < 0) packStartCol = 0;
+
+    pasteObject(rightCanvas, packsRowVisual, packStartRow, packStartCol);
+
+    // =================================================================================
+    // 4. BOX COMANDI
     // =================================================================================
     
     std::vector<std::string> cmdBox;
@@ -475,86 +585,54 @@ void Balatro::printShopUI() {
     std::string vBorder = C_ORANGE + "│" + RESET;
     std::string spacerLine = vBorder + std::string(boxWidth - 2, ' ') + vBorder;
 
-    // A. Header Box
     cmdBox.push_back(C_ORANGE + "┌──────────────────────────────────────────┐" + RESET);
-    
     std::string titleTxt = BOLD + centerText("SHOP COMMANDS", boxWidth - 2) + RESET;
-    // Se centerText non aggiunge padding colorato, potremmo doverlo gestire qui, 
-    // ma assumiamo che centerText restituisca la stringa formattata corretta o stringa semplice.
-    // Per sicurezza ricalcoliamo il visual length per il padding:
-    int titleLen = getVisualLength(titleTxt);
-    int titlePad = (boxWidth - 2) - titleLen;
-    if (titlePad < 0) titlePad = 0; // centerText dovrebbe averlo già fatto
-    // Nota: se centerText riempie già di spazi, ok. Altrimenti aggiungi spazi.
-    // Qui assumiamo che centerText ritorni la stringa già centrata e pad-ata.
-    // Se centerText ritorna SOLO il testo centrato senza spazi laterali:
-    // cmdBox.push_back(vBorder + titleTxt + std::string(titlePad, ' ') + vBorder); 
-    // Ma nel tuo codice precedente sembri usarlo direttamente.
     cmdBox.push_back(vBorder + titleTxt + vBorder); 
-    
     cmdBox.push_back(C_ORANGE + "├──────────────────────────────────────────┤" + RESET);
 
-    // B. Lista Comandi (Ridotta a 3)
     const int CMD_COUNT = 3;
     std::string cmdColors[CMD_COUNT]; 
-    cmdColors[0] = C_SCALE_1; cmdColors[1] = C_SCALE_3; cmdColors[2] = C_SCALE_7; // Ciano, Blu, Rosso
-    
+    cmdColors[0] = C_SCALE_1; cmdColors[1] = C_SCALE_3; cmdColors[2] = C_SCALE_7;
     std::string cmdNames[CMD_COUNT];
     cmdNames[0] = "!shop"; cmdNames[1] = "!reroll"; cmdNames[2] = "!next";
-
     std::string cmdArgs[CMD_COUNT];
     cmdArgs[0] = "<id>"; cmdArgs[1] = ""; cmdArgs[2] = "";
-
     std::string cmdDescs[CMD_COUNT];
     cmdDescs[0] = "(es: !shop 1 3)"; cmdDescs[1] = "(Reroll Shop - $5)"; cmdDescs[2] = "(Start Next Round)";
 
     for(int i = 0; i < CMD_COUNT; ++i) {
-        // Costruiamo la stringa: " <COLOR>!cmd<RESET> <ARGS> <GREY>(DESC)<RESET>"
         std::string rawLine = " " + cmdColors[i] + cmdNames[i] + RESET;
-        
-        if (cmdArgs[i] != "") {
-            rawLine += " " + cmdArgs[i];
-        }
-        
+        if (cmdArgs[i] != "") rawLine += " " + cmdArgs[i];
         rawLine += C_GREY + " " + cmdDescs[i] + RESET;
 
-        // Calcolo padding
         int visLen = getVisualLength(rawLine);
         int pad = (boxWidth - 2) - visLen;
         if (pad < 0) pad = 0;
 
         cmdBox.push_back(vBorder + rawLine + std::string(pad, ' ') + vBorder);
-        
-        // Aggiungi riga vuota tra i comandi per leggibilità (tranne dopo l'ultimo)
-        if (i < CMD_COUNT - 1) {
-             cmdBox.push_back(spacerLine);
-        }
+        if (i < CMD_COUNT - 1) cmdBox.push_back(spacerLine);
     }
-
-    // C. Footer Box
     cmdBox.push_back(C_ORANGE + "└──────────────────────────────────────────┘" + RESET);
 
-    // Posizionamento: Centrato in basso
+    // Posizionamento: In basso
     int cmdBoxHeight = (int)cmdBox.size();
     int cmdBoxRow = totalRows - cmdBoxHeight - 2; 
     int cmdBoxCol = (rightColWidth - boxWidth) / 2; 
 
-    // Incolla il box nel canvas
     pasteObject(rightCanvas, cmdBox, cmdBoxRow, cmdBoxCol);
 
-
     // =================================================================================
-    // 4. STAMPA FINALE SU SOCKET
+    // 5. SEND
     // =================================================================================
-    std::string msg = "";
+    std::string outMsg = "";
     
     // Header
-    for(int i=0; i<5; i++) msg += prefix + " \r\n";
-    msg += prefix + "═══════════════════════════════" + "╦" + "═════════════════════════════════════════════════════════════════";
-    msg += prefix + "═════════════════════════════════════════════════════════════════════════════════════════════════════\r\n";
+    for(int i=0; i<5; i++) outMsg += prefix + " \r\n";
+    outMsg += prefix + "═══════════════════════════════" + "╦" + "═════════════════════════════════════════════════════════════════";
+    outMsg += prefix + "═════════════════════════════════════════════════════════════════════════════════════════════════════\r\n";
     
     for (int row = 0; row < totalRows; ++row) {
-        // Pannello Sinistro (Stats)
+        // Pannello Sinistro
         std::string leftRaw, leftColor;
         getLeftPanelContent(row, leftRaw, leftColor); 
         
@@ -563,15 +641,13 @@ void Balatro::printShopUI() {
         if (paddingNeeded < 0) paddingNeeded = 0;
 
         std::string leftPanel = leftColor + std::string(paddingNeeded, ' ');
-        
-        // Pannello Destro (Canvas)
         std::string rightPanel = rightCanvas[row];
         
-        msg += prefix + " " + leftPanel + " ║ " + rightPanel + "\r\n";
+        outMsg += prefix + " " + leftPanel + " ║ " + rightPanel + "\r\n";
     }
     // Footer
-    msg += prefix + "═══════════════════════════════" + "╩" + "═════════════════════════════════════════════════════════════════";
-    msg += prefix + "═════════════════════════════════════════════════════════════════════════════════════════════════════\r\n";
+    outMsg += prefix + "═══════════════════════════════" + "╩" + "═════════════════════════════════════════════════════════════════";
+    outMsg += prefix + "═════════════════════════════════════════════════════════════════════════════════════════════════════\r\n";
     
-    send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+    send(sd, outMsg.c_str(), outMsg.length(), MSG_NOSIGNAL);
 }

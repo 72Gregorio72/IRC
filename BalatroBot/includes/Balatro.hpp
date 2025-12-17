@@ -78,15 +78,23 @@ class Balatro {
 
         int calculateAnteScore();
 
-        std::vector<std::string> createMsgBox(std::string text, std::string colorCode);
-        std::vector<std::string> createSimpleItem(int id, int cost);
-        void pasteObject(std::vector<std::string>& canvas, const std::vector<std::string>& object, int startRow, int startCol);
-        void initPokerHands();
-        void printShopUI();
-        std::vector<std::string> createButton(std::string text, std::string subtext, std::string bgColorCode);
+        // std::vector<std::string> createMsgBox(std::string text, std::string colorCode);
+        // std::vector<std::string> createSimpleItem(int id, int cost);
+        // void pasteObject(std::vector<std::string>& canvas, const std::vector<std::string>& object, int startRow, int startCol);
+        // void initPokerHands();
+        // void printShopUI();
+        // std::vector<std::string> createButton(std::string text, std::string subtext, std::string bgColorCode);
         
         // String helpers
         std::string repeat_char(int count, char c);
+		std::vector<std::string> createMsgBox(std::string text, std::string colorCode);
+		std::vector<std::string> createSimpleItem(int id, int cost);
+		void pasteObject(std::vector<std::string>& canvas, const std::vector<std::string>& object, int startRow, int startCol);
+		void initPokerHands();
+		void printShopUI();
+		void printWinUI();
+		std::vector<std::string> createButton(std::string text, std::string subtext, std::string bgColorCode);
+		// std::string repeat_char(int count, char c);
 
         template <typename T>
         std::string to_string_98(T value) {
@@ -134,12 +142,17 @@ class Balatro {
         void jokerPackUI(); // Renamed from jokerPackUI to match definition in JokerPackUI.cpp
 		std::string repeat_string(int count, const std::string& pattern);
 		void pickJokerFromPack(int index);
+        void pickPlanetFromPack(int index);
         void planetPackUI();
 		std::vector<IJoker*> getAllJokers() const;
 
 		std::vector<Card> getHandCards();
         PokerHand& getPokerHands(std::string handName);
 
+        std::vector<std::string> createPackItem(std::string type, int cost, std::string color);
+    
+        std::vector<int>    findCommandIndices(std::string input);
+        void                orderVectorIndices(std::vector<int> &input);
     private:
 
         bool    gameOver;
