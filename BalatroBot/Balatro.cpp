@@ -844,9 +844,10 @@ void Balatro::getMessagePrompt(std::string msg) {
                 bool found = false;
                 for (std::vector<IJoker *>::iterator it = jokers.begin(); it != jokers.end() && x < jokers.size(); ++it) {
                     if ((int)x == idx) {
-                        coins += jokers[idx]->getCost();
+                        coins += jokers[idx]->getCost() / 2;
                         std::string success = ":BalatroBot PRIVMSG " + player->getNickName() + " :Sold " + jokers[idx]->getName() + "\r\n";
                         send(sd, success.c_str(), success.length(), MSG_NOSIGNAL);
+						shopJokers.push_back(jokers[idx]);
                         jokers.erase(it);
                         found = true;
                     }
