@@ -14,7 +14,7 @@ void Jupiter::playPlanet(Balatro *bot){
 	PokerHand& highCardHand = bot->getPokerHands("Flush");
 	highCardHand.setChips(highCardHand.getChips() + 15);
 	highCardHand.setMult(highCardHand.getMult() + 2);
-	highCardHand.setRank(highCardHand.getRank() + 1);
+	highCardHand.setLevel(highCardHand.getLevel() + 1);
 }
 
 std::string Jupiter::getEffect(){

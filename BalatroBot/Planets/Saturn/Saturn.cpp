@@ -14,7 +14,7 @@ void Saturn::playPlanet(Balatro *bot){
 	PokerHand& highCardHand = bot->getPokerHands("Straight");
 	highCardHand.setChips(highCardHand.getChips() + 30);
 	highCardHand.setMult(highCardHand.getMult() + 3);
-	highCardHand.setRank(highCardHand.getRank() + 1);
+	highCardHand.setLevel(highCardHand.getLevel() + 1);
 }
 
 std::string Saturn::getEffect(){

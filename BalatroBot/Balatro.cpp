@@ -68,8 +68,6 @@ Balatro::~Balatro() {
     jokers.clear();
     shopJokers.clear();
 	
-
-    // 2. Cancella la memoria vera e propria dal "proprietario" (allJokers)
     for (size_t i = 0; i < allJokers.size(); ++i) {
         delete allJokers[i];
     }
@@ -106,7 +104,8 @@ Balatro::Balatro(const Balatro &other)
 	  rollPrice(other.rollPrice),
 	  blind(other.blind),
 	  packJokers(other.packJokers),
-	  isInJokerPackUI(other.isInJokerPackUI) {}
+	  isInJokerPackUI(other.isInJokerPackUI), 
+	  isInPlanetPackUI(other.isInPlanetPackUI) {}
 
 Balatro &Balatro::operator=(const Balatro &other) {
 	if (this != &other) {
@@ -136,6 +135,7 @@ Balatro &Balatro::operator=(const Balatro &other) {
 		blind = other.blind;
 		packJokers = other.packJokers;
 		isInJokerPackUI = other.isInJokerPackUI;
+		isInPlanetPackUI = other.isInPlanetPackUI;
 	}
 	return *this;
 }
@@ -158,6 +158,9 @@ void Balatro::initPokerHands() {
 
 void Balatro::initPlanets()
 {
+	if (!allPlanets.empty()) {
+		return;
+	}
 	allPlanets.push_back(new Earth());
 	allPlanets.push_back(new Mars());
 	allPlanets.push_back(new Venus());
@@ -844,9 +847,10 @@ void Balatro::getMessagePrompt(std::string msg) {
                 bool found = false;
                 for (std::vector<IJoker *>::iterator it = jokers.begin(); it != jokers.end() && x < jokers.size(); ++it) {
                     if ((int)x == idx) {
-                        coins += jokers[idx]->getCost();
+                        coins += jokers[idx]->getCost() / 2;
                         std::string success = ":BalatroBot PRIVMSG " + player->getNickName() + " :Sold " + jokers[idx]->getName() + "\r\n";
                         send(sd, success.c_str(), success.length(), MSG_NOSIGNAL);
+						shopJokers.push_back(jokers[idx]);
                         jokers.erase(it);
                         found = true;
                     }
@@ -939,6 +943,7 @@ void Balatro::playHand() {
 		setGameOver(true);
 		printUI();
 		freeJokers();
+		freePlanets();
 		return ;
 	}
 	std::cout << "current score: " << totalBet << std::endl;

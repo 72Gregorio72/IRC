@@ -8,7 +8,7 @@ User::User(int sd) :  buffer(""), sd(sd), authenticated(false), Nick_name(""), U
 User::User(std::string nickname, std::string username, std::string hostname, std::string servername, std::string realname)
 : sd(-1), authenticated(false), Nick_name(nickname), User_name(username), Host_name(hostname), Server_name(servername), Real_name(realname),  isOp(false) {}
 
-User::~User() { authenticated = false; }
+User::~User() { }
 
 User::User(const User &other){
 	this->sd = other.sd;
@@ -20,7 +20,6 @@ User::User(const User &other){
 	this->Server_name = other.Server_name;
 	this->Real_name = other.Real_name;
 	this->isOp = other.isOp;
-
 }
 
 void	User::setAll(std::string nickname, std::string username, std::string hostname, std::string servername, std::string realname){
@@ -41,7 +40,14 @@ void	User::setAll(std::string username, std::string hostname, std::string server
 User& User::operator=(const User &other){
 	if (this == &other)
 		return *this;
+	sd = other.sd;
+	buffer = other.buffer;
+	authenticated = other.authenticated;
+	Nick_name = other.Nick_name;
 	User_name = other.User_name;
+	Host_name = other.Host_name;
+	Server_name = other.Server_name;
+	Real_name = other.Real_name;
 	isOp = other.isOp;
 	return *this;
 }

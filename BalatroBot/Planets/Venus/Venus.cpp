@@ -14,7 +14,7 @@ void Venus::playPlanet(Balatro *bot){
 	PokerHand& highCardHand = bot->getPokerHands("Three of a Kind");
 	highCardHand.setChips(highCardHand.getChips() + 20);
 	highCardHand.setMult(highCardHand.getMult() + 2);
-	highCardHand.setRank(highCardHand.getRank() + 1);
+	highCardHand.setLevel(highCardHand.getLevel() + 1);
 }
 
 std::string Venus::getEffect(){

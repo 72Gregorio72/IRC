@@ -128,6 +128,7 @@ class Balatro {
         int calculateHand();
 
         void freeJokers();
+        void freePlanets();
         void initAllJokers();
         void initPlanets();
         
@@ -138,6 +139,7 @@ class Balatro {
 
         std::vector<std::string> createJokerItem(IJoker* joker);
         std::vector<std::string> createPlanetItem(IPlanet* planet);
+        std::vector<std::string> createPokerHandsRankBox();
         const std::vector<Card>& getSelectedCards() const;
 
         void jokerPackUI(); // Renamed from jokerPackUI to match definition in JokerPackUI.cpp
@@ -187,8 +189,8 @@ class Balatro {
         int blind; // 0 small 1 big 2 boss
         std::vector<IJoker*> packJokers;
         std::vector<IPlanet*> packPlanets;
-        int isInPlanetPackUI;
 		int isInJokerPackUI;
+        int isInPlanetPackUI;
 };
 
 #endif

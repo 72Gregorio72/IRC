@@ -34,6 +34,7 @@ void Balatro::generatePackJokers() {
 
 void Balatro::jokerPackUI() {
 	isInJokerPackUI = 1;
+    isShopUI = false;
     std::string prefix = ":BalatroBot PRIVMSG " + player->getNickName() + " :";
 
     int totalRows = 58;
@@ -70,7 +71,9 @@ void Balatro::jokerPackUI() {
     int headerCol = (rightColWidth - (boxContentWidth + 2)) / 2;
     pasteObject(rightCanvas, headerBox, 15, headerCol);
 
-    // 3. Disegna JOKERS
+    // Ranks box spostato nel pannello sinistro sotto ANTE
+
+    // 4. Disegna JOKERS
     int cardsStartRow = 22;
     
     if (!packJokers.empty()) {
@@ -82,7 +85,7 @@ void Balatro::jokerPackUI() {
 
         pasteObject(rightCanvas, combinedVisual, cardsStartRow, startCol);
 
-        // 4. Disegna BOTTONI [ !pick N ] - CORRETTO
+        // 5. Disegna BOTTONI [ !pick N ] - CORRETTO
         int cardFullWidth = 18; 
         int gap = 5;
 
@@ -114,7 +117,7 @@ void Balatro::jokerPackUI() {
         }
     }
 
-    // 5. Disegna Bottone SKIP
+    // 6. Disegna Bottone SKIP
     std::vector<std::string> skipBox;
     std::string sTop = "\xE2\x95\xAD" + repeat_string(10, "\xE2\x94\x80") + "\xE2\x95\xAE";
     std::string sBot = "\xE2\x95\xB0" + repeat_string(10, "\xE2\x94\x80") + "\xE2\x95\xAF";

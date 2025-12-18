@@ -166,14 +166,11 @@ void Server::startGame(int sd) {
     User* user = find_by_sd(sd);
     if (!user) return;
 
-    // 1. ALLOCAZIONE DINAMICA
     Balatro* newGame = new Balatro(sd, user);
     
-    // 2. INIZIALIZZAZIONE (Opzionale ma consigliata subito)
     newGame->initAllJokers(); 
     newGame->startNewGame();
 
-    // 3. SALVATAGGIO DEL PUNTATORE
     balatroBots.push_back(newGame);
     
     std::cout << "Gioco Balatro creato per socket " << sd << std::endl;
@@ -203,7 +200,7 @@ void	Server::sendPrivmsg(std::string msg, User* sender)
 			}
 		}
 	}
-	else // se non trova canale, cerca user
+	else
 	{
 		User *target = find_by_nickname(channelName);
 		if (target)
