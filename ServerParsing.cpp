@@ -794,7 +794,7 @@ int Server::parse_msg(int sd) {
 				}
 				std::vector<User> users = existingChannel->getUsers();
 				if (alreadyInChannel(find_by_sd(sd)->getNickName(), existingChannel->getChannelName())) {
-					return -1;
+					continue ;
 				}
 				if(checkUserPassword(existingChannel, channelsCopy, passwordsCopy) == false)
 				{
