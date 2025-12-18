@@ -135,14 +135,23 @@ int Server::kick(std::string msg, int sd){
 		reason = msg.substr(msg.find(" :") + 2, msg.find("\r\n") - (msg.find(" :") + 2));
 	}
 	Channel* channel = findChannelByName(channelName);
-	if (channel == NULL){
-		replyErrToClient(ERR_NOSUCHCHANNEL, find_by_sd(sd)->getNickName(), channelName, sd, "");
-		return -1;
-	}
-	if (channel->findUserByNickname(find_by_sd(sd)->getNickName())->_isOp() == false){
-		replyErrToClient(ERR_CHANOPRIVSNEEDED, find_by_sd(sd)->getNickName(), channelName, sd, "");
-		return -1;
-	}
+    if (channel == NULL){
+        replyErrToClient(ERR_NOSUCHCHANNEL, find_by_sd(sd)->getNickName(), channelName, sd, "");
+        return -1;
+    }
+
+    User* userSender = channel->findUserByNickname(find_by_sd(sd)->getNickName());
+
+    if (userSender == NULL){
+        replyErrToClient(ERR_NOTONCHANNEL, find_by_sd(sd)->getNickName(), channelName, sd, "");
+        return -1;
+    }
+
+    if (userSender->_isOp() == false){
+        replyErrToClient(ERR_CHANOPRIVSNEEDED, find_by_sd(sd)->getNickName(), channelName, sd, "");
+        return -1;
+    }
+
 	if (channel->findUserByNickname(find_by_sd(sd)->getNickName()) == NULL){
 		replyErrToClient(ERR_NOTONCHANNEL, find_by_sd(sd)->getNickName(), channelName, sd, "");
 		return -1;
@@ -150,15 +159,16 @@ int Server::kick(std::string msg, int sd){
 	if (channel->userInChannel(userToKick) == false){
 		replyErrToClient(ERR_USERNOTINCHANNEL, find_by_sd(sd)->getNickName(), channelName, sd, channelName);
 		return -1;
-	} else {
-		std::vector<User> users = channel->getUsers();
-		std::string partMsg = ":" + userToKick + "!" + userToKick + "@localhost PART " + channelName + " :" + reason + "\r\n";
-		for (size_t j = 0; j < users.size(); j++) {
-			int fd = users[j].sd;
-			send(fd, partMsg.c_str(), partMsg.length(), MSG_NOSIGNAL);
-		}
 	}
+	std::string kickMsg = ":" + find_by_sd(sd)->getNickName() + "!" + find_by_sd(sd)->getUserName() + "@localhost KICK " + channelName + " " + userToKick;
+	if (!reason.empty()){
+		kickMsg += " :" + reason + "\r\n";
+	} else {
+		kickMsg += " :No reason specified\r\n";
+	}
+	send(find_by_sd(sd)->sd, kickMsg.c_str(), kickMsg.length(), MSG_NOSIGNAL);
 	channel->removeUser(userToKick);
+	
 	return 0;
 }
 
@@ -598,12 +608,23 @@ int Server::mode(std::string msg, int sd) {
 		} else if (modeFlags.o.flag == 2) {
 			User* userToDeop = channel->findUserByNickname(modeFlags.o.arg);
 			if (userToDeop != NULL) {
-				userToDeop->SetOp(false);
-				std::string deopMsg = ":" + find_by_sd(sd)->getNickName() + "!" + find_by_sd(sd)->getUserName() + "@localhost MODE " + channelName + " -o " + modeFlags.o.arg + "\r\n";
-				std::vector<User> users = channel->getUsers();
-				for (size_t j = 0; j < users.size(); j++) {
-					int fd = users[j].sd;
-					send(fd, deopMsg.c_str(), deopMsg.length(), MSG_NOSIGNAL);
+				if (channel->count_operators() == 1 && userToDeop->_isOp()){
+					std::vector<User> users = channel->getUsers();
+					std::string partMsg = ":" + userToDeop->getNickName() + "!" + userToDeop->getNickName() + "@localhost PART " + channelName + " :" + "" + "\r\n";
+					for (size_t j = 0; j < users.size(); j++) {
+						int fd = users[j].sd;
+						send(fd, partMsg.c_str(), partMsg.length(), MSG_NOSIGNAL);
+					}
+					channel->removeUser(userToDeop->getNickName());
+				}
+				else {
+					userToDeop->SetOp(false);
+					std::string deopMsg = ":" + find_by_sd(sd)->getNickName() + "!" + find_by_sd(sd)->getUserName() + "@localhost MODE " + channelName + " -o " + modeFlags.o.arg + "\r\n";
+					std::vector<User> users = channel->getUsers();
+					for (size_t j = 0; j < users.size(); j++) {
+						int fd = users[j].sd;
+						send(fd, deopMsg.c_str(), deopMsg.length(), MSG_NOSIGNAL);
+					}
 				}
 			} else {
 				replyErrToClient(ERR_NOSUCHNICK, find_by_sd(sd)->getNickName(), channelName, sd, "");
@@ -763,6 +784,7 @@ int Server::parse_msg(int sd) {
 			}
 		}
 		std::string channelsCopy = channels;
+		User tempUser = *find_by_sd(sd);
 		do {
 			std::string passwordsCopy = passwords;
 			pos = channels.find_first_of(",");
@@ -781,14 +803,13 @@ int Server::parse_msg(int sd) {
 			Channel channel(channelName, this);
 			if (findChannelByName(channel.getChannelName()) != NULL) {
 				Channel* existingChannel = findChannelByName(channel.getChannelName());
-				if (existingChannel->getUserLimit() > 0 && (int)existingChannel->getUsers().size() + 1 > existingChannel->getUserLimit())
-				{
+				
+				// Controlli limiti e invite...
+				if (existingChannel->getUserLimit() > 0 && (int)existingChannel->getUsers().size() + 1 > existingChannel->getUserLimit()) {
 					replyErrToClient(ERR_CHANNELISFULL, find_by_sd(sd)->getNickName(), channelName, sd, "");
 					return -1;
 				}
-
-				if (existingChannel->getInviteOnly() && !existingChannel->nickInInviteList(find_by_sd(sd)->getNickName()))
-				{
+				if (existingChannel->getInviteOnly() && !existingChannel->nickInInviteList(find_by_sd(sd)->getNickName())) {
 					replyErrToClient(ERR_INVITEONLYCHAN, "", existingChannel->getChannelName(), sd, " :Cannot join channel (+i)");
 					return -1;
 				}
@@ -799,15 +820,12 @@ int Server::parse_msg(int sd) {
 				if(checkUserPassword(existingChannel, channelsCopy, passwordsCopy) == false)
 				{
 					replyErrToClient(ERR_BADCHANNELKEY, find_by_sd(sd)->getNickName(), channel.getChannelName(), sd, "");
-					continue ;
+					continue ; // Usa continue, non return, per provare il prossimo canale nel loop
 				}
-				for (std::vector<User>::iterator it = users.begin(); it != users.end(); ++it)
-				{
-					if (it->sd != sd)
-					{
-						existingChannel->addUser(find_by_sd(sd));
-						continue ;
-					}
+
+				// AGGIUNTA UTENTE (Senza loop, senza return -1 preventivo)
+				if (!existingChannel->userInChannel(find_by_sd(sd)->getNickName())) {
+					existingChannel->addUser(&tempUser);
 				}
 			}
 			else if (findChannelByName(channel.getChannelName()) == NULL)
@@ -818,8 +836,7 @@ int Server::parse_msg(int sd) {
 					return -1;
 				}
 				allChannels.push_back(channel);
-				//std::cout << "channel: " << channel.getChannelName() << std::endl;
-				allChannels.back().addUser(find_by_sd(sd));
+				allChannels.back().addUser(&tempUser);
 			}
 		}
 		while (pos != std::string::npos);
