@@ -194,10 +194,6 @@ int Server::part(std::string msg, int sd){
 
 int Server::parse_entry(std::string msg, int sd){
 	if (find_by_sd(sd)->getNickName() == "") {
-		if (msg.find("CAP LS 302") != std::string::npos) {
-			msg.erase(0, 12);
-			return 0;
-		}
 
 		if (msg.find("PASS ") != std::string::npos) {
 			if (check_password(msg) && !find_by_sd(sd)->authenticated && find_by_sd(sd)->getNickName() == "") {
@@ -208,6 +204,7 @@ int Server::parse_entry(std::string msg, int sd){
 				return -72;
 			}
 		}
+	
 		if (size_t pos = msg.find("NICK ") != std::string::npos && find_by_sd(sd)->getNickName() == "" && find_by_sd(sd)->authenticated) {
 			if (pos != std::string::npos)
 				msg.erase(0, pos);
@@ -222,6 +219,10 @@ int Server::parse_entry(std::string msg, int sd){
 			find_by_sd(sd)->setNickName(nickname);
 			return 0;
 		}
+	}
+	if (!find_by_sd(sd)->authenticated) {
+		replyErrToClient(ERR_PASSWDMISMATCH, "", "", sd, "");
+		return -72;
 	}
 	return 0;
 }
@@ -565,18 +566,18 @@ int Server::mode(std::string msg, int sd) {
 				return -1; // Unknown flag
 		}
 		
-		if (modeFlags.i.flag == 1)
-			channel->setInviteOnly(true);
-		else if (modeFlags.i.flag == 2)
-			channel->setInviteOnly(false);
+		// if (modeFlags.i.flag == 1)
+		// 	channel->setInviteOnly(true);
+		// else if (modeFlags.i.flag == 2)
+		// 	channel->setInviteOnly(false);
 		
-		if (modeFlags.t.flag == 1) {
-			// Implement topic restriction logic if needed
-		}
+		// if (modeFlags.t.flag == 1) {
+		// 	// Implement topic restriction logic if needed
+		// }
 
-		if (modeFlags.k.flag == 1) {
-			// Implement password logic if needed
-		}
+		// if (modeFlags.k.flag == 1) {
+		// 	// Implement password logic if needed
+		// }
 
 		if (modeFlags.o.flag == 1) {
 			//std::cout << "Giving operator status to |" << modeFlags.o.arg << "|" << std::endl;
@@ -706,11 +707,19 @@ int Server::parse_msg(int sd) {
     
     std::string msg(serverdata.msg);
 
-    if (parse_entry(msg, sd) == -72)
-        return -72;
+	if (msg.find("CAP LS 302") != std::string::npos) {
+		msg.erase(0, 12);
+		return 0;
+	}
 
-    if (!find_by_sd(sd)->authenticated)
-        return -1;
+    if (parse_entry(msg, sd) == -72) {
+        return -72;
+	}
+
+	if (!find_by_sd(sd)->authenticated) {
+		// replyErrToClient(ERR_PASSWDMISMATCH, "", "", sd, "");
+		return -1;
+	}
 
     if (msg.find("USER ") != std::string::npos && find_by_sd(sd)->getUserName() == "") {
         create_user(msg, sd);
