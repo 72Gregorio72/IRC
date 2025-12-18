@@ -217,6 +217,7 @@ int Server::parse_entry(std::string msg, int sd){
 			msg.erase(0, msg.find_first_of("\r\n"));
 			nickname.erase(nickname.find_last_not_of(" \r\n") + 1);
 			find_by_sd(sd)->setNickName(nickname);
+			find_by_sd(sd)->setHasNick(true);
 			return 0;
 		}
 	}

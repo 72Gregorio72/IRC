@@ -133,6 +133,7 @@ void	Server::create_user(std::string msg, int sd){
     }
 
     user->setAll(username, hostanme, servername, realname);
+	user->setHasUser(true);
 }
 
 User* Server::find_by_sd(int sd){
@@ -197,7 +198,7 @@ void	Server::sendPrivmsg(std::string msg, User* sender)
 		replyErrToClient(ERR_NOTEXTTOSEND, sender->getNickName(), channelName, sender->sd, "");
 		return ;
 	}
-	if (sender->authenticated == false)
+	if (!sender->getHasNick() || !sender->getHasUser())
 	{
 		replyErrToClient(ERR_NOTREGISTERED, sender->getNickName(), "", sender->sd, "");
 		return ;
