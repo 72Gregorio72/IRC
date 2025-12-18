@@ -353,39 +353,38 @@ std::string Balatro::getRightPanelContent(int row, int handStart, int handH, int
                                           const std::vector<std::string>& deckVisual) {
     
     // --- CONFIGURAZIONE DIMENSIONI ---
-    int boxWidth = 44;          // Larghezza box comandi
-    int targetRightCol = 85;    // Dove inizia visivamente il box comandi
+    int boxWidth = 44;          // Larghezza Box Comandi
+    int statsWidth = 44;        // Larghezza Box Statistiche
+    int gapSize = 2;            // Spazio tra i due box
     int cardWidth = 14;         
 
-    // --- CALCOLO SPAZIATURA ---
-    // Calcoliamo dove finiscono le carte per sapere quanti spazi mettere prima del box destro
+    // Spostamento a sinistra (fisso)
+    int targetRightCol = 4;    
+    
     int currentHandWidth = hand.size() * cardWidth;
     int boxStartCol = targetRightCol;
-    
-    // Se la mano è troppo larga, sposta il box a destra
-    if (currentHandWidth + 4 > targetRightCol) {
-        boxStartCol = currentHandWidth + 4;
-    }
 
     // --- COLORI ---
     std::string C_ORANGE  = "\x03" "07";
-    // Scala da Blu (Freddo) a Rosso (Caldo)
-    std::string C_SCALE_1 = "\x03" "02"; // Navy Blue
-    std::string C_SCALE_2 = "\x03" "12"; // Blue
-    std::string C_SCALE_3 = "\x03" "11"; // Cyan
-    std::string C_SCALE_4 = "\x03" "10"; // Teal
-    std::string C_SCALE_5 = "\x03" "09"; // Light Green
-    std::string C_SCALE_6 = "\x03" "08"; // Yellow
-    std::string C_SCALE_7 = "\x03" "07"; // Orange
-    std::string C_SCALE_8 = "\x03" "04"; // Red
-    std::string C_SCALE_9 = "\x03" "05"; // Maroon (Dark Red)
-    std::string C_SCALE_10 = "\x03" "06"; // Purple
-    std::string C_SCALE_11 = "\x03" "13"; // Pink / Fuchsia
+    std::string C_SCALE_1 = "\x03" "02"; 
+    std::string C_SCALE_2 = "\x03" "12"; 
+    std::string C_SCALE_3 = "\x03" "11"; 
+    std::string C_SCALE_4 = "\x03" "10"; 
+    std::string C_SCALE_5 = "\x03" "09"; 
+    std::string C_SCALE_6 = "\x03" "08"; 
+    std::string C_SCALE_7 = "\x03" "07"; 
+    std::string C_SCALE_8 = "\x03" "04"; 
+    std::string C_SCALE_9 = "\x03" "05"; 
+    std::string C_SCALE_10 = "\x03" "06"; 
+    std::string C_SCALE_11 = "\x03" "13"; 
     std::string C_GREY    = "\x03" "14";
     std::string BOLD      = "\x02";
     std::string RESET     = "\x0f";
+    std::string vBorder = C_ORANGE + "│" + RESET; 
 
-    // --- 1. CONTENUTO "SINISTRO" (CARTE DELLA MANO) ---
+    // ==========================================================
+    // 1. CONTENUTO "SINISTRO" (CARTE DELLA MANO)
+    // ==========================================================
     std::string leftPart = "";
     int visibleLeftLen = 0; 
 
@@ -398,7 +397,7 @@ std::string Balatro::getRightPanelContent(int row, int handStart, int handH, int
     }
     else if (row == handStart + handH) {
         for(size_t c = 0; c < hand.size(); c++) {
-            std::string cardNum = "(" + toString(c + 1) + ")";
+            std::string cardNum = "(" + to_string_98(c + 1) + ")";
             int paddingLen = (13 - cardNum.length()) / 2;
             std::string item = std::string(paddingLen, ' ') + cardNum + std::string(13 - paddingLen - cardNum.length(), ' ') + " ";
             leftPart += item;
@@ -406,88 +405,199 @@ std::string Balatro::getRightPanelContent(int row, int handStart, int handH, int
         visibleLeftLen = currentHandWidth;
     }
 
-    // --- 2. SPAZIATURA CENTRALE ---
+    // ==========================================================
+    // 2. SPAZIATURA CENTRALE
+    // ==========================================================
     int paddingNeeded = boxStartCol - visibleLeftLen;
     if (paddingNeeded < 0) paddingNeeded = 0;
     std::string spacer = std::string(paddingNeeded, ' ');
 
-    // --- 3. CONTENUTO DESTRO (BOX COMANDI + DECK) ---
+    // ==========================================================
+    // 3. CONTENUTO DESTRO (COMANDI + STATS + DECK)
+    // ==========================================================
     std::string rightPart = "";
-    std::string vBorder = C_ORANGE + "│" + RESET; 
 
-    // Fissiamo l'inizio del box comandi in alto (es. riga 2)
-    int boxCommandStartRow = 2; 
+    int boxesStartRow = 2;
+    int cmdBoxHeight = 24; 
+    int boxesEndRow = boxesStartRow + cmdBoxHeight;
 
-    // A. HEADER BOX
-    if (row == 0) {
-        rightPart = C_ORANGE + "┌──────────────────────────────────────────┐" + RESET;
-    }
-    // B. SEZIONE COMANDI
-    else if (row >= boxCommandStartRow && row < deckStart) {
+    std::vector<std::string> pokerStats = getPokerHandVisuals();
+    
+    // --- A & B. BOX COMANDI E STATS ---
+    if (row >= boxesStartRow && row < boxesEndRow) {
         
-        int r = row - boxCommandStartRow + 1; // Riga relativa
-
-        if (row == deckStart - 1) {
-             rightPart = C_ORANGE + "└──────────────────────────────────────────┘" + RESET;
+        // 1. Box Comandi (Sinistra)
+        std::string cmdLine = "";
+        int r = row - boxesStartRow + 1; 
+        
+        if (r == 1) {
+            cmdLine = C_ORANGE + "┌──────────────────────────────────────────┐" + RESET;
+        } 
+        else if (r == cmdBoxHeight) {
+            cmdLine = C_ORANGE + "└──────────────────────────────────────────┘" + RESET;
         }
         else {
             std::string text = "";
-            if (r == 1)      text = BOLD + centerText("COMMANDS", boxWidth - 2) + RESET;
-            else if (r == 2) text = C_ORANGE + "├──────────────────────────────────────────┤" + RESET;
-            else if (r == 3) text = " " + C_SCALE_1 + "!select" + RESET + " <id> " + C_GREY + "(es: !select 1 3)" + RESET;
-            else if (r == 5) text = " " + C_SCALE_2 + "!discard" + C_GREY + " (Discard selected)" + RESET;
-            else if (r == 7) text = " " + C_SCALE_3 + "!play" + C_GREY + "    (Play selected)" + RESET;
-            else if (r == 9) text = " " + C_SCALE_4 + "!sort suit/rank" + C_GREY + " (Sort Hand)" + RESET;
-            else if (r == 11) text = " " + C_SCALE_5 + "!cash out" + C_GREY + " (Cash Out)" + RESET;
-            else if (r == 13) text = " " + C_SCALE_6 + "!shop"  + RESET + " <id> " + C_GREY + "(es: !shop 1 3)" + RESET;
-            else if (r == 15) text = " " + C_SCALE_7 + "!next" + C_GREY + " (Start New Round)" + RESET;
-            else if (r == 17) text = " " + C_SCALE_8 + "!replace"  + RESET + " <id> " + C_GREY + "(es: !replace 1 3)" + RESET;
-            else if (r == 19) text = " " + C_SCALE_9 + "!reroll" + C_GREY + " (Reroll The Shop)" + RESET;
-            else if (r == 21) text = " " + C_SCALE_10 + "!sell"  + RESET + " <id> " + C_GREY + "(es: !sell 1 3)" + RESET;
-            else if (r == 23) text = " " + C_SCALE_11 + "!swap"  + RESET + " <id1> <id2> " + C_GREY + "(es: !swap 1 3)" + RESET;
+            if (r == 2)      text = BOLD + centerText("COMMANDS", boxWidth - 2) + RESET;
+            else if (r == 3) text = C_ORANGE + "├──────────────────────────────────────────┤" + RESET;
+            else if (r == 4) text = " " + C_SCALE_1 + "!select" + RESET + " <id> " + C_GREY + "(es: !select 1 3)" + RESET;
+            else if (r == 6) text = " " + C_SCALE_2 + "!discard" + C_GREY + " (Discard selected)" + RESET;
+            else if (r == 8) text = " " + C_SCALE_3 + "!play" + C_GREY + "    (Play selected)" + RESET;
+            else if (r == 10) text = " " + C_SCALE_4 + "!sort suit/rank" + C_GREY + " (Sort Hand)" + RESET;
+            else if (r == 12) text = " " + C_SCALE_5 + "!cash out" + C_GREY + " (Cash Out)" + RESET;
+            else if (r == 14) text = " " + C_SCALE_6 + "!shop"  + RESET + " <id> " + C_GREY + "(es: !shop 1 3)" + RESET;
+            else if (r == 16) text = " " + C_SCALE_7 + "!next" + C_GREY + " (Start New Round)" + RESET;
+            else if (r == 18) text = " " + C_SCALE_8 + "!replace"  + RESET + " <id> " + C_GREY + "(es: !replace 1 3)" + RESET;
+            else if (r == 20) text = " " + C_SCALE_9 + "!reroll" + C_GREY + " (Reroll The Shop)" + RESET;
+            else if (r == 22) text = " " + C_SCALE_10 + "!sell"  + RESET + " <id> " + C_GREY + "(es: !sell 1 3)" + RESET;
+            else if (r == 24) text = " " + C_SCALE_11 + "!swap"  + RESET + " <id1> <id2> " + C_GREY + "(es: !swap 1 3)" + RESET;
             else {
                 text = std::string(boxWidth - 2, ' '); 
             }
 
-            if (r == 2) {
-                rightPart = text;
+            if (r == 3) {
+                cmdLine = text;
             } else {
-                 int txtLen = getVisualLength(text);
-                 if (txtLen > boxWidth - 2) text = std::string(boxWidth - 2, ' '); 
-                 int padRight = (boxWidth - 2) - txtLen;
-                 if(padRight < 0) padRight = 0;
-                 rightPart = vBorder + text + std::string(padRight, ' ') + vBorder;
+                int txtLen = getVisualLength(text); 
+                if (txtLen > boxWidth - 2) text = std::string(boxWidth - 2, ' '); 
+                int padRight = (boxWidth - 2) - txtLen;
+                if(padRight < 0) padRight = 0;
+                cmdLine = vBorder + text + std::string(padRight, ' ') + vBorder;
             }
         }
+
+        // 2. Box Stats (Destra)
+        std::string statLine = "";
+        int statIdx = row - boxesStartRow; 
+
+        if (statIdx >= 0 && statIdx < (int)pokerStats.size()) {
+            statLine = pokerStats[statIdx];
+        } else {
+            statLine = std::string(statsWidth, ' ');
+        }
+
+        std::string gap = std::string(gapSize, ' ');
+        rightPart = cmdLine + gap + statLine;
     }
-    // C. RIEMPIMENTO VERTICALE (Tra header e box comandi, se c'è spazio)
-    else if (row < deckStart && row > 0) {
-        rightPart = vBorder + std::string(boxWidth - 2, ' ') + vBorder;
-    }
-    // D. SEZIONE DECK
+
+    // --- D. DECK (SPOSTATO TUTTO A DESTRA) ---
     else if (row >= deckStart && row < deckStart + deckH) {
         int dSlice = row - deckStart;
         std::string deckRow = deckVisual[dSlice];
-        int deckPadLen = (boxWidth - 20) / 2;
+        
+        // Calcolo per allineare a DESTRA
+        // Larghezza totale dei box sopra = boxWidth (44) + gapSize (2) + statsWidth (44) = 90
+        // Larghezza Deck = 20
+        // Padding = 90 - 20 = 70
+        
+        int deckWidth = 20; 
+        int totalBlockWidth = boxWidth + gapSize + statsWidth; 
+        int deckPadLen = totalBlockWidth - deckWidth - 20;
+        
         if (deckPadLen < 0) deckPadLen = 0;
         rightPart = std::string(deckPadLen, ' ') + deckRow;
     }
     else if (row == deckStart + deckH) {
-        std::string deckLabel = "(" + toString(deck.size()) + ")";
-        int labelPadLen = (boxWidth - deckLabel.length()) / 2;
-        rightPart = std::string(labelPadLen, ' ') + deckLabel; 
+        std::string deckLabel = "(" + to_string_98(deck.size()) + ")";
+        
+        // Centrare l'etichetta rispetto alla nuova posizione del deck (a destra)
+        int deckWidth = 20;
+        int totalBlockWidth = boxWidth + gapSize + statsWidth; 
+        
+        // Il deck inizia graficamente a: totalBlockWidth - deckWidth
+        // Il centro del deck è a: (totalBlockWidth - deckWidth) + (deckWidth / 2)
+        // La label deve iniziare a: CentroDeck - (LabelLen / 2)
+        
+        int centerDeck = (totalBlockWidth - deckWidth) + (deckWidth / 2);
+        int labelStart = centerDeck - (deckLabel.length() / 2);
+
+        if (labelStart < 0) labelStart = 0;
+        rightPart = std::string(labelStart, ' ') + deckLabel; 
+    }
+    else {
+        rightPart = ""; 
     }
 
     return leftPart + spacer + rightPart;
 }
 
-// Helper per ripetere una stringa N volte (es: "───")
-std::string repeat(int n, const char* s) {
-    std::string res = "";
-    for (int i = 0; i < n; ++i) {
-        res += s;
+std::vector<std::string> Balatro::getPokerHandVisuals() {
+    std::vector<std::string> lines;
+    
+    // --- COLORI ---
+    std::string C_WHITE   = "\x03" "00";
+    std::string C_BLUE    = "\x03" "12";
+    std::string C_RED     = "\x03" "04";
+    std::string C_ORANGE  = "\x03" "07";
+    std::string C_GREY    = "\x03" "14";
+    std::string C_YELLOW  = "\x03" "08";
+    std::string BOLD      = "\x02";
+    std::string RESET     = "\x0f";
+
+    int boxWidth = 44;
+    
+    // CORREZIONE 1: Usa repeat_string e doppi apici per "─"
+    std::string hBorder = repeat_string(boxWidth - 2, "─"); 
+    std::string vBorder = C_GREY + "│" + RESET;
+
+    // Header del Box
+    lines.push_back(C_GREY + "┌" + hBorder + "┐" + RESET);
+    
+    std::string title = "HAND CONTENTS";
+    int padTitle = (boxWidth - 2 - title.length()) / 2;
+    std::string titleLine = std::string(padTitle, ' ') + C_YELLOW + BOLD + title + RESET + std::string(boxWidth - 2 - padTitle - title.length(), ' ');
+    
+    lines.push_back(vBorder + titleLine + vBorder);
+    lines.push_back(C_GREY + "├" + hBorder + "┤" + RESET);
+
+    // Lista Mani
+    std::vector<PokerHand*> handsList;
+    handsList.push_back(&pokerHands.HighCard);
+    handsList.push_back(&pokerHands.OnePair);
+    handsList.push_back(&pokerHands.TwoPair);
+    handsList.push_back(&pokerHands.ThreeOfAKind);
+    handsList.push_back(&pokerHands.Straight);
+    handsList.push_back(&pokerHands.Flush);
+    handsList.push_back(&pokerHands.FullHouse);
+    handsList.push_back(&pokerHands.FourOfAKind);
+    handsList.push_back(&pokerHands.StraightFlush);
+    handsList.push_back(&pokerHands.RoyalFlush);
+    handsList.push_back(&pokerHands.FiveOfAKind);
+    handsList.push_back(&pokerHands.FlushHouse);
+    handsList.push_back(&pokerHands.FlushFive);
+
+    for (size_t i = 0; i < handsList.size(); ++i) {
+        PokerHand* h = handsList[i];
+
+        std::string name = h->getName();
+        if (name.length() > 14) name = name.substr(0, 14);
+        std::string namePad = std::string(14 - name.length(), ' ');
+
+        // CORREZIONE 2: Assumiamo che tu abbia aggiunto getLevel() in PokerHand.hpp
+        std::string lvlStr = "lvl." + to_string_98(h->getRank()); 
+        if (lvlStr.length() < 6) lvlStr += std::string(6 - lvlStr.length(), ' ');
+
+        std::string chipsStr = to_string_98(h->getChips());
+        std::string multStr = to_string_98(h->getMult());
+        
+        int contentLen = 1 + 14 + 1 + 6 + 2 + chipsStr.length() + 3 + multStr.length() + 1;
+        int remainingSpace = (boxWidth - 2) - contentLen;
+        if (remainingSpace < 0) remainingSpace = 0;
+
+        std::stringstream ss;
+        ss << vBorder 
+           << " " << C_WHITE << name << RESET << namePad << " "
+           << C_GREY << lvlStr << RESET << "  "
+           << C_BLUE << chipsStr << RESET << C_RED << " X " << multStr << RESET
+           << std::string(remainingSpace, ' ')
+           << vBorder;
+
+        lines.push_back(ss.str());
     }
-    return res;
+    
+    lines.push_back(C_GREY + "└" + hBorder + "┘" + RESET);
+
+    return lines;
 }
 
 void Balatro::printWinUI() {
@@ -527,7 +637,7 @@ void Balatro::printWinUI() {
     
     // *** CORREZIONE QUI SOTTO ***
     // Usiamo repeat() invece del costruttore, e "─" tra doppi apici
-    std::string hBorder = repeat(boxWidth - 2, "─"); 
+    std::string hBorder = repeat_string(boxWidth - 2, "─"); 
     std::string vBorder = C_GREY + "│" + RESET;
 
     infoBox.push_back(C_GREY + "┌" + hBorder + "┐" + RESET);
