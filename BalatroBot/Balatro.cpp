@@ -141,19 +141,19 @@ Balatro &Balatro::operator=(const Balatro &other) {
 }
 
 void Balatro::initPokerHands() {
-	pokerHands.HighCard.setPokerHand("High Card", 1, 5, 1);
-    pokerHands.OnePair.setPokerHand("Pair", 2, 10, 2);
-    pokerHands.TwoPair.setPokerHand("Two Pair", 3, 20, 2);
-    pokerHands.ThreeOfAKind.setPokerHand("Three of a Kind", 4, 30, 3);
-    pokerHands.Straight.setPokerHand("Straight", 5, 30, 4);
-    pokerHands.Flush.setPokerHand("Flush", 6, 35, 4);
-    pokerHands.FullHouse.setPokerHand("Full House", 7, 40, 4);
-    pokerHands.FourOfAKind.setPokerHand("Four of a Kind", 8, 60, 7);
-    pokerHands.StraightFlush.setPokerHand("Straight Flush", 9, 100, 8);
-    pokerHands.RoyalFlush.setPokerHand("Royal Flush", 10, 100, 8);
-    pokerHands.FiveOfAKind.setPokerHand("Five of a Kind", 11, 120, 12);
-    pokerHands.FlushHouse.setPokerHand("Flush House", 12, 140, 14);
-    pokerHands.FlushFive.setPokerHand("Flush Five", 13, 160, 16);
+	pokerHands.HighCard.setPokerHand("High Card", 0, 5, 1);
+    pokerHands.OnePair.setPokerHand("Pair", 0, 10, 2);
+    pokerHands.TwoPair.setPokerHand("Two Pair", 0, 20, 2);
+    pokerHands.ThreeOfAKind.setPokerHand("Three of a Kind", 0, 30, 3);
+    pokerHands.Straight.setPokerHand("Straight", 0, 30, 4);
+    pokerHands.Flush.setPokerHand("Flush", 0, 35, 4);
+    pokerHands.FullHouse.setPokerHand("Full House", 0, 40, 4);
+    pokerHands.FourOfAKind.setPokerHand("Four of a Kind", 0, 60, 7);
+    pokerHands.StraightFlush.setPokerHand("Straight Flush", 0, 100, 8);
+    pokerHands.RoyalFlush.setPokerHand("Royal Flush", 0, 100, 8);
+    pokerHands.FiveOfAKind.setPokerHand("Five of a Kind", 0, 120, 12);
+    pokerHands.FlushHouse.setPokerHand("Flush House", 0, 140, 14);
+    pokerHands.FlushFive.setPokerHand("Flush Five", 0, 160, 16);
 }
 
 void Balatro::initPlanets()
