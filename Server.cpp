@@ -188,19 +188,33 @@ void	Server::sendPrivmsg(std::string msg, User* sender)
 	msg.erase(0, pos + 1);
 	if (channelName[0] == '#'|| channelName[0] == '&')
 	{
-		for (std::vector<Channel>::iterator it = allChannels.begin(); it != allChannels.end(); it++)
-		{;
-			if (it->getChannelName() == channelName)
+		Channel *temp = findChannelByName(channelName);
+		if (temp)
+		{
+			if (!temp->userInChannel(sender->getNickName()))
 			{
-				std::vector<User> channelUsers = it->getUsers();
-				for (size_t i = 0; i < channelUsers.size(); i++)
+				replyErrToClient(ERR_CANNOTSENDTOCHAN, sender->getNickName(), channelName, sender->sd, "");
+				return ;
+			}
+			for (std::vector<Channel>::iterator it = allChannels.begin(); it != allChannels.end(); it++)
+			{;
+				if (it->getChannelName() == channelName)
 				{
-					std::string fullMsg = ":" + sender->getNickName() + "!" + sender->getUserName() + "@localhost PRIVMSG " + channelName + " :" + msg + "\r\n";
-					if (channelUsers[i].sd != sender->sd)
-						send(channelUsers[i].sd, fullMsg.c_str(), fullMsg.length(), MSG_NOSIGNAL);
+					std::vector<User> channelUsers = it->getUsers();
+					for (size_t i = 0; i < channelUsers.size(); i++)
+					{
+						std::string fullMsg = ":" + sender->getNickName() + "!" + sender->getUserName() + "@localhost PRIVMSG " + channelName + " :" + msg + "\r\n";
+						if (channelUsers[i].sd != sender->sd)
+							send(channelUsers[i].sd, fullMsg.c_str(), fullMsg.length(), MSG_NOSIGNAL);
 
+					}
 				}
 			}
+		}
+		else
+		{
+			replyErrToClient(ERR_NOSUCHNICK, sender->getNickName(), channelName, sender->sd, "");
+			return ;
 		}
 	}
 	else // se non trova canale, cerca user
@@ -216,7 +230,6 @@ void	Server::sendPrivmsg(std::string msg, User* sender)
 		{
 			replyErrToClient(ERR_NOSUCHNICK, sender->getNickName(), channelName, sender->sd, "");
 			return ;
-
 		}
 	}
 
