@@ -186,6 +186,27 @@ void	Server::sendPrivmsg(std::string msg, User* sender)
 	msg.erase(0, pos);
 	pos = msg.find(":");
 	msg.erase(0, pos + 1);
+	std::cout << "Sending PRIVMSG to " << channelName << " message: " << msg << std::endl;
+	if (channelName.empty() || channelName[0] == ':')
+	{
+		replyErrToClient(ERR_NORECIPIENT, sender->getNickName(), "", sender->sd, " :No recipient given (PRIVMSG)");
+		return ;
+	}
+	if (msg.empty())
+	{
+		replyErrToClient(ERR_NOTEXTTOSEND, sender->getNickName(), channelName, sender->sd, "");
+		return ;
+	}
+	if (sender->authenticated == false)
+	{
+		replyErrToClient(ERR_NOTREGISTERED, sender->getNickName(), "", sender->sd, "");
+		return ;
+	}
+	if (channelName.find(",") != std::string::npos)
+	{
+		replyErrToClient(ERR_TOOMANYTARGETS, sender->getNickName(), channelName, sender->sd, " :Too many targets");
+		return ;
+	}
 	if (channelName[0] == '#'|| channelName[0] == '&')
 	{
 		Channel *temp = findChannelByName(channelName);

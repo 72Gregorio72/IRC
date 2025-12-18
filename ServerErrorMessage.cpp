@@ -63,7 +63,23 @@ void	Server::replyErrToClient(int numErrno, std::string nickname, std::string ch
 		case ERR_UNKNOWNMODE:
 			msg = ":localhost 472 " + nickname + " " + arg + " :Is unknown mode char to me\r\n";
 			break ;
+
+		case ERR_NORECIPIENT:
+			msg = ":localhost 411 " + nickname + " :No recipient given (" + arg + ")\r\n";
+			break ;
 	
+		case ERR_NOTEXTTOSEND:
+			msg = ":localhost 412 " + nickname + " :No text to send\r\n";
+			break ;
+
+		case ERR_NOTREGISTERED:
+			msg = ":localhost 451 " + nickname + " :You have not registered\r\n";
+			break ;
+
+		case ERR_TOOMANYTARGETS:
+			msg = ":localhost 407 " + nickname + " " + channel + " :Too many targets\r\n";
+			break ;	
+
 		default:
 			break;
 	}
