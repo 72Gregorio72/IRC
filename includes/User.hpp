@@ -17,15 +17,17 @@ class User{
 		User(const User &other);
 		User &operator=(const User &other);
 
-
 		std::string getNickName();
 		std::string getUserName();
 		std::string getHostName();
 		std::string getServerName();
 		std::string getRealName();
+		bool getHasNick();
+		bool getHasUser();
 
 		void	setNickName(std::string nickname);
-
+		void 	setHasNick( bool val );
+		void 	setHasUser( bool val );
 		void	printUser();
 
 		void	setAll(std::string nickname, std::string username, std::string hostname, std::string servername, std::string realname);
@@ -40,6 +42,8 @@ class User{
 		std::string Server_name;
 		std::string Real_name;
 		bool isOp;
+		bool hasNick;
+		bool hasUser;
 };
 
 #endif

@@ -57,6 +57,7 @@ class Balatro {
         int getCurrentBet() const;
         int getTotalBet() const;
         std::string getBestHandName() const;
+		std::vector<std::string> getPokerHandVisuals();
 
         void setAnte(int newAnte);
         void setDiscards(int newDiscards);
