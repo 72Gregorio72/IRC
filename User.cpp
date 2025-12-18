@@ -41,7 +41,14 @@ void	User::setAll(std::string username, std::string hostname, std::string server
 User& User::operator=(const User &other){
 	if (this == &other)
 		return *this;
+	sd = other.sd;
+	buffer = other.buffer;
+	authenticated = other.authenticated;
+	Nick_name = other.Nick_name;
 	User_name = other.User_name;
+	Host_name = other.Host_name;
+	Server_name = other.Server_name;
+	Real_name = other.Real_name;
 	isOp = other.isOp;
 	hasNick = other.hasNick;
 	hasUser = other.hasUser;
