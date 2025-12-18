@@ -28,6 +28,10 @@ void	Server::replyErrToClient(int numErrno, std::string nickname, std::string ch
 			msg = ":localhost 401 " + nickname + " " + channel + " :No such nick/channel\r\n";
             break;
 		
+		case ERR_CANNOTSENDTOCHAN:
+			msg = ":localhost 404 " + nickname + " " + channel + " :Cannot send to channel\r\n";
+			break;
+
 		case ERR_USERNOTINCHANNEL:
             msg = ":localhost 441 " + nickname + " " + channel + " :User is not in that channel\r\n";
             break;
