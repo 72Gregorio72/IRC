@@ -7,8 +7,10 @@
 #include "PokerHand.hpp"
 #include <algorithm>
 #include "../Jokers/IJoker.hpp"
+#include "../Planets/IPlanet.hpp"
 
 class IJoker;
+class IPlanet;
 class PokerHand;
 class Card;
 class User;
@@ -55,6 +57,7 @@ class Balatro {
         int getCurrentBet() const;
         int getTotalBet() const;
         std::string getBestHandName() const;
+		std::vector<std::string> getPokerHandVisuals();
 
         void setAnte(int newAnte);
         void setDiscards(int newDiscards);
@@ -76,15 +79,23 @@ class Balatro {
 
         int calculateAnteScore();
 
-        std::vector<std::string> createMsgBox(std::string text, std::string colorCode);
-        std::vector<std::string> createSimpleItem(int id, int cost);
-        void pasteObject(std::vector<std::string>& canvas, const std::vector<std::string>& object, int startRow, int startCol);
-        void initPokerHands();
-        void printShopUI();
-        std::vector<std::string> createButton(std::string text, std::string subtext, std::string bgColorCode);
+        // std::vector<std::string> createMsgBox(std::string text, std::string colorCode);
+        // std::vector<std::string> createSimpleItem(int id, int cost);
+        // void pasteObject(std::vector<std::string>& canvas, const std::vector<std::string>& object, int startRow, int startCol);
+        // void initPokerHands();
+        // void printShopUI();
+        // std::vector<std::string> createButton(std::string text, std::string subtext, std::string bgColorCode);
         
         // String helpers
         std::string repeat_char(int count, char c);
+		std::vector<std::string> createMsgBox(std::string text, std::string colorCode);
+		std::vector<std::string> createSimpleItem(int id, int cost);
+		void pasteObject(std::vector<std::string>& canvas, const std::vector<std::string>& object, int startRow, int startCol);
+		void initPokerHands();
+		void printShopUI();
+		void printWinUI();
+		std::vector<std::string> createButton(std::string text, std::string subtext, std::string bgColorCode);
+		// std::string repeat_char(int count, char c);
 
         template <typename T>
         std::string to_string_98(T value) {
@@ -103,6 +114,7 @@ class Balatro {
                                  const std::vector<std::string>& deckVisual);
 
         std::vector<std::string> getCombinedJokersVisual(const std::vector<IJoker*>& targetJokers);
+        std::vector<std::string> getCombinedPlanetsVisual(const std::vector<IPlanet*>& targetPlanets);
 
         std::string getSpaces(int count);
         
@@ -116,23 +128,35 @@ class Balatro {
         int calculateHand();
 
         void freeJokers();
+        void freePlanets();
         void initAllJokers();
+        void initPlanets();
         
         // Shop and Pack generation
         void generateShopJokers();
         void generatePackJokers(); // Added to match definition in JokerPackUI.cpp
-        
+        void generatePackPlanets();
+
         std::vector<std::string> createJokerItem(IJoker* joker);
+        std::vector<std::string> createPlanetItem(IPlanet* planet);
+        std::vector<std::string> createPokerHandsRankBox();
         const std::vector<Card>& getSelectedCards() const;
 
         void jokerPackUI(); // Renamed from jokerPackUI to match definition in JokerPackUI.cpp
 		std::string repeat_string(int count, const std::string& pattern);
 		void pickJokerFromPack(int index);
-
+        void pickPlanetFromPack(int index);
+        void planetPackUI();
 		std::vector<IJoker*> getAllJokers() const;
+		std::vector<IJoker*> getJokers() const;
 
 		std::vector<Card> getHandCards();
+        PokerHand& getPokerHands(std::string handName);
 
+        std::vector<std::string> createPackItem(std::string type, int cost, std::string color);
+    
+        std::vector<int>    findCommandIndices(std::string input);
+        void                orderVectorIndices(std::vector<int> &input);
     private:
 
         bool    gameOver;
@@ -158,13 +182,16 @@ class Balatro {
         std::vector<IJoker*> jokers;
         std::vector<IJoker*> allJokers; 
         std::vector<IJoker*> shopJokers;
+        std::vector<IPlanet*> allPlanets;
         std::string bestHandName;
         int pendingShopIndex;
         int rollPrice;
         
         int blind; // 0 small 1 big 2 boss
         std::vector<IJoker*> packJokers;
+        std::vector<IPlanet*> packPlanets;
 		int isInJokerPackUI;
+        int isInPlanetPackUI;
 };
 
 #endif

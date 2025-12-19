@@ -38,6 +38,106 @@ std::vector<std::string> Balatro::getCombinedJokersVisual(const std::vector<IJok
     return mergedRow;
 }
 
+std::vector<std::string> Balatro::getCombinedPlanetsVisual(const std::vector<IPlanet*>& targetPlanets) {
+    if (targetPlanets.empty()) {
+        return std::vector<std::string>();
+    }
+
+    // 1. Genera i singoli box
+    std::vector< std::vector<std::string> > planetImages;
+    for (size_t i = 0; i < targetPlanets.size(); ++i) {
+        planetImages.push_back(createPlanetItem(targetPlanets[i]));
+    }
+
+    if (planetImages.empty()) return std::vector<std::string>();
+
+    // 2. Unisci orizzontalmente
+    int itemsHeight = (int)planetImages[0].size();
+    int gapSize = 1; 
+    std::string spacer = std::string(gapSize, ' ');
+
+    std::vector<std::string> mergedRow(itemsHeight, "");
+
+    for (int r = 0; r < itemsHeight; ++r) {
+        for (size_t i = 0; i < planetImages.size(); ++i) {
+            mergedRow[r] += planetImages[i][r];
+            if (i < planetImages.size() - 1) {
+                mergedRow[r] += spacer;
+            }
+        }
+    }
+    return mergedRow;
+}
+
+std::vector<std::string> Balatro::createPokerHandsRankBox() {
+    std::vector<std::string> box;
+
+    std::string RESET = "\x0f";
+    std::string GREY  = "\x03" "14";
+    std::string WHITE = "\x03" "00";
+    std::string YEL   = "\x03" "08";
+
+    std::string TL = "\xE2\x95\xAD"; std::string TR = "\xE2\x95\xAE";
+    std::string BL = "\xE2\x95\xB0"; std::string BR = "\xE2\x95\xAF";
+    std::string H  = "\xE2\x94\x80"; std::string V  = "\xE2\x94\x82";
+
+    // Title (kept separate for centering)
+    std::string title = YEL + "\x02" + std::string("POKER HANDS") + RESET;
+
+    // Pairs of display name and lookup key for getPokerHands
+    std::vector< std::pair<std::string,std::string> > items;
+    items.push_back(std::make_pair("High Card", "High Card"));
+    items.push_back(std::make_pair("One Pair", "Pair"));
+    items.push_back(std::make_pair("Two Pair", "Two Pair"));
+    items.push_back(std::make_pair("Three of a Kind", "Three of a Kind"));
+    items.push_back(std::make_pair("Straight", "Straight"));
+    items.push_back(std::make_pair("Flush", "Flush"));
+    items.push_back(std::make_pair("Full House", "Full House"));
+    items.push_back(std::make_pair("Four of a Kind", "Four of a Kind"));
+    items.push_back(std::make_pair("Straight Flush", "Straight Flush"));
+    items.push_back(std::make_pair("Royal Flush", "Royal Flush"));
+    items.push_back(std::make_pair("Five of a Kind", "Five of a Kind"));
+    items.push_back(std::make_pair("Flush House", "Flush House"));
+    items.push_back(std::make_pair("Flush Five", "Flush Five"));
+
+    // Build colored content lines with levels
+    std::vector<std::string> outLines;
+    outLines.push_back(title);
+    for (size_t i = 0; i < items.size(); ++i) {
+        const std::string& disp = items[i].first;
+        const std::string& key  = items[i].second;
+        int lv = getPokerHands(key).getLevel();
+        std::string line = WHITE + disp + RESET + "  " + YEL + "Lv " + to_string_98(lv) + RESET;
+        outLines.push_back(line);
+    }
+
+    // Compute inner width (max visual length)
+    int inner = 0;
+    for (size_t i = 0; i < outLines.size(); ++i) {
+        int v = getVisualLength(outLines[i]);
+        if (v > inner) inner = v;
+    }
+    inner += 2; // one space left/right
+
+    // Top
+    box.push_back(GREY + TL + repeat_string(inner, H) + TR + RESET);
+
+    for (size_t i = 0; i < outLines.size(); ++i) {
+        std::string text = outLines[i];
+        int v = getVisualLength(text);
+        int padLeft = (inner - v) / 2;
+        int padRight = inner - v - padLeft;
+        if (padLeft < 0) padLeft = 0;
+        if (padRight < 0) padRight = 0;
+        box.push_back(GREY + V + RESET + repeat_char(padLeft, ' ') + text + repeat_char(padRight, ' ') + GREY + V + RESET);
+    }
+
+    // Bottom
+    box.push_back(GREY + BL + repeat_string(inner, H) + BR + RESET);
+
+    return box;
+}
+
 std::vector<std::string> Balatro::getCardRows(const Card& c) {
     std::vector<std::string> rows;
     std::string rank = c.getRank();
@@ -222,6 +322,7 @@ void Balatro::getLeftPanelContent(int row, std::string& rawOut, std::string& col
     std::string C_ORANGE  = "\x03" "07";
     std::string C_YELLOW  = "\x03" "08";
     std::string C_WHITE   = "\x03" "00";
+    std::string C_GREY    = "\x03" "14";
     std::string BOLD      = "\x02";
     std::string RESET     = "\x0f";
 
@@ -315,6 +416,103 @@ void Balatro::getLeftPanelContent(int row, std::string& rawOut, std::string& col
         rawOut = "          +------+           ";
         colOut = "          " + C_ORANGE + "└──────┘" + RESET + "           ";
     }
+
+    // POKER HAND LEVELS BOX (sotto ANTE, qualche riga più in basso)
+    else if (row >= 31 && row < 31 + 16) {
+        // Build box content
+        std::vector< std::pair<std::string,std::string> > items;
+        items.push_back(std::make_pair("High Card", "High Card"));
+        items.push_back(std::make_pair("One Pair", "Pair"));
+        items.push_back(std::make_pair("Two Pair", "Two Pair"));
+        items.push_back(std::make_pair("Three of a Kind", "Three of a Kind"));
+        items.push_back(std::make_pair("Straight", "Straight"));
+        items.push_back(std::make_pair("Flush", "Flush"));
+        items.push_back(std::make_pair("Full House", "Full House"));
+        items.push_back(std::make_pair("Four of a Kind", "Four of a Kind"));
+        items.push_back(std::make_pair("Straight Flush", "Straight Flush"));
+        items.push_back(std::make_pair("Royal Flush", "Royal Flush"));
+        items.push_back(std::make_pair("Five of a Kind", "Five of a Kind"));
+        items.push_back(std::make_pair("Flush House", "Flush House"));
+        items.push_back(std::make_pair("Flush Five", "Flush Five"));
+
+        // Fixed inner width 27 (fits 29 total with borders)
+        const int inner = 27;
+        std::vector<std::string> rawBox;
+        std::vector<std::string> colBox;
+
+        // Top border
+        rawBox.push_back("+---------------------------+");
+        colBox.push_back(C_GREY + "┌" + repeat_string(inner, "─") + "┐" + RESET);
+
+        // Title
+        std::string title = "POKER HANDS";
+        int tPad = (inner - (int)title.length()) / 2;
+        if (tPad < 0) tPad = 0;
+        std::string rawTitle = "|" + std::string(tPad, ' ') + title + std::string(inner - tPad - (int)title.length(), ' ') + "|";
+        std::string colTitle = C_GREY + "│" + RESET + std::string(tPad, ' ') + C_YELLOW + "\x02" + title + RESET + std::string(inner - tPad - (int)title.length(), ' ') + C_GREY + "│" + RESET;
+        rawBox.push_back(rawTitle);
+        colBox.push_back(colTitle);
+
+        // Lines with: Name (dark yellow), Lv (grey), Mult (red), Chips (blue)
+        // Allineamento: nome fisso 11 char, poi Lv M C allineati
+        for (size_t i = 0; i < items.size(); ++i) {
+            const std::string& disp = items[i].first;
+            const std::string& key  = items[i].second;
+            int lv   = getPokerHands(key).getLevel();
+            int mult = getPokerHands(key).getMult();
+            int chip = getPokerHands(key).getChips();
+
+            // Nome: max 11 caratteri, padding a destra
+            int nameWidth = 11;
+            std::string name = disp;
+            if ((int)name.length() > nameWidth) name = name.substr(0, nameWidth);
+            std::string namePadded = name + std::string(nameWidth - (int)name.length(), ' ');
+
+            // Valori: allineati a larghezza fissa (Lv:4, M:5, C:5)
+            std::stringstream ssLv, ssMult, ssChip;
+            ssLv << lv;
+            ssMult << mult;
+            ssChip << chip;
+            
+            std::string lvStr = "Lv" + ssLv.str();
+            std::string multStr = ssMult.str();
+            std::string chipStr = ssChip.str();
+            
+            // Padding per allineamento (larghezza fissa)
+            lvStr += std::string(4 - (int)lvStr.length() > 0 ? 4 - (int)lvStr.length() : 0, ' ');
+            chipStr += std::string(5 - (int)chipStr.length() > 0 ? 5 - (int)chipStr.length() : 0, ' ');
+            int multPadding = 6 - ((int)multStr.length() + 1); // mult + 'X' occupano 6 caratteri totali
+            if (multPadding < 0) multPadding = 0;
+
+            // Raw line (27 char interni: 11 nome + 1 spazio + 4 lv + 6 mult/X + 5 chip)
+            std::string rawLine = "|" + namePadded + " " + lvStr + multStr + "X" + chipStr + std::string(multPadding, ' ') + "|";
+
+            // Colored line
+            std::string colLine = C_GREY + "│" + RESET
+                                 + C_ORANGE + namePadded + RESET
+                                 + " "
+                                 + C_GREY + lvStr + RESET
+                                 + C_RED + multStr + RESET
+                                 + "X"
+                                 + C_BLUE + chipStr + RESET
+                                 + std::string(multPadding, ' ')
+                                 + C_GREY + "│" + RESET;
+
+            rawBox.push_back(rawLine);
+            colBox.push_back(colLine);
+        }
+
+        // Bottom border
+        rawBox.push_back("+---------------------------+");
+        colBox.push_back(C_GREY + "└" + repeat_string(inner, "─") + "┘" + RESET);
+
+        int base = 31;
+        int idx = row - base;
+        if (idx >= 0 && idx < (int)rawBox.size()) {
+            rawOut = rawBox[idx];
+            colOut = colBox[idx];
+        }
+    }
 }
 
 std::string Balatro::getRightPanelContent(int row, int handStart, int handH, int deckStart, int deckH, 
@@ -322,37 +520,39 @@ std::string Balatro::getRightPanelContent(int row, int handStart, int handH, int
                                           const std::vector<std::string>& deckVisual) {
     
     // --- CONFIGURAZIONE DIMENSIONI ---
-    int boxWidth = 44;          // Larghezza box comandi
-    int targetRightCol = 85;    // Dove inizia visivamente il box comandi
+    int boxWidth = 44;          // Larghezza Box Comandi
     int cardWidth = 14;         
 
-    // --- CALCOLO SPAZIATURA ---
-    // Calcoliamo dove finiscono le carte per sapere quanti spazi mettere prima del box destro
-    int currentHandWidth = hand.size() * cardWidth;
-    int boxStartCol = targetRightCol;
+    // --- CORREZIONE ALLINEAMENTO ---
+    // Impostiamo una colonna fissa per l'inizio del pannello di destra.
+    // 8 carte * 14 caratteri = 112 caratteri. 
+    // Mettiamo il pannello destro a partire dalla colonna 116 per evitare sovrapposizioni 
+    // e mantenere Comandi e Deck perfettamente allineati in verticale.
+    int targetRightCol = 116;    
     
-    // Se la mano è troppo larga, sposta il box a destra
-    if (currentHandWidth + 4 > targetRightCol) {
-        boxStartCol = currentHandWidth + 4;
-    }
+    int currentHandWidth = hand.size() * cardWidth;
 
     // --- COLORI ---
     std::string C_ORANGE  = "\x03" "07";
-    // Scala da Blu (Freddo) a Rosso (Caldo)
-    std::string C_SCALE_1 = "\x03" "02"; // Navy Blue
-    std::string C_SCALE_2 = "\x03" "12"; // Blue
-    std::string C_SCALE_3 = "\x03" "11"; // Cyan
-    std::string C_SCALE_4 = "\x03" "10"; // Teal
-    std::string C_SCALE_5 = "\x03" "09"; // Light Green
-    std::string C_SCALE_6 = "\x03" "08"; // Yellow
-    std::string C_SCALE_7 = "\x03" "07"; // Orange
-    std::string C_SCALE_8 = "\x03" "04"; // Red
-    std::string C_SCALE_9 = "\x03" "05"; // Maroon (Dark Red)
+    std::string C_SCALE_1 = "\x03" "02"; 
+    std::string C_SCALE_2 = "\x03" "12"; 
+    std::string C_SCALE_3 = "\x03" "11"; 
+    std::string C_SCALE_4 = "\x03" "10"; 
+    std::string C_SCALE_5 = "\x03" "09"; 
+    std::string C_SCALE_6 = "\x03" "08"; 
+    std::string C_SCALE_7 = "\x03" "07"; 
+    std::string C_SCALE_8 = "\x03" "04"; 
+    std::string C_SCALE_9 = "\x03" "05"; 
+    std::string C_SCALE_10 = "\x03" "06"; 
+    std::string C_SCALE_11 = "\x03" "13"; 
     std::string C_GREY    = "\x03" "14";
     std::string BOLD      = "\x02";
     std::string RESET     = "\x0f";
+    std::string vBorder = C_ORANGE + "│" + RESET; 
 
-    // --- 1. CONTENUTO "SINISTRO" (CARTE DELLA MANO) ---
+    // ==========================================================
+    // 1. CONTENUTO "SINISTRO" (CARTE DELLA MANO)
+    // ==========================================================
     std::string leftPart = "";
     int visibleLeftLen = 0; 
 
@@ -364,8 +564,9 @@ std::string Balatro::getRightPanelContent(int row, int handStart, int handH, int
         visibleLeftLen = currentHandWidth;
     }
     else if (row == handStart + handH) {
+        // Numeri sotto le carte
         for(size_t c = 0; c < hand.size(); c++) {
-            std::string cardNum = "(" + toString(c + 1) + ")";
+            std::string cardNum = "(" + to_string_98(c + 1) + ")";
             int paddingLen = (13 - cardNum.length()) / 2;
             std::string item = std::string(paddingLen, ' ') + cardNum + std::string(13 - paddingLen - cardNum.length(), ' ') + " ";
             leftPart += item;
@@ -373,78 +574,291 @@ std::string Balatro::getRightPanelContent(int row, int handStart, int handH, int
         visibleLeftLen = currentHandWidth;
     }
 
-    // --- 2. SPAZIATURA CENTRALE ---
-    int paddingNeeded = boxStartCol - visibleLeftLen;
-    if (paddingNeeded < 0) paddingNeeded = 0;
+    // ==========================================================
+    // 2. SPAZIATURA CENTRALE (Padding Dinamico)
+    // ==========================================================
+    // Calcoliamo quanto spazio serve per arrivare alla colonna target (116)
+    // partendo dalla fine del contenuto sinistro attuale.
+    int paddingNeeded = targetRightCol - visibleLeftLen;
+    if (paddingNeeded < 0) paddingNeeded = 1; // Minimo 1 spazio se sfora (caso raro)
     std::string spacer = std::string(paddingNeeded, ' ');
 
-    // --- 3. CONTENUTO DESTRO (BOX COMANDI + DECK) ---
+    // ==========================================================
+    // 3. CONTENUTO DESTRO (COMANDI + DECK)
+    // ==========================================================
     std::string rightPart = "";
-    std::string vBorder = C_ORANGE + "│" + RESET; 
 
-    // Fissiamo l'inizio del box comandi in alto (es. riga 2)
-    int boxCommandStartRow = 2; 
+    int boxesStartRow = 2;
+    int cmdBoxHeight = 26; 
+    int boxesEndRow = boxesStartRow + cmdBoxHeight;
 
-    // A. HEADER BOX
-    if (row == 0) {
-        rightPart = C_ORANGE + "┌──────────────────────────────────────────┐" + RESET;
-    }
-    // B. SEZIONE COMANDI
-    else if (row >= boxCommandStartRow && row < deckStart) {
+    // --- A. BOX COMANDI ---
+    if (row >= boxesStartRow && row < boxesEndRow) {
         
-        int r = row - boxCommandStartRow + 1; // Riga relativa
-
-        if (row == deckStart - 1) {
-             rightPart = C_ORANGE + "└──────────────────────────────────────────┘" + RESET;
+        std::string cmdLine = "";
+        int r = row - boxesStartRow + 1; 
+        
+        if (r == 1) {
+            cmdLine = C_ORANGE + "┌──────────────────────────────────────────┐" + RESET;
+        } 
+        else if (r == cmdBoxHeight) {
+            cmdLine = C_ORANGE + "└──────────────────────────────────────────┘" + RESET;
         }
         else {
             std::string text = "";
-            if (r == 1)      text = BOLD + centerText("COMMANDS", boxWidth - 2) + RESET;
-            else if (r == 2) text = C_ORANGE + "├──────────────────────────────────────────┤" + RESET;
-            else if (r == 3) text = " " + C_SCALE_1 + "!select" + RESET + " <id> " + C_GREY + "(es: !select 1 3)" + RESET;
-            else if (r == 5) text = " " + C_SCALE_2 + "!discard" + C_GREY + " (Discard selected)" + RESET;
-            else if (r == 7) text = " " + C_SCALE_3 + "!play" + C_GREY + "    (Play selected)" + RESET;
-            else if (r == 9) text = " " + C_SCALE_4 + "!sort suit/rank" + C_GREY + " (Sort Hand)" + RESET;
-            else if (r == 11) text = " " + C_SCALE_5 + "!cash out" + C_GREY + " (Cash Out)" + RESET;
-            else if (r == 13) text = " " + C_SCALE_6 + "!shop"  + RESET + " <id> " + C_GREY + "(es: !shop 1 3)" + RESET;
-            else if (r == 15) text = " " + C_SCALE_7 + "!next" + C_GREY + " (Start New Round)" + RESET;
-            else if (r == 17) text = " " + C_SCALE_8 + "!replace"  + RESET + " <id> " + C_GREY + "(es: !replace 1 3)" + RESET;
-            else if (r == 19) text = " " + C_SCALE_9 + "!reroll" + C_GREY + " (Reroll The Shop)" + RESET;
-
+            if (r == 2)      text = BOLD + centerText("COMMANDS", boxWidth - 2) + RESET;
+            else if (r == 3) text = C_ORANGE + "├──────────────────────────────────────────┤" + RESET;
+            else if (r == 4) text = " " + C_SCALE_1 + "!select" + RESET + " <id> " + C_GREY + "(es: !select 1 3)" + RESET;
+            else if (r == 6) text = " " + C_SCALE_2 + "!discard" + C_GREY + " (Discard selected)" + RESET;
+            else if (r == 8) text = " " + C_SCALE_3 + "!play" + C_GREY + "    (Play selected)" + RESET;
+            else if (r == 10) text = " " + C_SCALE_4 + "!sort suit/rank" + C_GREY + " (Sort Hand)" + RESET;
+            else if (r == 12) text = " " + C_SCALE_5 + "!cash out" + C_GREY + " (Cash Out)" + RESET;
+            else if (r == 14) text = " " + C_SCALE_6 + "!shop"  + RESET + " <id> " + C_GREY + "(es: !shop 1 3)" + RESET;
+            else if (r == 16) text = " " + C_SCALE_7 + "!next" + C_GREY + " (Start New Round)" + RESET;
+            else if (r == 18) text = " " + C_SCALE_8 + "!replace"  + RESET + " <id> " + C_GREY + "(es: !replace 1 3)" + RESET;
+            else if (r == 20) text = " " + C_SCALE_9 + "!reroll" + C_GREY + " (Reroll The Shop)" + RESET;
+            else if (r == 22) text = " " + C_SCALE_10 + "!sell"  + RESET + " <id> " + C_GREY + "(es: !sell 1 3)" + RESET;
+            else if (r == 24) text = " " + C_SCALE_11 + "!swap"  + RESET + " <id1> <id2> " + C_GREY + "(es: !swap 1 3)" + RESET;
             else {
                 text = std::string(boxWidth - 2, ' '); 
             }
 
-            if (r == 2) {
-                rightPart = text;
+            if (r == 3) {
+                cmdLine = text;
             } else {
-                 int txtLen = getVisualLength(text);
-                 if (txtLen > boxWidth - 2) text = std::string(boxWidth - 2, ' '); 
-                 int padRight = (boxWidth - 2) - txtLen;
-                 if(padRight < 0) padRight = 0;
-                 rightPart = vBorder + text + std::string(padRight, ' ') + vBorder;
+                int txtLen = getVisualLength(text); 
+                if (txtLen > boxWidth - 2) text = std::string(boxWidth - 2, ' '); 
+                int padRight = (boxWidth - 2) - txtLen;
+                if(padRight < 0) padRight = 0;
+                cmdLine = vBorder + text + std::string(padRight, ' ') + vBorder;
             }
         }
+        rightPart = cmdLine;
     }
-    // C. RIEMPIMENTO VERTICALE (Tra header e box comandi, se c'è spazio)
-    else if (row < deckStart && row > 0) {
-        rightPart = vBorder + std::string(boxWidth - 2, ' ') + vBorder;
-    }
-    // D. SEZIONE DECK
+
+    // --- B. DECK (RIPOSIZIONATO) ---
     else if (row >= deckStart && row < deckStart + deckH) {
         int dSlice = row - deckStart;
         std::string deckRow = deckVisual[dSlice];
-        int deckPadLen = (boxWidth - 20) / 2;
+        
+        // Calcolo per allineare il deck sotto il lato DESTRO del box comandi (che inizia a targetRightCol)
+        int deckWidth = 20; 
+        
+        // Allineamento a destra dentro lo spazio del box comandi (44 chars)
+        int deckPadLen = boxWidth - deckWidth;
+        
         if (deckPadLen < 0) deckPadLen = 0;
         rightPart = std::string(deckPadLen, ' ') + deckRow;
     }
     else if (row == deckStart + deckH) {
-        std::string deckLabel = "(" + toString(deck.size()) + ")";
-        int labelPadLen = (boxWidth - deckLabel.length()) / 2;
-        rightPart = std::string(labelPadLen, ' ') + deckLabel; 
+        std::string deckLabel = "(" + to_string_98(deck.size()) + ")";
+        int deckWidth = 20;
+        
+        // Centrare l'etichetta
+        int centerDeck = (boxWidth - deckWidth) + (deckWidth / 2);
+        int labelStart = centerDeck - (deckLabel.length() / 2);
+
+        if (labelStart < 0) labelStart = 0;
+        rightPart = std::string(labelStart, ' ') + deckLabel; 
+    }
+    else {
+        rightPart = ""; 
     }
 
     return leftPart + spacer + rightPart;
+}
+
+std::vector<std::string> Balatro::getPokerHandVisuals() {
+    std::vector<std::string> lines;
+    
+    // --- COLORI ---
+    std::string C_WHITE   = "\x03" "00";
+    std::string C_BLUE    = "\x03" "12";
+    std::string C_RED     = "\x03" "04";
+    std::string C_ORANGE  = "\x03" "07";
+    std::string C_GREY    = "\x03" "14";
+    std::string C_YELLOW  = "\x03" "08";
+    std::string BOLD      = "\x02";
+    std::string RESET     = "\x0f";
+
+    int boxWidth = 44;
+    
+    // CORREZIONE 1: Usa repeat_string e doppi apici per "─"
+    std::string hBorder = repeat_string(boxWidth - 2, "─"); 
+    std::string vBorder = C_GREY + "│" + RESET;
+
+    // Header del Box
+    lines.push_back(C_GREY + "┌" + hBorder + "┐" + RESET);
+    
+    std::string title = "HAND CONTENTS";
+    int padTitle = (boxWidth - 2 - title.length()) / 2;
+    std::string titleLine = std::string(padTitle, ' ') + C_YELLOW + BOLD + title + RESET + std::string(boxWidth - 2 - padTitle - title.length(), ' ');
+    
+    lines.push_back(vBorder + titleLine + vBorder);
+    lines.push_back(C_GREY + "├" + hBorder + "┤" + RESET);
+
+    // Lista Mani
+    std::vector<PokerHand*> handsList;
+    handsList.push_back(&pokerHands.HighCard);
+    handsList.push_back(&pokerHands.OnePair);
+    handsList.push_back(&pokerHands.TwoPair);
+    handsList.push_back(&pokerHands.ThreeOfAKind);
+    handsList.push_back(&pokerHands.Straight);
+    handsList.push_back(&pokerHands.Flush);
+    handsList.push_back(&pokerHands.FullHouse);
+    handsList.push_back(&pokerHands.FourOfAKind);
+    handsList.push_back(&pokerHands.StraightFlush);
+    handsList.push_back(&pokerHands.RoyalFlush);
+    handsList.push_back(&pokerHands.FiveOfAKind);
+    handsList.push_back(&pokerHands.FlushHouse);
+    handsList.push_back(&pokerHands.FlushFive);
+
+    for (size_t i = 0; i < handsList.size(); ++i) {
+        PokerHand* h = handsList[i];
+
+        std::string name = h->getName();
+        if (name.length() > 14) name = name.substr(0, 14);
+        std::string namePad = std::string(14 - name.length(), ' ');
+
+        // CORREZIONE 2: Assumiamo che tu abbia aggiunto getLevel() in PokerHand.hpp
+        std::string lvlStr = "lvl." + to_string_98(h->getRank()); 
+        if (lvlStr.length() < 6) lvlStr += std::string(6 - lvlStr.length(), ' ');
+
+        std::string chipsStr = to_string_98(h->getChips());
+        std::string multStr = to_string_98(h->getMult());
+        
+        int contentLen = 1 + 14 + 1 + 6 + 2 + chipsStr.length() + 3 + multStr.length() + 1;
+        int remainingSpace = (boxWidth - 2) - contentLen;
+        if (remainingSpace < 0) remainingSpace = 0;
+
+        std::stringstream ss;
+        ss << vBorder 
+           << " " << C_WHITE << name << RESET << namePad << " "
+           << C_GREY << lvlStr << RESET << "  "
+           << C_BLUE << chipsStr << RESET << C_RED << " X " << multStr << RESET
+           << std::string(remainingSpace, ' ')
+           << vBorder;
+
+        lines.push_back(ss.str());
+    }
+    
+    lines.push_back(C_GREY + "└" + hBorder + "┘" + RESET);
+
+    return lines;
+}
+
+void Balatro::printWinUI() {
+    std::string prefix = ":BalatroBot PRIVMSG " + player->getNickName() + " :";
+    
+    int totalRows = 58;
+    int leftColWidth = 29;
+    int rightColWidth = 85; 
+
+    // --- COLORI ---
+    std::string C_L_GREEN = "\x03" "09"; // Light Green
+    std::string C_ORANGE  = "\x03" "07";
+    std::string C_GREY    = "\x03" "14";
+    std::string BOLD      = "\x02";
+    std::string RESET     = "\x0f";
+
+    // --- CANVAS ---
+    std::vector<std::string> rightCanvas(totalRows, std::string(rightColWidth, ' '));
+
+    // =======================================================================
+    // 1. ASCII ART "YOU WON"
+    // =======================================================================
+    std::vector<std::string> bigWin;
+    std::string c = C_L_GREEN + BOLD;
+    
+    bigWin.push_back(c + "Y   Y  OOO  U   U     W   W  OOO  N   N  !!!" + RESET);
+    bigWin.push_back(c + " Y Y  O   O U   U     W   W O   O NN  N  !!!" + RESET);
+    bigWin.push_back(c + "  Y   O   O U   U     W W W O   O N N N  !!!" + RESET);
+    bigWin.push_back(c + "  Y   O   O U   U     WW WW O   O N  NN     " + RESET);
+    bigWin.push_back(c + "  Y    OOO   UUU      W   W  OOO  N   N  !!!" + RESET);
+
+    // =======================================================================
+    // 2. BOX ISTRUZIONI
+    // =======================================================================
+    std::vector<std::string> infoBox;
+    int boxWidth = 50; 
+    
+    // *** CORREZIONE QUI SOTTO ***
+    // Usiamo repeat() invece del costruttore, e "─" tra doppi apici
+    std::string hBorder = repeat_string(boxWidth - 2, "─"); 
+    std::string vBorder = C_GREY + "│" + RESET;
+
+    infoBox.push_back(C_GREY + "┌" + hBorder + "┐" + RESET);
+    
+    // Riga vuota
+    infoBox.push_back(vBorder + std::string(boxWidth - 2, ' ') + vBorder);
+    
+    // Testo Centrale
+    std::string txtPart1 = "Type ";
+    std::string txtCmd   = "/balatro";
+    std::string txtPart2 = " to play again";
+    
+    int txtLen = txtPart1.length() + txtCmd.length() + txtPart2.length();
+    int padLeft = (boxWidth - 2 - txtLen) / 2;
+    int padRight = (boxWidth - 2) - txtLen - padLeft;
+    if (padLeft < 0) padLeft = 0; // Sicurezza
+    if (padRight < 0) padRight = 0;
+    
+    std::string lineContent = std::string(padLeft, ' ') 
+                            + txtPart1 + C_ORANGE + BOLD + txtCmd + RESET 
+                            + txtPart2 + std::string(padRight, ' ');
+
+    infoBox.push_back(vBorder + lineContent + vBorder);
+    
+    // Riga vuota
+    infoBox.push_back(vBorder + std::string(boxWidth - 2, ' ') + vBorder);
+    
+    infoBox.push_back(C_GREY + "└" + hBorder + "┘" + RESET);
+
+    // =======================================================================
+    // 3. POSIZIONAMENTO
+    // =======================================================================
+    
+    int centerY = totalRows / 2;
+    
+    int winH = (int)bigWin.size();
+    int winRow = centerY - winH - 2;
+    int winCol = (rightColWidth - 37) / 2; 
+    if (winCol < 0) winCol = 0;
+    
+    pasteObject(rightCanvas, bigWin, winRow, winCol);
+
+    // int infoH = (int)infoBox.size();
+    int infoRow = centerY + 2; 
+    int infoCol = (rightColWidth - boxWidth) / 2;
+
+    pasteObject(rightCanvas, infoBox, infoRow, infoCol);
+
+    // =======================================================================
+    // 4. INVIO AL CLIENT
+    // =======================================================================
+    std::string msg = "";
+    
+    msg += prefix + " \r\n";
+    msg += prefix + "═══════════════════════════════" + "╦" + "═════════════════════════════════════════════════════════════════";
+    msg += prefix + "═════════════════════════════════════════════════════════════════════════════════════════════════════\r\n";
+    
+    for (int row = 0; row < totalRows; ++row) {
+        std::string leftRaw, leftColor;
+        getLeftPanelContent(row, leftRaw, leftColor);
+        
+        int padLeft = leftColWidth - (int)leftRaw.length();
+        if(padLeft < 0) padLeft = 0;
+
+        std::string leftPanel = leftColor + std::string(padLeft, ' ');
+        std::string rightPanel = rightCanvas[row];
+
+        msg += prefix + " " + leftPanel + " ║ " + rightPanel + "\r\n";
+    }
+
+    msg += prefix + "═══════════════════════════════" + "╩" + "═════════════════════════════════════════════════════════════════";
+    msg += prefix + "═════════════════════════════════════════════════════════════════════════════════════════════════════\r\n";
+    
+    send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
 }
 
 void Balatro::printUI() {
@@ -568,6 +982,8 @@ void Balatro::printUI() {
                 rightPanel.replace(startPos, visualLen, jLine);
             }
         }
+
+        // Ranks box moved to left panel under ANTE
 
         // Assemblaggio messaggio IRC
         msg += prefix + " " + leftPanel + " ║ " + rightPanel + "\r\n";

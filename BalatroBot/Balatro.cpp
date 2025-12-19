@@ -42,6 +42,16 @@
 #include "Jokers/ShootTheMoon/ShootTheMoon.hpp"
 #include "Jokers/SmileyFace/SmileyFace.hpp"
 #include "Jokers/WalkieTalkie/WalkieTalkie.hpp"
+#include "Planets/Earth/Earth.hpp"
+#include "Planets/IPlanet.hpp"
+#include "Planets/Jupiter/Jupiter.hpp"
+#include "Planets/Mars/Mars.hpp"
+#include "Planets/Mercury/Mercury.hpp"
+#include "Planets/Neptune/Neptune.hpp"
+#include "Planets/Saturn/Saturn.hpp"
+#include "Planets/Uranus/Uranus.hpp"
+#include "Planets/Venus/Venus.hpp"
+#include "Planets/Pluto/Pluto.hpp"
 
 Balatro::Balatro() : gameOver(false), gameWon(false), ante(1), anteScore(0), discards(4), hands(4), coins(0), currentBet(0), totalBet(0), sd(0), player(), pokerHands(), isSuitSorting(false), isCashingOut(false), isShopUI(false), jokers(), allJokers(), bestHandName(""), pendingShopIndex(-1), packJokers(), isInJokerPackUI(0) {
     std::srand(static_cast<unsigned int>(std::time(0)));
@@ -57,12 +67,15 @@ Balatro::~Balatro() {
     // 1. Svuota i vettori secondari SENZA fare delete (sono solo riferimenti)
     jokers.clear();
     shopJokers.clear();
-
-    // 2. Cancella la memoria vera e propria dal "proprietario" (allJokers)
+	
     for (size_t i = 0; i < allJokers.size(); ++i) {
         delete allJokers[i];
     }
     allJokers.clear();
+	for (size_t i = 0; i < allPlanets.size(); ++i) {
+        delete allPlanets[i];
+    }
+	allPlanets.clear();
 }
 
 Balatro::Balatro(const Balatro &other)
@@ -91,7 +104,8 @@ Balatro::Balatro(const Balatro &other)
 	  rollPrice(other.rollPrice),
 	  blind(other.blind),
 	  packJokers(other.packJokers),
-	  isInJokerPackUI(other.isInJokerPackUI) {}
+	  isInJokerPackUI(other.isInJokerPackUI), 
+	  isInPlanetPackUI(other.isInPlanetPackUI) {}
 
 Balatro &Balatro::operator=(const Balatro &other) {
 	if (this != &other) {
@@ -121,44 +135,41 @@ Balatro &Balatro::operator=(const Balatro &other) {
 		blind = other.blind;
 		packJokers = other.packJokers;
 		isInJokerPackUI = other.isInJokerPackUI;
+		isInPlanetPackUI = other.isInPlanetPackUI;
 	}
 	return *this;
 }
 
 void Balatro::initPokerHands() {
-	pokerHands.HighCard.setPokerHand("High Card", 1, 5, 1);
-    pokerHands.OnePair.setPokerHand("Pair", 2, 10, 2);
-    pokerHands.TwoPair.setPokerHand("Two Pair", 3, 20, 2);
-    pokerHands.ThreeOfAKind.setPokerHand("Three of a Kind", 4, 30, 3);
-    pokerHands.Straight.setPokerHand("Straight", 5, 30, 4);
-    pokerHands.Flush.setPokerHand("Flush", 6, 35, 4);
-    pokerHands.FullHouse.setPokerHand("Full House", 7, 40, 4);
-    pokerHands.FourOfAKind.setPokerHand("Four of a Kind", 8, 60, 7);
-    pokerHands.StraightFlush.setPokerHand("Straight Flush", 9, 100, 8);
-    pokerHands.RoyalFlush.setPokerHand("Royal Flush", 10, 100, 8);
-    pokerHands.FiveOfAKind.setPokerHand("Five of a Kind", 11, 120, 12);
-    pokerHands.FlushHouse.setPokerHand("Flush House", 12, 140, 14);
-    pokerHands.FlushFive.setPokerHand("Flush Five", 13, 160, 16);
+	pokerHands.HighCard.setPokerHand("High Card", 0, 5, 1);
+    pokerHands.OnePair.setPokerHand("Pair", 0, 10, 2);
+    pokerHands.TwoPair.setPokerHand("Two Pair", 0, 20, 2);
+    pokerHands.ThreeOfAKind.setPokerHand("Three of a Kind", 0, 30, 3);
+    pokerHands.Straight.setPokerHand("Straight", 0, 30, 4);
+    pokerHands.Flush.setPokerHand("Flush", 0, 35, 4);
+    pokerHands.FullHouse.setPokerHand("Full House", 0, 40, 4);
+    pokerHands.FourOfAKind.setPokerHand("Four of a Kind", 0, 60, 7);
+    pokerHands.StraightFlush.setPokerHand("Straight Flush", 0, 100, 8);
+    pokerHands.RoyalFlush.setPokerHand("Royal Flush", 0, 100, 8);
+    pokerHands.FiveOfAKind.setPokerHand("Five of a Kind", 0, 120, 12);
+    pokerHands.FlushHouse.setPokerHand("Flush House", 0, 140, 14);
+    pokerHands.FlushFive.setPokerHand("Flush Five", 0, 160, 16);
 }
 
-const std::vector<Card>& Balatro::getSelectedCards() const {
-    return selectedCards;
-}
-
-std::vector<Card> Balatro::getHandCards() {
-	return hand;
-}
-
-int Balatro::getCoins() {
-	return coins;
-}
-
-std::vector<IJoker*> Balatro::getAllJokers() const {
-	return allJokers;
-}
-
-int Balatro::getDiscards(){
-	return discards;
+void Balatro::initPlanets()
+{
+	if (!allPlanets.empty()) {
+		return;
+	}
+	allPlanets.push_back(new Earth());
+	allPlanets.push_back(new Mars());
+	allPlanets.push_back(new Venus());
+	allPlanets.push_back(new Mercury());
+	allPlanets.push_back(new Jupiter());
+	allPlanets.push_back(new Saturn());
+	allPlanets.push_back(new Uranus());
+	allPlanets.push_back(new Neptune());
+	allPlanets.push_back(new Pluto());
 }
 
 void Balatro::initAllJokers() {
@@ -214,7 +225,83 @@ void Balatro::initAllJokers() {
 	std::cout << "DEBUG: Inizializzati " << allJokers.size() << " jolly." << std::endl;
 }
 
+PokerHand& Balatro::getPokerHands(std::string handName) {
+	if (handName == "High Card") return pokerHands.HighCard;
+	if (handName == "Pair") return pokerHands.OnePair;
+	if (handName == "Two Pair") return pokerHands.TwoPair;
+	if (handName == "Three of a Kind") return pokerHands.ThreeOfAKind;
+	if (handName == "Straight") return pokerHands.Straight;
+	if (handName == "Flush") return pokerHands.Flush;
+	if (handName == "Full House") return pokerHands.FullHouse;
+	if (handName == "Four of a Kind") return pokerHands.FourOfAKind;
+	if (handName == "Straight Flush") return pokerHands.StraightFlush;
+	if (handName == "Royal Flush") return pokerHands.RoyalFlush;
+	if (handName == "Five of a Kind") return pokerHands.FiveOfAKind;
+	if (handName == "Flush House") return pokerHands.FlushHouse;
+	if (handName == "Flush Five") return pokerHands.FlushFive;
+
+	return pokerHands.HighCard;
+}
+
+
+
+const std::vector<Card>& Balatro::getSelectedCards() const {
+    return selectedCards;
+}
+
+std::vector<Card> Balatro::getHandCards() {
+	return hand;
+}
+
+int Balatro::getCoins() {
+	return coins;
+}
+
+std::vector<IJoker*> Balatro::getAllJokers() const {
+	return allJokers;
+}
+
+int Balatro::getDiscards(){
+	return discards;
+}
+
+std::vector<Card> Balatro::getDeck() {
+	return deck;
+}
+
+int Balatro::getHands() {
+	return hands;
+}
+
+void Balatro::setCoins(int newCoins) {
+	coins = newCoins;
+}
+
+std::vector<IJoker*> Balatro::getJokers() const
+{
+	return jokers;
+}
+
+
+int getRankValue(std::string rank) {
+    if (rank == "J") return 11;
+    if (rank == "Q") return 12;
+    if (rank == "K") return 13;
+    if (rank == "A") return 14;
+    return std::atol(rank.c_str());
+}
+
+int getRankChips(std::string rank) {
+    if (rank == "J" || rank == "Q" || rank == "K") return 10;
+    if (rank == "A") return 11;
+    return std::atol(rank.c_str());
+}
+
 void Balatro::startNewRound() {
+    if (gameWon) {
+        printWinUI();
+        return ;
+    }
 	blind++;
 	if (blind > 2)
 		blind = 0;
@@ -239,14 +326,6 @@ void Balatro::startNewRound() {
 	dealInitialHand();
 }
 
-int getRankValue(std::string rank) {
-    if (rank == "J") return 11;
-    if (rank == "Q") return 12;
-    if (rank == "K") return 13;
-    if (rank == "A") return 14;
-    return std::atol(rank.c_str());
-}
-
 bool compareCardsByRank(const Card& a, const Card& b) {
     int valA = getRankValue(a.getRank());
     int valB = getRankValue(b.getRank());
@@ -264,13 +343,7 @@ bool compareCardsBySuit(const Card& a, const Card& b) {
     return getRankValue(a.getRank()) > getRankValue(b.getRank());
 }
 
-int getRankChips(std::string rank) {
-    if (rank == "J" || rank == "Q" || rank == "K") return 10;
-    if (rank == "A") return 11;
-    return std::atol(rank.c_str());
-}
 
-// ... (codice precedente invariato fino a calculateHand)
 int Balatro::calculateHand() {
     if (selectedCards.empty()) {
         std::cout << "DEBUG: Nessuna carta selezionata." << std::endl;
@@ -403,21 +476,20 @@ void Balatro::pickJokerFromPack(int index) {
 	std::cout << "DEBUG: Joker " << selectedJoker->getName() << " aggiunto alla collezione." << std::endl;
 }
 
-std::vector<Card> Balatro::getDeck() {
-	return deck;
-}
-
-int Balatro::getHands() {
-	return hands;
-}
-
-void Balatro::setCoins(int newCoins) {
-	coins = newCoins;
+void Balatro::pickPlanetFromPack(int index) {
+	if (index < 0 || index >= static_cast<int>(packPlanets.size())) {
+		std::cout << "DEBUG: Indice joker non valido." << std::endl;
+		return;
+	}
+	IPlanet* selectedPlanet = packPlanets[index];
+	selectedPlanet->playPlanet(this);
+	packPlanets.erase(packPlanets.begin() + index);
+	std::cout << "DEBUG: Planet " << selectedPlanet->getName() << " giocato." << std::endl;
 }
 
 void Balatro::getMessagePrompt(std::string msg) {
 
-	if (gameOver) {
+	if (gameOver || gameWon) {
 		std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :Send /balatro to start a new round\r\n";
 		send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
 		return ;
@@ -425,7 +497,14 @@ void Balatro::getMessagePrompt(std::string msg) {
 	std::cout << "BalatroBot message: " << msg << std::endl;
 	if (msg.find("!") == 0) {
 		msg.erase(0, 1);
+		// remove /r/n at the end of the received msg
+
 		std::cout << "Received command: " << msg << std::endl;
+		if (!msg.empty() && msg[msg.length() - 1] == '\n')
+			msg.erase(msg.length() - 1);
+		if (!msg.empty() && msg[msg.length() - 1] == '\r')
+			msg.erase(msg.length() - 1);
+
 		if (msg.find("select ") == 0) {
             if (isCashingOut || isShopUI) {
                 std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :!select not possible\r\n";
@@ -467,9 +546,9 @@ void Balatro::getMessagePrompt(std::string msg) {
                 send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
                 return ;
 			}
-			for(size_t i = 0; i < cardIndices.size(); ++i) {
-				std::cout << "Selected card: " << hand[cardIndices[i]].getRank() << " of " << hand[cardIndices[i]].getSuit() << std::endl;
-			}
+			// for(size_t i = 0; i < cardIndices.size(); ++i) {
+			// 	std::cout << "Selected card: " << hand[cardIndices[i]].getRank() << " of " << hand[cardIndices[i]].getSuit() << std::endl;
+			// }
 			for(size_t i = 0; i < cardIndices.size(); ++i) {
 				selectedCards.push_back(hand[cardIndices[i]]);
 			}
@@ -575,10 +654,15 @@ void Balatro::getMessagePrompt(std::string msg) {
 				send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
 				return;
 			}
-			if (blind == 2)
+			if (blind == 2) {
 				ante++;
+                if (ante == 9) {
+                    gameWon = true;
+                }
+            }
 			startNewRound();
-			printSelectedCardsUI();
+            if (!gameWon)
+			    printSelectedCardsUI();
 			isShopUI = false;
         } else if (msg.find("shopUI") == 0) {
             generateShopJokers();
@@ -589,27 +673,14 @@ void Balatro::getMessagePrompt(std::string msg) {
                 send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
                 return;
             }
-            std::string params = "";
-            if (msg.length() > 5) params = msg.substr(5);
-            
-            std::stringstream ss(params);
-            int tempIndex;
-            std::vector<int> indicesToBuy;
-
-            while (ss >> tempIndex) {
-                // Convertiamo da 1-based (utente) a 0-based (vector)
-                indicesToBuy.push_back(tempIndex - 1);
-            }
+            std::vector<int> indicesToBuy = findCommandIndices(msg);
 
             if (indicesToBuy.empty()) {
                 std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :Usage: !shop <id> (e.g. !shop 1 3)\r\n";
                 send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
                 return;
             }
-            std::sort(indicesToBuy.begin(), indicesToBuy.end(), std::greater<int>());
-            
-            std::vector<int>::iterator it = std::unique(indicesToBuy.begin(), indicesToBuy.end());
-            indicesToBuy.resize(std::distance(indicesToBuy.begin(), it));
+            orderVectorIndices(indicesToBuy);
 
             bool updateUI = false;
 
@@ -705,10 +776,16 @@ void Balatro::getMessagePrompt(std::string msg) {
 				return;
 			}
 			int pack = std::atoi(msg.substr(5).c_str());
+			if (coins < 6){
+				std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :Not enough coins to pick a joker\r\n";
+				send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+				return;
+			}
+			coins -= 6;
 			if (pack == 1)
 				jokerPackUI();
 			else if (pack == 2){
-				//planetPackUI();
+				planetPackUI();
 			}
 			else {
 				std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :Invalid pack number\r\n";
@@ -716,30 +793,133 @@ void Balatro::getMessagePrompt(std::string msg) {
 				return;
 			}
 		} else if (msg.find("pick") == 0) {
-			if (!isInJokerPackUI){
+			if (!isInJokerPackUI && !isInPlanetPackUI){
 				std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :You are not in the joker pack screen\r\n";
 				send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
 				return;
 			}
 			int pick = std::atoi(msg.substr(5).c_str());
-			if (pick < 1 || pick > (int)packJokers.size()){
-				std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :Invalid pick number\r\n";
-				send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
-				return;
+			if (isInJokerPackUI){
+				if (pick < 1 || pick > (int)packJokers.size()) {
+					std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :Invalid pick number\r\n";
+					send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+					return;
+				}
+				pickJokerFromPack(pick - 1);
+				isInJokerPackUI = 0;
+			} else if (isInPlanetPackUI) {
+				if (pick < 1 || pick > (int)packPlanets.size()) {
+					std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :Invalid pick number\r\n";
+					send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+					return;
+				}
+				pickPlanetFromPack(pick - 1);
+				isInPlanetPackUI = 0;
 			}
-			pickJokerFromPack(pick - 1);
-			isInJokerPackUI = 0;
 			printShopUI();
 		} else if (msg.find("skip") == 0) {
-			if (!isInJokerPackUI){
-				std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :You are not in the joker pack screen\r\n";
+			if (!isInJokerPackUI && !isInPlanetPackUI){
+				std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :You are not in the pack screen\r\n";
 				send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
 				return;
 			}
-			packJokers.clear();
-			isInJokerPackUI = 0;
+			if (isInJokerPackUI) {
+				packJokers.clear();
+				isInJokerPackUI = 0;
+			} else if (isInPlanetPackUI) {
+				packPlanets.clear();
+				isInPlanetPackUI = 0;
+			}
 			printShopUI();
-		}
+		} else if (msg.find("sell") == 0) {
+            if (jokers.empty()) {
+                std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :You don't have any jokers\r\n";
+				send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+				return;
+            }
+            std::vector<int> indicesToSell = findCommandIndices(msg);
+
+
+            if (indicesToSell.empty()) {
+                std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :Usage: !sell <id> (e.g. !sell 1 3)\r\n";
+                send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+                return;
+            }
+
+            orderVectorIndices(indicesToSell);
+        
+            bool updateUI = false;
+
+            for (size_t i = 0; i < indicesToSell.size(); ++i) {
+                int idx = indicesToSell[i];
+
+                if (idx < 0 || idx >= (int)shopJokers.size()) {
+                    continue;
+                }
+                size_t x = 0;
+                bool found = false;
+                for (std::vector<IJoker *>::iterator it = jokers.begin(); it != jokers.end() && x < jokers.size(); ++it) {
+                    if ((int)x == idx) {
+                        coins += jokers[idx]->getCost() / 2;
+                        std::string success = ":BalatroBot PRIVMSG " + player->getNickName() + " :Sold " + jokers[idx]->getName() + "\r\n";
+                        send(sd, success.c_str(), success.length(), MSG_NOSIGNAL);
+						shopJokers.push_back(jokers[idx]);
+                        jokers.erase(it);
+                        found = true;
+                    }
+                    x++;
+                }
+                if (!found) {
+                    std::string err = ":BalatroBot PRIVMSG " + player->getNickName() + " :Invalid index\r\n";
+                    send(sd, err.c_str(), err.length(), MSG_NOSIGNAL);
+                    continue;
+                }
+                
+                updateUI = true;
+            }
+            if (updateUI) {
+                if (isShopUI) {
+                    printShopUI();
+                    return ;
+                }
+                printSelectedCardsUI();
+                isShopUI = false;
+            }
+        } else if (msg.find("swap") == 0) {
+            if (jokers.empty()) {
+                std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :You don't have any jokers\r\n";
+				send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+				return;
+            }
+            std::vector<int> indicesToSwap = findCommandIndices(msg);
+
+            if (indicesToSwap.empty()) {
+                std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :Usage: !swap <id> (e.g. !swap 1 3)\r\n";
+                send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+                return;
+            }
+
+            if (indicesToSwap.size() > 2) {
+                std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :Usage: !swap <id1> <id2> (e.g. !swap 1 3)\r\n";
+                send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+                return;
+            }
+
+            if (!(indicesToSwap[0] >= 0 && indicesToSwap[0] < (int)jokers.size())
+                || !(indicesToSwap[1] >= 0 && indicesToSwap[1] < (int)jokers.size())) {
+                    std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :Invalid index\r\n";
+                    send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+                    return;
+                }
+
+            std::swap(jokers[indicesToSwap[0]], jokers[indicesToSwap[1]]);
+            if (isShopUI) {
+                printShopUI();
+                return ;
+            }
+            printSelectedCardsUI();
+            isShopUI = false;
+        }
 	}
 }
 
@@ -776,6 +956,7 @@ void Balatro::playHand() {
 		setGameOver(true);
 		printUI();
 		freeJokers();
+		freePlanets();
 		return ;
 	}
 	std::cout << "current score: " << totalBet << std::endl;

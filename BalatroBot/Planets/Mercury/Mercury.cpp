@@ -14,6 +14,7 @@ void Mercury::playPlanet(Balatro *bot){
 	PokerHand& highCardHand = bot->getPokerHands("Pair");
 	highCardHand.setChips(highCardHand.getChips() + 15);
 	highCardHand.setMult(highCardHand.getMult() + 1);
+	highCardHand.setLevel(highCardHand.getLevel() + 1);
 }
 
 std::string Mercury::getEffect(){

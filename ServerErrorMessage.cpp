@@ -28,6 +28,10 @@ void	Server::replyErrToClient(int numErrno, std::string nickname, std::string ch
 			msg = ":localhost 401 " + nickname + " " + channel + " :No such nick/channel\r\n";
             break;
 		
+		case ERR_CANNOTSENDTOCHAN:
+			msg = ":localhost 404 " + nickname + " " + channel + " :Cannot send to channel\r\n";
+			break;
+
 		case ERR_USERNOTINCHANNEL:
             msg = ":localhost 441 " + nickname + " " + channel + " :User is not in that channel\r\n";
             break;
@@ -59,7 +63,23 @@ void	Server::replyErrToClient(int numErrno, std::string nickname, std::string ch
 		case ERR_UNKNOWNMODE:
 			msg = ":localhost 472 " + nickname + " " + arg + " :Is unknown mode char to me\r\n";
 			break ;
+
+		case ERR_NORECIPIENT:
+			msg = ":localhost 411 " + nickname + " :No recipient given (" + arg + ")\r\n";
+			break ;
 	
+		case ERR_NOTEXTTOSEND:
+			msg = ":localhost 412 " + nickname + " :No text to send\r\n";
+			break ;
+
+		case ERR_NOTREGISTERED:
+			msg = ":localhost 451 " + nickname + " :You have not registered\r\n";
+			break ;
+
+		case ERR_TOOMANYTARGETS:
+			msg = ":localhost 407 " + nickname + " " + channel + " :Too many targets\r\n";
+			break ;	
+
 		default:
 			break;
 	}

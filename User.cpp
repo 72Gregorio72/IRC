@@ -1,13 +1,12 @@
 #include "User.hpp"
 
-User::User() : buffer(""), sd(-1), authenticated(false), Nick_name(""), User_name(""), Host_name(""), Server_name(""), Real_name(""), isOp(false){}
+User::User() : buffer(""), sd(-1), authenticated(false), Nick_name(""), User_name(""), Host_name(""), Server_name(""), Real_name(""), isOp(false), hasNick(false), hasUser(false) {}
 
-User::User(int sd) :  buffer(""), sd(sd), authenticated(false), Nick_name(""), User_name(""), Host_name(""), Server_name(""), Real_name(""), isOp(false){
+User::User(int sd) :  buffer(""), sd(sd), authenticated(false), Nick_name(""), User_name(""), Host_name(""), Server_name(""), Real_name(""), isOp(false), hasNick(false), hasUser(false) {
 }
 
 User::User(std::string nickname, std::string username, std::string hostname, std::string servername, std::string realname)
-: sd(-1), authenticated(false), Nick_name(nickname), User_name(username), Host_name(hostname), Server_name(servername), Real_name(realname),  isOp(false) {}
-
+: sd(-1), authenticated(false), Nick_name(nickname), User_name(username), Host_name(hostname), Server_name(servername), Real_name(realname),  isOp(false), hasNick(false), hasUser(false) {}
 User::~User() { authenticated = false; }
 
 User::User(const User &other){
@@ -20,7 +19,8 @@ User::User(const User &other){
 	this->Server_name = other.Server_name;
 	this->Real_name = other.Real_name;
 	this->isOp = other.isOp;
-
+	this->hasNick = other.hasNick;
+	this->hasUser = other.hasUser;
 }
 
 void	User::setAll(std::string nickname, std::string username, std::string hostname, std::string servername, std::string realname){
@@ -41,9 +41,34 @@ void	User::setAll(std::string username, std::string hostname, std::string server
 User& User::operator=(const User &other){
 	if (this == &other)
 		return *this;
+	sd = other.sd;
+	buffer = other.buffer;
+	authenticated = other.authenticated;
+	Nick_name = other.Nick_name;
 	User_name = other.User_name;
+	Host_name = other.Host_name;
+	Server_name = other.Server_name;
+	Real_name = other.Real_name;
 	isOp = other.isOp;
+	hasNick = other.hasNick;
+	hasUser = other.hasUser;
 	return *this;
+}
+
+bool User::getHasNick() {
+	return hasNick;
+}
+
+void User::setHasNick(bool val) {
+	hasNick = val;
+}
+
+bool User::getHasUser() {
+	return hasUser;
+}
+
+void User::setHasUser(bool val) {
+	hasUser = val;
 }
 
 std::string User::getNickName(){

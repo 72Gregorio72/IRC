@@ -133,6 +133,7 @@ void	Server::create_user(std::string msg, int sd){
     }
 
     user->setAll(username, hostanme, servername, realname);
+	user->setHasUser(true);
 }
 
 User* Server::find_by_sd(int sd){
@@ -166,14 +167,11 @@ void Server::startGame(int sd) {
     User* user = find_by_sd(sd);
     if (!user) return;
 
-    // 1. ALLOCAZIONE DINAMICA
     Balatro* newGame = new Balatro(sd, user);
     
-    // 2. INIZIALIZZAZIONE (Opzionale ma consigliata subito)
     newGame->initAllJokers(); 
     newGame->startNewGame();
 
-    // 3. SALVATAGGIO DEL PUNTATORE
     balatroBots.push_back(newGame);
     
     std::cout << "Gioco Balatro creato per socket " << sd << std::endl;
@@ -186,24 +184,59 @@ void	Server::sendPrivmsg(std::string msg, User* sender)
 	msg.erase(0, pos);
 	pos = msg.find(":");
 	msg.erase(0, pos + 1);
+	std::cout << "Sending PRIVMSG to " << channelName << " message: " << msg << std::endl;
+	if (channelName.empty() || channelName[0] == ':')
+	{
+		replyErrToClient(ERR_NORECIPIENT, sender->getNickName(), "", sender->sd, " :No recipient given (PRIVMSG)");
+		return ;
+	}
+	if (msg.empty())
+	{
+		replyErrToClient(ERR_NOTEXTTOSEND, sender->getNickName(), channelName, sender->sd, "");
+		return ;
+	}
+	if (!sender->getHasNick() || !sender->getHasUser())
+	{
+		replyErrToClient(ERR_NOTREGISTERED, sender->getNickName(), "", sender->sd, "");
+		return ;
+	}
+	if (channelName.find(",") != std::string::npos)
+	{
+		replyErrToClient(ERR_TOOMANYTARGETS, sender->getNickName(), channelName, sender->sd, " :Too many targets");
+		return ;
+	}
 	if (channelName[0] == '#'|| channelName[0] == '&')
 	{
-		for (std::vector<Channel>::iterator it = allChannels.begin(); it != allChannels.end(); it++)
-		{;
-			if (it->getChannelName() == channelName)
+		Channel *temp = findChannelByName(channelName);
+		if (temp)
+		{
+			if (!temp->userInChannel(sender->getNickName()))
 			{
-				std::vector<User> channelUsers = it->getUsers();
-				for (size_t i = 0; i < channelUsers.size(); i++)
+				replyErrToClient(ERR_CANNOTSENDTOCHAN, sender->getNickName(), channelName, sender->sd, "");
+				return ;
+			}
+			for (std::vector<Channel>::iterator it = allChannels.begin(); it != allChannels.end(); it++)
+			{;
+				if (it->getChannelName() == channelName)
 				{
-					std::string fullMsg = ":" + sender->getNickName() + "!" + sender->getUserName() + "@localhost PRIVMSG " + channelName + " :" + msg + "\r\n";
-					if (channelUsers[i].sd != sender->sd)
-						send(channelUsers[i].sd, fullMsg.c_str(), fullMsg.length(), MSG_NOSIGNAL);
+					std::vector<User> channelUsers = it->getUsers();
+					for (size_t i = 0; i < channelUsers.size(); i++)
+					{
+						std::string fullMsg = ":" + sender->getNickName() + "!" + sender->getUserName() + "@localhost PRIVMSG " + channelName + " :" + msg + "\r\n";
+						if (channelUsers[i].sd != sender->sd)
+							send(channelUsers[i].sd, fullMsg.c_str(), fullMsg.length(), MSG_NOSIGNAL);
 
+					}
 				}
 			}
 		}
+		else
+		{
+			replyErrToClient(ERR_NOSUCHNICK, sender->getNickName(), channelName, sender->sd, "");
+			return ;
+		}
 	}
-	else // se non trova canale, cerca user
+	else
 	{
 		User *target = find_by_nickname(channelName);
 		if (target)
@@ -216,7 +249,6 @@ void	Server::sendPrivmsg(std::string msg, User* sender)
 		{
 			replyErrToClient(ERR_NOSUCHNICK, sender->getNickName(), channelName, sender->sd, "");
 			return ;
-
 		}
 	}
 

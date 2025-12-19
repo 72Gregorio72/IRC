@@ -8,7 +8,6 @@ void sighandler(int signum) {
 }
 
 void Server::server_loop() {
-    // Configurazione segnali (Corretta!)
     struct sigaction sa;
     memset(&sa, 0, sizeof(sa));
     sa.sa_handler = sighandler;
@@ -89,10 +88,18 @@ void Server::handle_client_read(int sd) {
 		user->buffer += std::string(buffer);
 
 		int result = process_user_buffer(user, sd);
-		(void)result;
+		if (result == -72) {
+            user->buffer.clear();
+            user->authenticated = false;
+            remove_user(sd);
+		    FD_CLR(sd, &serverdata.master_fd);
+            close(sd);
+            return ;
+        }
 	} else if (bytes_received == 0) {
 		FD_CLR(sd, &serverdata.master_fd);
 		User *user = find_by_sd(sd);
+        close(sd);
 		if (user != NULL) {
 			remove_user(user->sd);
 		}

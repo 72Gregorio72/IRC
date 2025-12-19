@@ -14,6 +14,7 @@ void Neptune::playPlanet(Balatro *bot){
 	PokerHand& highCardHand = bot->getPokerHands("Straight Flush");
 	highCardHand.setChips(highCardHand.getChips() + 40);
 	highCardHand.setMult(highCardHand.getMult() + 4);
+	highCardHand.setLevel(highCardHand.getLevel() + 1);
 }
 
 std::string Neptune::getEffect(){

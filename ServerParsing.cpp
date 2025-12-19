@@ -135,14 +135,23 @@ int Server::kick(std::string msg, int sd){
 		reason = msg.substr(msg.find(" :") + 2, msg.find("\r\n") - (msg.find(" :") + 2));
 	}
 	Channel* channel = findChannelByName(channelName);
-	if (channel == NULL){
-		replyErrToClient(ERR_NOSUCHCHANNEL, find_by_sd(sd)->getNickName(), channelName, sd, "");
-		return -1;
-	}
-	if (channel->findUserByNickname(find_by_sd(sd)->getNickName())->_isOp() == false){
-		replyErrToClient(ERR_CHANOPRIVSNEEDED, find_by_sd(sd)->getNickName(), channelName, sd, "");
-		return -1;
-	}
+    if (channel == NULL){
+        replyErrToClient(ERR_NOSUCHCHANNEL, find_by_sd(sd)->getNickName(), channelName, sd, "");
+        return -1;
+    }
+
+    User* userSender = channel->findUserByNickname(find_by_sd(sd)->getNickName());
+
+    if (userSender == NULL){
+        replyErrToClient(ERR_NOTONCHANNEL, find_by_sd(sd)->getNickName(), channelName, sd, "");
+        return -1;
+    }
+
+    if (userSender->_isOp() == false){
+        replyErrToClient(ERR_CHANOPRIVSNEEDED, find_by_sd(sd)->getNickName(), channelName, sd, "");
+        return -1;
+    }
+
 	if (channel->findUserByNickname(find_by_sd(sd)->getNickName()) == NULL){
 		replyErrToClient(ERR_NOTONCHANNEL, find_by_sd(sd)->getNickName(), channelName, sd, "");
 		return -1;
@@ -150,15 +159,20 @@ int Server::kick(std::string msg, int sd){
 	if (channel->userInChannel(userToKick) == false){
 		replyErrToClient(ERR_USERNOTINCHANNEL, find_by_sd(sd)->getNickName(), channelName, sd, channelName);
 		return -1;
-	} else {
-		std::vector<User> users = channel->getUsers();
-		std::string partMsg = ":" + userToKick + "!" + userToKick + "@localhost PART " + channelName + " :" + reason + "\r\n";
-		for (size_t j = 0; j < users.size(); j++) {
-			int fd = users[j].sd;
-			send(fd, partMsg.c_str(), partMsg.length(), MSG_NOSIGNAL);
-		}
 	}
+	std::string kickMsg = ":" + find_by_sd(sd)->getNickName() + "!" + find_by_sd(sd)->getUserName() + "@localhost KICK " + channelName + " " + userToKick;
+	if (!reason.empty()){
+		kickMsg += " :" + reason + "\r\n";
+	} else {
+		kickMsg += " :No reason specified\r\n";
+	}
+	std::vector<User> usersInChan = channel->getUsers();
+    for (size_t i = 0; i < usersInChan.size(); i++) {
+        send(usersInChan[i].sd, kickMsg.c_str(), kickMsg.length(), MSG_NOSIGNAL);
+    }
+	// send(find_by_sd(sd)->sd, kickMsg.c_str(), kickMsg.length(), MSG_NOSIGNAL);
 	channel->removeUser(userToKick);
+	
 	return 0;
 }
 
@@ -169,8 +183,20 @@ int Server::part(std::string msg, int sd){
 	pos = msg.find_first_of("\r\n");
 	if (pos != std::string::npos) msg = msg.substr(0, pos);
 	User *userToRemove = find_by_sd(sd);
-	std::string channelName = msg.substr(0, msg.find_first_of(' '));
+	std::string channelName;
+    std::string reason = "";
 
+    size_t spacePos = msg.find(' ');
+    if (spacePos != std::string::npos) {
+        channelName = msg.substr(0, spacePos);
+        // Se c'è un " :" dopo il nome del canale, prendiamo tutto il resto come reason
+        size_t reasonPos = msg.find(" :", spacePos);
+        if (reasonPos != std::string::npos) {
+            reason = msg.substr(reasonPos + 2);
+        }
+    } else {
+        channelName = msg; // Nessun reason specificato
+    }
 	Channel *channelWanted = findChannelByName(channelName);
 	if (!channelWanted)
 	{
@@ -182,7 +208,15 @@ int Server::part(std::string msg, int sd){
 		replyErrToClient(ERR_NOTONCHANNEL, userToRemove->getNickName(), channelWanted->getChannelName(), sd, "");
 		return (-72);
 	}
-	
+	std::string partMsg = ":" + userToRemove->getNickName() + "!" + userToRemove->getUserName() + "@localhost PART " + channelName;
+    if (!reason.empty()) {
+        partMsg += " :" + reason;
+    }
+    partMsg += "\r\n";
+
+    // Invia al client che ha fatto il comando (così chiude la finestra)
+    send(sd, partMsg.c_str(), partMsg.length(), MSG_NOSIGNAL);
+
 	channelWanted->removeUser(userToRemove->getNickName());
 	
 	if (channelWanted->getUsers().empty()) {
@@ -194,10 +228,6 @@ int Server::part(std::string msg, int sd){
 
 int Server::parse_entry(std::string msg, int sd){
 	if (find_by_sd(sd)->getNickName() == "") {
-		if (msg.find("CAP LS 302") != std::string::npos) {
-			msg.erase(0, 12);
-			return 0;
-		}
 
 		if (msg.find("PASS ") != std::string::npos) {
 			if (check_password(msg) && !find_by_sd(sd)->authenticated && find_by_sd(sd)->getNickName() == "") {
@@ -208,6 +238,7 @@ int Server::parse_entry(std::string msg, int sd){
 				return -72;
 			}
 		}
+	
 		if (size_t pos = msg.find("NICK ") != std::string::npos && find_by_sd(sd)->getNickName() == "" && find_by_sd(sd)->authenticated) {
 			if (pos != std::string::npos)
 				msg.erase(0, pos);
@@ -220,8 +251,13 @@ int Server::parse_entry(std::string msg, int sd){
 			msg.erase(0, msg.find_first_of("\r\n"));
 			nickname.erase(nickname.find_last_not_of(" \r\n") + 1);
 			find_by_sd(sd)->setNickName(nickname);
+			find_by_sd(sd)->setHasNick(true);
 			return 0;
 		}
+	}
+	if (!find_by_sd(sd)->authenticated) {
+		replyErrToClient(ERR_PASSWDMISMATCH, "", "", sd, "");
+		return -72;
 	}
 	return 0;
 }
@@ -506,9 +542,6 @@ int Server::mode(std::string msg, int sd) {
 		}
 	}
 
-	// for(size_t i = 0; i < args.size(); i++) {
-	// 	std::cout << "Arg " << i << ": " << args[i] << std::endl;
-	// }
 
 	std::cout << flagsStr << std::endl;
 	for (size_t i = 0; i < flagsStr.length(); i++) {
@@ -547,7 +580,7 @@ int Server::mode(std::string msg, int sd) {
 				return -1; // Unknown flag
 			}
 		}
-		else if (modeFlags.setting == 2) { // Removing flags
+		else if (modeFlags.setting == 2) {
 			if (flagsStr[i] == 'i')
 				modeFlags.i.flag = 2;
 			else if (flagsStr[i] == 't')
@@ -564,22 +597,8 @@ int Server::mode(std::string msg, int sd) {
 			else
 				return -1; // Unknown flag
 		}
-		
-		if (modeFlags.i.flag == 1)
-			channel->setInviteOnly(true);
-		else if (modeFlags.i.flag == 2)
-			channel->setInviteOnly(false);
-		
-		if (modeFlags.t.flag == 1) {
-			// Implement topic restriction logic if needed
-		}
-
-		if (modeFlags.k.flag == 1) {
-			// Implement password logic if needed
-		}
 
 		if (modeFlags.o.flag == 1) {
-			//std::cout << "Giving operator status to |" << modeFlags.o.arg << "|" << std::endl;
 			User* userToOp = channel->findUserByNickname(modeFlags.o.arg);	
 			if (userToOp != NULL) {
 				userToOp->SetOp(true);
@@ -596,12 +615,23 @@ int Server::mode(std::string msg, int sd) {
 		} else if (modeFlags.o.flag == 2) {
 			User* userToDeop = channel->findUserByNickname(modeFlags.o.arg);
 			if (userToDeop != NULL) {
-				userToDeop->SetOp(false);
-				std::string deopMsg = ":" + find_by_sd(sd)->getNickName() + "!" + find_by_sd(sd)->getUserName() + "@localhost MODE " + channelName + " -o " + modeFlags.o.arg + "\r\n";
-				std::vector<User> users = channel->getUsers();
-				for (size_t j = 0; j < users.size(); j++) {
-					int fd = users[j].sd;
-					send(fd, deopMsg.c_str(), deopMsg.length(), MSG_NOSIGNAL);
+				if (channel->count_operators() == 1 && userToDeop->_isOp()){
+					std::vector<User> users = channel->getUsers();
+					std::string partMsg = ":" + userToDeop->getNickName() + "!" + userToDeop->getNickName() + "@localhost PART " + channelName + " :" + "" + "\r\n";
+					for (size_t j = 0; j < users.size(); j++) {
+						int fd = users[j].sd;
+						send(fd, partMsg.c_str(), partMsg.length(), MSG_NOSIGNAL);
+					}
+					channel->removeUser(userToDeop->getNickName());
+				}
+				else {
+					userToDeop->SetOp(false);
+					std::string deopMsg = ":" + find_by_sd(sd)->getNickName() + "!" + find_by_sd(sd)->getUserName() + "@localhost MODE " + channelName + " -o " + modeFlags.o.arg + "\r\n";
+					std::vector<User> users = channel->getUsers();
+					for (size_t j = 0; j < users.size(); j++) {
+						int fd = users[j].sd;
+						send(fd, deopMsg.c_str(), deopMsg.length(), MSG_NOSIGNAL);
+					}
 				}
 			} else {
 				replyErrToClient(ERR_NOSUCHNICK, find_by_sd(sd)->getNickName(), channelName, sd, "");
@@ -706,11 +736,19 @@ int Server::parse_msg(int sd) {
     
     std::string msg(serverdata.msg);
 
-    if (parse_entry(msg, sd) == -72)
-        return -72;
+	if (msg.find("CAP LS 302") != std::string::npos) {
+		msg.erase(0, 12);
+		return 0;
+	}
 
-    if (!find_by_sd(sd)->authenticated)
-        return -1;
+    if (parse_entry(msg, sd) == -72) {
+        return -72;
+	}
+
+	if (!find_by_sd(sd)->authenticated) {
+		// replyErrToClient(ERR_PASSWDMISMATCH, "", "", sd, "");
+		return -1;
+	}
 
     if (msg.find("USER ") != std::string::npos && find_by_sd(sd)->getUserName() == "") {
         create_user(msg, sd);
@@ -728,7 +766,6 @@ int Server::parse_msg(int sd) {
     }
 
     if (msg.find("JOIN ") != std::string::npos) {
-		//std::cout << msg << std::endl;
         size_t pos = msg.find("JOIN ");
         if (pos != std::string::npos) msg.erase(0, pos);
         msg.erase(0, 5);
@@ -753,6 +790,7 @@ int Server::parse_msg(int sd) {
 			}
 		}
 		std::string channelsCopy = channels;
+		User tempUser = *find_by_sd(sd);
 		do {
 			std::string passwordsCopy = passwords;
 			pos = channels.find_first_of(",");
@@ -771,33 +809,27 @@ int Server::parse_msg(int sd) {
 			Channel channel(channelName, this);
 			if (findChannelByName(channel.getChannelName()) != NULL) {
 				Channel* existingChannel = findChannelByName(channel.getChannelName());
-				if (existingChannel->getUserLimit() > 0 && (int)existingChannel->getUsers().size() + 1 > existingChannel->getUserLimit())
-				{
+				
+				// Controlli limiti e invite
+				if (existingChannel->getUserLimit() > 0 && (int)existingChannel->getUsers().size() + 1 > existingChannel->getUserLimit()) {
 					replyErrToClient(ERR_CHANNELISFULL, find_by_sd(sd)->getNickName(), channelName, sd, "");
 					return -1;
 				}
-
-				if (existingChannel->getInviteOnly() && !existingChannel->nickInInviteList(find_by_sd(sd)->getNickName()))
-				{
+				if (existingChannel->getInviteOnly() && !existingChannel->nickInInviteList(find_by_sd(sd)->getNickName())) {
 					replyErrToClient(ERR_INVITEONLYCHAN, "", existingChannel->getChannelName(), sd, " :Cannot join channel (+i)");
 					return -1;
 				}
 				std::vector<User> users = existingChannel->getUsers();
 				if (alreadyInChannel(find_by_sd(sd)->getNickName(), existingChannel->getChannelName())) {
-					return -1;
+					continue ;
 				}
 				if(checkUserPassword(existingChannel, channelsCopy, passwordsCopy) == false)
 				{
 					replyErrToClient(ERR_BADCHANNELKEY, find_by_sd(sd)->getNickName(), channel.getChannelName(), sd, "");
-					continue ;
+					return -1;
 				}
-				for (std::vector<User>::iterator it = users.begin(); it != users.end(); ++it)
-				{
-					if (it->sd != sd)
-					{
-						existingChannel->addUser(find_by_sd(sd));
-						continue ;
-					}
+				if (!existingChannel->userInChannel(find_by_sd(sd)->getNickName())) {
+					existingChannel->addUser(&tempUser);
 				}
 			}
 			else if (findChannelByName(channel.getChannelName()) == NULL)
@@ -808,8 +840,7 @@ int Server::parse_msg(int sd) {
 					return -1;
 				}
 				allChannels.push_back(channel);
-				//std::cout << "channel: " << channel.getChannelName() << std::endl;
-				allChannels.back().addUser(find_by_sd(sd));
+				allChannels.back().addUser(&tempUser);
 			}
 		}
 		while (pos != std::string::npos);
@@ -860,7 +891,7 @@ int Server::parse_msg(int sd) {
 	if (msg.find("balatro") != std::string::npos) {
 		User *u = find_by_sd(sd);
 		if (u) {
-			addBalatroBot(sd, u); // Passi direttamente il puntatore
+			addBalatroBot(sd, u);
 		}
 		if (findBalatroBySd(sd) != NULL)
 			findBalatroBySd(sd)->startNewGame();

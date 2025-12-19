@@ -57,15 +57,30 @@ SRCS		=   main.cpp Server.cpp \
 				BalatroBot/Jokers/SmileyFace/SmileyFace.cpp \
 				BalatroBot/Jokers/WalkieTalkie/WalkieTalkie.cpp \
 				BalatroBot/Jokers/RoughGem/RoughGem.cpp \
+				BalatroBot/Planets/Earth/Earth.cpp \
+				BalatroBot/Planets/Mars/Mars.cpp \
+				BalatroBot/Planets/Venus/Venus.cpp \
+				BalatroBot/Planets/Mercury/Mercury.cpp \
+				BalatroBot/Planets/Jupiter/Jupiter.cpp \
+				BalatroBot/Planets/Saturn/Saturn.cpp \
+				BalatroBot/Planets/Uranus/Uranus.cpp \
+				BalatroBot/Planets/Neptune/Neptune.cpp \
+				BalatroBot/Planets/Pluto/Pluto.cpp \
+				BalatroBot/PlanetPackUI.cpp \
+
 
 
 OBJS		= $(SRCS:.cpp=.o)
 
 RM			= rm -f
-FLAGS		= -Wall -Wextra -Werror -std=c++98
+FLAGS		= -Wall -Wextra -Werror -std=c++98 -g
 COMPILER	= c++
 
 INCLUDES = -Iincludes
+
+PORTNUM = 7272
+
+PW_SERV = 1234
 
 .cpp.o:
 	$(COMPILER) $(FLAGS) $(INCLUDES) -c $< -o $@
@@ -94,8 +109,7 @@ re: fclean all
 vale: re
 	make clean
 	@clear
-	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --track-fds=yes ./$(NAME) 7272 1234
-
+	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --track-fds=yes ./$(NAME) $(PORTNUM) $(PW_SERV)
 push: fclean
 	if [ -d .vscode ]; then \
 		rm -rf .vscode; \
@@ -105,7 +119,7 @@ push: fclean
 testosterone: re
 	make clean
 	@clear
-	./$(NAME) 7272 1234
+	./$(NAME) $(PORTNUM) $(PW_SERV)
 
 .PHONY: all clean fclean re vale push testosterone
 
