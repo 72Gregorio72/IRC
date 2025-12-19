@@ -277,6 +277,12 @@ void Balatro::setCoins(int newCoins) {
 	coins = newCoins;
 }
 
+std::vector<IJoker*> Balatro::getJokers() const
+{
+	return jokers;
+}
+
+
 int getRankValue(std::string rank) {
     if (rank == "J") return 11;
     if (rank == "Q") return 12;
@@ -491,7 +497,14 @@ void Balatro::getMessagePrompt(std::string msg) {
 	std::cout << "BalatroBot message: " << msg << std::endl;
 	if (msg.find("!") == 0) {
 		msg.erase(0, 1);
+		// remove /r/n at the end of the received msg
+
 		std::cout << "Received command: " << msg << std::endl;
+		if (!msg.empty() && msg[msg.length() - 1] == '\n')
+			msg.erase(msg.length() - 1);
+		if (!msg.empty() && msg[msg.length() - 1] == '\r')
+			msg.erase(msg.length() - 1);
+
 		if (msg.find("select ") == 0) {
             if (isCashingOut || isShopUI) {
                 std::string msg = ":BalatroBot PRIVMSG " + player->getNickName() + " :!select not possible\r\n";
@@ -533,9 +546,9 @@ void Balatro::getMessagePrompt(std::string msg) {
                 send(sd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
                 return ;
 			}
-			for(size_t i = 0; i < cardIndices.size(); ++i) {
-				std::cout << "Selected card: " << hand[cardIndices[i]].getRank() << " of " << hand[cardIndices[i]].getSuit() << std::endl;
-			}
+			// for(size_t i = 0; i < cardIndices.size(); ++i) {
+			// 	std::cout << "Selected card: " << hand[cardIndices[i]].getRank() << " of " << hand[cardIndices[i]].getSuit() << std::endl;
+			// }
 			for(size_t i = 0; i < cardIndices.size(); ++i) {
 				selectedCards.push_back(hand[cardIndices[i]]);
 			}

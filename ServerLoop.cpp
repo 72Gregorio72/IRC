@@ -99,6 +99,7 @@ void Server::handle_client_read(int sd) {
 	} else if (bytes_received == 0) {
 		FD_CLR(sd, &serverdata.master_fd);
 		User *user = find_by_sd(sd);
+        close(sd);
 		if (user != NULL) {
 			remove_user(user->sd);
 		}
