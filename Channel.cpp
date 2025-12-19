@@ -173,7 +173,7 @@ User *Channel::findUserBySd(int sd) {
 
 int Channel::removeUser(std::string nickname) {
     for (size_t i = 0; i < users.size(); i++) {
-        if (users[i].getNickName() == nickname) {
+        if (users[i].getNickName() == nickname) { 
             bool isOp = users[i]._isOp();
             std::string channel_name = this->getChannelName();
 
