@@ -148,6 +148,7 @@ class Balatro {
         void pickPlanetFromPack(int index);
         void planetPackUI();
 		std::vector<IJoker*> getAllJokers() const;
+		std::vector<IJoker*> getJokers() const;
 
 		std::vector<Card> getHandCards();
         PokerHand& getPokerHands(std::string handName);

@@ -13,11 +13,11 @@ void BaseballCard::printJoker(){
 
 void BaseballCard::playJoker(int& chips, int& mult, Balatro *bot){
 	(void)chips;
-	for (size_t i = 0; i < bot->getAllJokers().size(); ++i) {
-		IJoker* joker = bot->getAllJokers()[i];
+	for (size_t i = 0; i < bot->getJokers().size(); ++i) {
+		IJoker* joker = bot->getJokers()[i];
 		std::string rarity = joker->getRarity();
 		if (rarity == "Uncommon") {
-			mult = static_cast<int>(mult * 1.5);
+			mult *= 1.5;
 		}
 	}
 }

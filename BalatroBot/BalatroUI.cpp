@@ -589,7 +589,7 @@ std::string Balatro::getRightPanelContent(int row, int handStart, int handH, int
     std::string rightPart = "";
 
     int boxesStartRow = 2;
-    int cmdBoxHeight = 24; 
+    int cmdBoxHeight = 26; 
     int boxesEndRow = boxesStartRow + cmdBoxHeight;
 
     // --- A. BOX COMANDI ---

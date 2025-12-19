@@ -166,7 +166,11 @@ int Server::kick(std::string msg, int sd){
 	} else {
 		kickMsg += " :No reason specified\r\n";
 	}
-	send(find_by_sd(sd)->sd, kickMsg.c_str(), kickMsg.length(), MSG_NOSIGNAL);
+	std::vector<User> usersInChan = channel->getUsers();
+    for (size_t i = 0; i < usersInChan.size(); i++) {
+        send(usersInChan[i].sd, kickMsg.c_str(), kickMsg.length(), MSG_NOSIGNAL);
+    }
+	// send(find_by_sd(sd)->sd, kickMsg.c_str(), kickMsg.length(), MSG_NOSIGNAL);
 	channel->removeUser(userToKick);
 	
 	return 0;
@@ -518,9 +522,6 @@ int Server::mode(std::string msg, int sd) {
 		}
 	}
 
-	// for(size_t i = 0; i < args.size(); i++) {
-	// 	std::cout << "Arg " << i << ": " << args[i] << std::endl;
-	// }
 
 	std::cout << flagsStr << std::endl;
 	for (size_t i = 0; i < flagsStr.length(); i++) {
@@ -559,7 +560,7 @@ int Server::mode(std::string msg, int sd) {
 				return -1; // Unknown flag
 			}
 		}
-		else if (modeFlags.setting == 2) { // Removing flags
+		else if (modeFlags.setting == 2) {
 			if (flagsStr[i] == 'i')
 				modeFlags.i.flag = 2;
 			else if (flagsStr[i] == 't')
@@ -576,22 +577,8 @@ int Server::mode(std::string msg, int sd) {
 			else
 				return -1; // Unknown flag
 		}
-		
-		// if (modeFlags.i.flag == 1)
-		// 	channel->setInviteOnly(true);
-		// else if (modeFlags.i.flag == 2)
-		// 	channel->setInviteOnly(false);
-		
-		// if (modeFlags.t.flag == 1) {
-		// 	// Implement topic restriction logic if needed
-		// }
-
-		// if (modeFlags.k.flag == 1) {
-		// 	// Implement password logic if needed
-		// }
 
 		if (modeFlags.o.flag == 1) {
-			//std::cout << "Giving operator status to |" << modeFlags.o.arg << "|" << std::endl;
 			User* userToOp = channel->findUserByNickname(modeFlags.o.arg);	
 			if (userToOp != NULL) {
 				userToOp->SetOp(true);
@@ -759,7 +746,6 @@ int Server::parse_msg(int sd) {
     }
 
     if (msg.find("JOIN ") != std::string::npos) {
-		//std::cout << msg << std::endl;
         size_t pos = msg.find("JOIN ");
         if (pos != std::string::npos) msg.erase(0, pos);
         msg.erase(0, 5);
@@ -804,7 +790,7 @@ int Server::parse_msg(int sd) {
 			if (findChannelByName(channel.getChannelName()) != NULL) {
 				Channel* existingChannel = findChannelByName(channel.getChannelName());
 				
-				// Controlli limiti e invite...
+				// Controlli limiti e invite
 				if (existingChannel->getUserLimit() > 0 && (int)existingChannel->getUsers().size() + 1 > existingChannel->getUserLimit()) {
 					replyErrToClient(ERR_CHANNELISFULL, find_by_sd(sd)->getNickName(), channelName, sd, "");
 					return -1;
@@ -820,10 +806,8 @@ int Server::parse_msg(int sd) {
 				if(checkUserPassword(existingChannel, channelsCopy, passwordsCopy) == false)
 				{
 					replyErrToClient(ERR_BADCHANNELKEY, find_by_sd(sd)->getNickName(), channel.getChannelName(), sd, "");
-					continue ; // Usa continue, non return, per provare il prossimo canale nel loop
+					return -1;
 				}
-
-				// AGGIUNTA UTENTE (Senza loop, senza return -1 preventivo)
 				if (!existingChannel->userInChannel(find_by_sd(sd)->getNickName())) {
 					existingChannel->addUser(&tempUser);
 				}
@@ -887,7 +871,7 @@ int Server::parse_msg(int sd) {
 	if (msg.find("balatro") != std::string::npos) {
 		User *u = find_by_sd(sd);
 		if (u) {
-			addBalatroBot(sd, u); // Passi direttamente il puntatore
+			addBalatroBot(sd, u);
 		}
 		if (findBalatroBySd(sd) != NULL)
 			findBalatroBySd(sd)->startNewGame();
