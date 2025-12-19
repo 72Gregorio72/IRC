@@ -76,7 +76,7 @@ void Balatro::startNewGame() {
     isCashingOut = false;
     isSuitSorting = false;
     isRankSorting = false;
-    coins = 1000;
+    coins = 0;
 	blind = -1;
     jokers.clear();
     shopJokers.clear();

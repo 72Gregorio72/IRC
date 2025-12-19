@@ -521,15 +521,16 @@ std::string Balatro::getRightPanelContent(int row, int handStart, int handH, int
     
     // --- CONFIGURAZIONE DIMENSIONI ---
     int boxWidth = 44;          // Larghezza Box Comandi
-    int statsWidth = 44;        // Larghezza Box Statistiche
-    int gapSize = 2;            // Spazio tra i due box
     int cardWidth = 14;         
 
-    // Spostamento a sinistra (fisso)
-    int targetRightCol = 4;    
+    // --- CORREZIONE ALLINEAMENTO ---
+    // Impostiamo una colonna fissa per l'inizio del pannello di destra.
+    // 8 carte * 14 caratteri = 112 caratteri. 
+    // Mettiamo il pannello destro a partire dalla colonna 116 per evitare sovrapposizioni 
+    // e mantenere Comandi e Deck perfettamente allineati in verticale.
+    int targetRightCol = 116;    
     
     int currentHandWidth = hand.size() * cardWidth;
-    int boxStartCol = targetRightCol;
 
     // --- COLORI ---
     std::string C_ORANGE  = "\x03" "07";
@@ -563,6 +564,7 @@ std::string Balatro::getRightPanelContent(int row, int handStart, int handH, int
         visibleLeftLen = currentHandWidth;
     }
     else if (row == handStart + handH) {
+        // Numeri sotto le carte
         for(size_t c = 0; c < hand.size(); c++) {
             std::string cardNum = "(" + to_string_98(c + 1) + ")";
             int paddingLen = (13 - cardNum.length()) / 2;
@@ -573,27 +575,26 @@ std::string Balatro::getRightPanelContent(int row, int handStart, int handH, int
     }
 
     // ==========================================================
-    // 2. SPAZIATURA CENTRALE
+    // 2. SPAZIATURA CENTRALE (Padding Dinamico)
     // ==========================================================
-    int paddingNeeded = boxStartCol - visibleLeftLen;
-    if (paddingNeeded < 0) paddingNeeded = 0;
+    // Calcoliamo quanto spazio serve per arrivare alla colonna target (116)
+    // partendo dalla fine del contenuto sinistro attuale.
+    int paddingNeeded = targetRightCol - visibleLeftLen;
+    if (paddingNeeded < 0) paddingNeeded = 1; // Minimo 1 spazio se sfora (caso raro)
     std::string spacer = std::string(paddingNeeded, ' ');
 
     // ==========================================================
-    // 3. CONTENUTO DESTRO (COMANDI + STATS + DECK)
+    // 3. CONTENUTO DESTRO (COMANDI + DECK)
     // ==========================================================
     std::string rightPart = "";
 
     int boxesStartRow = 2;
-    int cmdBoxHeight = 24; 
+    int cmdBoxHeight = 26; 
     int boxesEndRow = boxesStartRow + cmdBoxHeight;
 
-    std::vector<std::string> pokerStats = getPokerHandVisuals();
-    
-    // --- A & B. BOX COMANDI E STATS ---
+    // --- A. BOX COMANDI ---
     if (row >= boxesStartRow && row < boxesEndRow) {
         
-        // 1. Box Comandi (Sinistra)
         std::string cmdLine = "";
         int r = row - boxesStartRow + 1; 
         
@@ -632,50 +633,29 @@ std::string Balatro::getRightPanelContent(int row, int handStart, int handH, int
                 cmdLine = vBorder + text + std::string(padRight, ' ') + vBorder;
             }
         }
-
-        // 2. Box Stats (Destra)
-        std::string statLine = "";
-        int statIdx = row - boxesStartRow; 
-
-        if (statIdx >= 0 && statIdx < (int)pokerStats.size()) {
-            statLine = pokerStats[statIdx];
-        } else {
-            statLine = std::string(statsWidth, ' ');
-        }
-
-        std::string gap = std::string(gapSize, ' ');
-        rightPart = cmdLine + gap + statLine;
+        rightPart = cmdLine;
     }
 
-    // --- D. DECK (SPOSTATO TUTTO A DESTRA) ---
+    // --- B. DECK (RIPOSIZIONATO) ---
     else if (row >= deckStart && row < deckStart + deckH) {
         int dSlice = row - deckStart;
         std::string deckRow = deckVisual[dSlice];
         
-        // Calcolo per allineare a DESTRA
-        // Larghezza totale dei box sopra = boxWidth (44) + gapSize (2) + statsWidth (44) = 90
-        // Larghezza Deck = 20
-        // Padding = 90 - 20 = 70
-        
+        // Calcolo per allineare il deck sotto il lato DESTRO del box comandi (che inizia a targetRightCol)
         int deckWidth = 20; 
-        int totalBlockWidth = boxWidth + gapSize + statsWidth; 
-        int deckPadLen = totalBlockWidth - deckWidth - 20;
+        
+        // Allineamento a destra dentro lo spazio del box comandi (44 chars)
+        int deckPadLen = boxWidth - deckWidth;
         
         if (deckPadLen < 0) deckPadLen = 0;
         rightPart = std::string(deckPadLen, ' ') + deckRow;
     }
     else if (row == deckStart + deckH) {
         std::string deckLabel = "(" + to_string_98(deck.size()) + ")";
-        
-        // Centrare l'etichetta rispetto alla nuova posizione del deck (a destra)
         int deckWidth = 20;
-        int totalBlockWidth = boxWidth + gapSize + statsWidth; 
         
-        // Il deck inizia graficamente a: totalBlockWidth - deckWidth
-        // Il centro del deck è a: (totalBlockWidth - deckWidth) + (deckWidth / 2)
-        // La label deve iniziare a: CentroDeck - (LabelLen / 2)
-        
-        int centerDeck = (totalBlockWidth - deckWidth) + (deckWidth / 2);
+        // Centrare l'etichetta
+        int centerDeck = (boxWidth - deckWidth) + (deckWidth / 2);
         int labelStart = centerDeck - (deckLabel.length() / 2);
 
         if (labelStart < 0) labelStart = 0;
