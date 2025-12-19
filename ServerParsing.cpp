@@ -183,8 +183,20 @@ int Server::part(std::string msg, int sd){
 	pos = msg.find_first_of("\r\n");
 	if (pos != std::string::npos) msg = msg.substr(0, pos);
 	User *userToRemove = find_by_sd(sd);
-	std::string channelName = msg.substr(0, msg.find_first_of(' '));
+	std::string channelName;
+    std::string reason = "";
 
+    size_t spacePos = msg.find(' ');
+    if (spacePos != std::string::npos) {
+        channelName = msg.substr(0, spacePos);
+        // Se c'è un " :" dopo il nome del canale, prendiamo tutto il resto come reason
+        size_t reasonPos = msg.find(" :", spacePos);
+        if (reasonPos != std::string::npos) {
+            reason = msg.substr(reasonPos + 2);
+        }
+    } else {
+        channelName = msg; // Nessun reason specificato
+    }
 	Channel *channelWanted = findChannelByName(channelName);
 	if (!channelWanted)
 	{
@@ -196,7 +208,15 @@ int Server::part(std::string msg, int sd){
 		replyErrToClient(ERR_NOTONCHANNEL, userToRemove->getNickName(), channelWanted->getChannelName(), sd, "");
 		return (-72);
 	}
-	
+	std::string partMsg = ":" + userToRemove->getNickName() + "!" + userToRemove->getUserName() + "@localhost PART " + channelName;
+    if (!reason.empty()) {
+        partMsg += " :" + reason;
+    }
+    partMsg += "\r\n";
+
+    // Invia al client che ha fatto il comando (così chiude la finestra)
+    send(sd, partMsg.c_str(), partMsg.length(), MSG_NOSIGNAL);
+
 	channelWanted->removeUser(userToRemove->getNickName());
 	
 	if (channelWanted->getUsers().empty()) {
