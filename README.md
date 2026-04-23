@@ -1,5 +1,9 @@
 # IRC Server + BalatroBot
 
+<img width="1917" height="1078" alt="Screenshot 2026-04-23 204230" src="https://github.com/user-attachments/assets/a3911369-e6b3-4528-8034-118227246696" />
+<img width="1919" height="1079" alt="Screenshot 2026-04-23 204219" src="https://github.com/user-attachments/assets/2590e973-d910-4445-b3f8-ecad111be717" />
+
+
 ## Panoramica
 Questo progetto implementa un server IRC in C++98 con gestione multi-client via socket non bloccanti e `select()`, piu una modalita gioco integrata chiamata BalatroBot.
 
