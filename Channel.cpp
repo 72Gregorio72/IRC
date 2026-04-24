@@ -32,6 +32,7 @@ Channel::Channel(std::string name, Server *serv) {
     }
 }
 
+
 Channel::Channel(const Channel &other) {
 	channel_name = other.channel_name;
 	users = other.users;
