@@ -106,7 +106,7 @@ re: fclean all
 
 # --- Custom/Utility Rules ---
 
-vale: re
+valgrind: re
 	make clean
 	@clear
 	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --track-fds=yes ./$(NAME) $(PORTNUM) $(PW_SERV)
@@ -116,12 +116,12 @@ push: fclean
 	fi
 	bash -i -c "push"
 
-testosterone: re
+test: re
 	make clean
 	@clear
 	./$(NAME) $(PORTNUM) $(PW_SERV)
 
-.PHONY: all clean fclean re vale push testosterone
+.PHONY: all clean fclean re valgrind push test
 
 #COLORS
 

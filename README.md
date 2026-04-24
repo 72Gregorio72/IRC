@@ -62,8 +62,8 @@ make re
 ```
 
 Nel `Makefile` sono presenti anche:
-- `make testosterone`: ricompila e avvia con porta/password di default
-- `make vale`: esecuzione con valgrind
+- `make test`: ricompila e avvia con porta/password di default
+- `make valgrind`: esecuzione con valgrind
 
 ## Avvio server
 Uso:
